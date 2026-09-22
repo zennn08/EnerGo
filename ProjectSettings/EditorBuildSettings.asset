@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/EnerGo/LobbyScene.unity
+    guid: a1b2c3d4e5f60718293a4b5c6d7e8f90
+  - enabled: 1
+    path: Assets/EnerGo/ARPrototype.unity
+    guid: 9e96db1502256354cbc06701379d876a
+  - enabled: 1
+    path: Assets/EnerGo/Sensor360Scene.unity
+    guid: 660705c4acd85724595a4718ce1a5d1c
+  m_configObjects:
+    UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 91ec9e9386815c54e9a359edbfc94d59, type: 2}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: b5a3873443c17eb42829d72e264f15df, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 97a30efcb7d889c468f4bbf58b320efe, type: 2}
+  m_UseUCBPForAssetBundles: 0
