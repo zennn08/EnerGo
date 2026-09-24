@@ -14,6 +14,7 @@ namespace EnerGo
             Lobby,
             HelpModal,
             InventoryModal,
+            DebugModal,
             TransitioningToAR
         }
 
@@ -87,6 +88,13 @@ namespace EnerGo
         private GUIStyle styleModalStepNum;
         private GUIStyle styleModalStepTitle;
         private GUIStyle styleModalStepDesc;
+
+        private GUIStyle styleTitleShadow;
+        private GUIStyle styleTargetTag;
+        private GUIStyle styleDebugTag;
+        private GUIStyle styleDebugDesc;
+        private GUIStyle styleDebugOptionActive;
+        private GUIStyle styleDebugOptionInactive;
 
         private bool stylesInitialized = false;
 
@@ -298,10 +306,10 @@ namespace EnerGo
             // CTA Button
             stylePlayBtnText = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 18,
+                fontSize = 26,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.02f, 0.16f, 0.12f) } // High-contrast dark ink on vibrant mint
+                normal = { textColor = new Color(0.01f, 0.16f, 0.11f) } // High-contrast dark ink on vibrant mint
             };
 
             // Card
@@ -403,6 +411,50 @@ namespace EnerGo
                 normal = { textColor = new Color(0.65f, 0.80f, 0.90f) }
             };
 
+            styleTitleShadow = new GUIStyle(styleLobbyTitle)
+            {
+                normal = { textColor = new Color(0f, 0.03f, 0.06f, 0.75f) }
+            };
+
+            styleTargetTag = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 11,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.18f, 0.94f, 0.74f) }
+            };
+
+            styleDebugTag = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 10,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(1f, 0.72f, 0.28f) }
+            };
+
+            styleDebugDesc = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 11,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.55f, 0.75f, 0.88f) }
+            };
+
+            styleDebugOptionActive = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = Color.white }
+            };
+
+            styleDebugOptionInactive = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Normal,
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = new Color(0.55f, 0.72f, 0.85f) }
+            };
+
             stylesInitialized = true;
         }
 
@@ -426,7 +478,7 @@ namespace EnerGo
             GUI.color = Color.white;
             if (texBg != null)
             {
-                GUI.DrawTexture(new Rect(0, 0, sw, sh), texBg, ScaleMode.ScaleAndCrop);
+                GUI.DrawTexture(new Rect(0, 0, sw, sh), texBg, ScaleMode.StretchToFill);
             }
             else
             {
@@ -451,6 +503,10 @@ namespace EnerGo
                 if (currentState == ScreenState.InventoryModal)
                 {
                     DrawInventoryModal(sw, sh);
+                }
+                if (currentState == ScreenState.DebugModal)
+                {
+                    DrawDebugModal(sw, sh);
                 }
 
                 if (currentState == ScreenState.TransitioningToAR)
@@ -540,29 +596,11 @@ namespace EnerGo
 
         private void DrawLobbyScreen(float sw, float sh)
         {
-            float safeTop = Mathf.Max(14f, (Screen.height - Screen.safeArea.yMax) / HudScale + 8f);
-
-            // --- 1. TELEMETRY TOP BAR ---
-            float pillH = 42f;
-            float padX = 16f;
-
-            // Surveyor Badge (Left)
-            DrawPillCustom(new Rect(padX, safeTop, 130, pillH), "ENERGO", "DEMO 2026", styleHudLabel, styleHudValue);
-
-            // Resources (Right)
-            float oreW = 105f;
-            float energyW = 100f;
-            float rightX = sw - padX;
-
-            DrawPillCustom(new Rect(rightX - oreW, safeTop, oreW, pillH), "MINERAL (Au)", $"{goldCount} ORE", styleHudLabel, styleHudGold);
-            DrawPillCustom(new Rect(rightX - oreW - 8f - energyW, safeTop, energyW, pillH), "MATAHARI", $"{sunCount} UNIT", styleHudLabel, styleHudValue);
-
-            // --- 2. HERO / BRANDING ---
-            float floatAnim = Mathf.Sin(Time.time * 2.0f) * 5f;
-            float logoSize = Mathf.Min(140f, sw * 0.34f);
+            // --- HERO / BRANDING (centered) ---
+            float floatAnim = Mathf.Sin(Time.time * 2.0f) * 6f;
+            float logoSize = Mathf.Min(148f, sw * 0.34f);
             float logoX = (sw - logoSize) * 0.5f;
-            float headerStartY = safeTop + pillH + 20f;
-            float logoY = headerStartY + floatAnim;
+            float logoY = sh * 0.20f + floatAnim;
 
             GUI.color = Color.white;
             if (texLogo != null)
@@ -570,23 +608,23 @@ namespace EnerGo
                 GUI.DrawTexture(new Rect(logoX, logoY, logoSize, logoSize * 1.06f), texLogo, ScaleMode.ScaleToFit);
             }
 
-            float titleY = logoY + (logoSize * 1.06f) + 8f;
-            GUI.Label(new Rect(20, titleY, sw - 40, 36), "ENERGO", styleLobbyTitle);
-            GUI.Label(new Rect(20, titleY + 32, sw - 40, 20), "JELAJAHI SUMBER DAYA · PILIH ENERGI", styleLobbySub);
+            float titleY = logoY + (logoSize * 1.06f) + 10f;
+            GUI.Label(new Rect(21, titleY + 1, sw - 40, 38), "ENERGO", styleTitleShadow);
+            GUI.Label(new Rect(20, titleY, sw - 40, 38), "ENERGO", styleLobbyTitle);
+            GUI.Label(new Rect(20, titleY + 36, sw - 40, 20), "JELAJAHI SUMBER DAYA · TEMUKAN ENERGI", styleLobbySub);
 
-            // --- 3. PRIMARY ACTION: SCAN ENVIRONMENT ---
+            // --- PRIMARY ACTION: PLAY BUTTON ---
             float pulse = 1f + 0.018f * Mathf.Sin(Time.time * 3.2f);
-            float btnW = Mathf.Min(320f, sw - 44f) * pulse;
+            float btnW = Mathf.Min(290f, sw - 48f) * pulse;
             float btnH = 68f * pulse;
             float btnX = (sw - btnW) * 0.5f;
-            float btnY = Mathf.Max(titleY + 64f, sh * 0.47f - (btnH - 68f) * 0.5f);
+            float btnY = titleY + 68f;
             var playBtnRect = new Rect(btnX, btnY, btnW, btnH);
 
             bool playHover = playBtnRect.Contains(Event.current.mousePosition);
             bool playPressed = playHover && Mouse.current != null && Mouse.current.leftButton.isPressed;
 
-            GUI.color = playPressed ? new Color(0.85f, 0.85f, 0.85f, 1f) : Color.white;
-
+            GUI.color = playPressed ? new Color(0.82f, 0.82f, 0.82f, 1f) : Color.white;
             if (texBtnPlay != null)
             {
                 GUI.DrawTexture(playBtnRect, texBtnPlay, ScaleMode.StretchToFill);
@@ -596,10 +634,8 @@ namespace EnerGo
                 GUI.color = new Color(0.08f, 0.92f, 0.65f, 1f);
                 GUI.DrawTexture(playBtnRect, texWhite);
             }
-
             GUI.color = Color.white;
-            // Clean, confident typographic CTA with dark ink on mint
-            GUI.Label(new Rect(btnX, btnY + (btnH - 28f) * 0.5f, btnW, 28f), "TANGKAP " + ResourceIds.Name(selectedResource).ToUpperInvariant(), stylePlayBtnText);
+            GUI.Label(new Rect(btnX, btnY + (btnH - 32f) * 0.5f, btnW, 32f), "PLAY", stylePlayBtnText);
 
             if (inputCooldownTimer <= 0f && ButtonHit(playBtnRect))
             {
@@ -611,101 +647,345 @@ namespace EnerGo
                 }
             }
 
-            // --- 4. FIELD SCAN RESEARCH PANEL ---
-            float cardW = sw - 32f;
-            float cardH = 168f;
-            float cardX = 16f;
-            float cardY = btnY + btnH + 18f;
+            // --- SETTINGS BUTTON (red, below PLAY) ---
+            float setW = Mathf.Min(220f, sw - 80f);
+            float setH = 46f;
+            float setX = (sw - setW) * 0.5f;
+            float setY = btnY + btnH + 16f;
+            var settingsRect = new Rect(setX, setY, setW, setH);
 
-            float maxCardY = sh - 76f - cardH;
-            if (cardY > maxCardY) cardY = maxCardY;
+            bool setHover = settingsRect.Contains(Event.current.mousePosition);
+            bool setPressed = setHover && Mouse.current != null && Mouse.current.leftButton.isPressed;
+            GUI.color = setPressed ? new Color(0.55f, 0.08f, 0.08f, 1f) : new Color(0.72f, 0.10f, 0.10f, 1f);
+            GUI.DrawTexture(settingsRect, texWhite);
 
-            var cardRect = new Rect(cardX, cardY, cardW, cardH);
+            // Top accent line
+            GUI.color = new Color(1f, 0.40f, 0.40f, 0.70f);
+            GUI.DrawTexture(new Rect(setX, setY, setW, 2f), texWhite);
+            GUI.color = Color.white;
 
+            GUI.Label(settingsRect, "⚙  PENGATURAN", styleSecBtn);
+
+            if (inputCooldownTimer <= 0f && ButtonHit(settingsRect))
+            {
+                if (currentState == ScreenState.Lobby)
+                {
+                    currentState = ScreenState.DebugModal;
+                    inputCooldownTimer = 0.2f;
+                }
+            }
+        }
+
+        private void DrawDebugModal(float sw, float sh)
+        {
+            // 1. Dark Backdrop
+            GUI.color = new Color(0.02f, 0.05f, 0.08f, 0.88f);
+            GUI.DrawTexture(new Rect(0, 0, sw, sh), texWhite);
+            GUI.color = Color.white;
+
+            // 2. Modal Panel dimensions (compute first so backdrop hit-test can exclude it)
+            float mw = Mathf.Min(430f, sw - 28f);
+            float mh = Mathf.Min(560f, sh - 40f);
+            float mx = (sw - mw) * 0.5f;
+            float my = (sh - mh) * 0.5f;
+            var modalRect = new Rect(mx, my, mw, mh);
+
+            // Close when tapping OUTSIDE the modal panel
+            if (inputCooldownTimer <= 0f && Event.current.type == EventType.MouseDown
+                && !modalRect.Contains(Event.current.mousePosition))
+            {
+                currentState = ScreenState.Lobby;
+                inputCooldownTimer = 0.2f;
+                Event.current.Use();
+            }
+            // Touch support for outside-tap close
+            if (inputCooldownTimer <= 0f && Event.current.type == EventType.Repaint)
+            {
+                foreach (var touch in EnhancedTouch.activeTouches)
+                {
+                    if (touch.phase != UnityEngine.InputSystem.TouchPhase.Began) continue;
+                    var pt = new Vector2(touch.screenPosition.x / HudScale, (Screen.height - touch.screenPosition.y) / HudScale);
+                    if (!modalRect.Contains(pt))
+                    {
+                        currentState = ScreenState.Lobby;
+                        inputCooldownTimer = 0.2f;
+                        break;
+                    }
+                }
+            }
+
+            // Modal background
             GUI.color = Color.white;
             if (texCard != null)
             {
-                GUI.DrawTexture(cardRect, texCard, ScaleMode.StretchToFill);
+                GUI.DrawTexture(modalRect, texCard, ScaleMode.StretchToFill);
             }
             else
             {
-                GUI.color = new Color(0.05f, 0.12f, 0.18f, 0.92f);
-                GUI.DrawTexture(cardRect, texWhite);
+                GUI.color = new Color(0.05f, 0.12f, 0.18f, 0.98f);
+                GUI.DrawTexture(modalRect, texWhite);
                 GUI.color = Color.white;
             }
 
-            // Card Header Bar
-            float headY = cardY + 7f;
-            GUI.Label(new Rect(cardX + 24, headY, 160, 20), "PILIH SUMBER DAYA", styleCardTag);
-            GUI.Label(new Rect(cardX + cardW - 160, headY, 144, 20), "5 KETUKAN + KUIS", styleCardTagRight);
-
-            // Card Telemetry Rows
-            float rowStartY = cardY + 38f;
-            float rowGap = 24f;
-
-            DrawResourceRow(cardX + 16, rowStartY, cardW - 32, ResourceIds.Sun, "Esensi Matahari", sunCount);
-            DrawResourceRow(cardX + 16, rowStartY + rowGap, cardW - 32, ResourceIds.Coal, "Batu Bara", coalCount);
-            DrawResourceRow(cardX + 16, rowStartY + rowGap * 2, cardW - 32, ResourceIds.Gold, "Emas · koleksi", goldCount);
-            var modeRect = new Rect(cardX + 16, rowStartY + rowGap * 3 + 7f, cardW - 32, 27f);
-            GUI.Label(modeRect, useARCore ? "MODE: ARCORE (BUTUH HP DIDUKUNG)  ·  GANTI" : "MODE: SENSOR 360 (TANPA ARCORE)  ·  GANTI", styleCardRowLabel);
-            if (currentState == ScreenState.Lobby && inputCooldownTimer <= 0f && ButtonHit(modeRect)) useARCore = !useARCore;
-
-            // --- 5. BOTTOM UTILITY CONTROLS ---
-            float botY = sh - 56f;
-            float botBtnW = (sw - 42f) * 0.5f;
-            float botBtnH = 42f;
-
-            // Field Guide Button
-            var helpRect = new Rect(16f, botY, botBtnW, botBtnH);
-            if (currentState == ScreenState.Lobby && DrawSecondaryBtn(helpRect, "PANDUAN", styleSecBtn))
-            {
-                currentState = ScreenState.HelpModal;
-                inputCooldownTimer = 0.2f;
-            }
-
-            var inventoryRect = new Rect(16f + botBtnW + 10f, botY, botBtnW, botBtnH);
-            if (currentState == ScreenState.Lobby && DrawSecondaryBtn(inventoryRect, "INVENTORI", styleSecBtn))
-            {
-                currentState = ScreenState.InventoryModal;
-                inputCooldownTimer = 0.2f;
-            }
-        }
-
-        private void DrawResourceRow(float x, float y, float w, string id, string label, int count)
-        {
-            GUI.Label(new Rect(x, y, w * 0.7f, 22f), (selectedResource == id ? "● " : "○ ") + label, styleCardRowLabel);
-            GUI.Label(new Rect(x + w * 0.65f, y, w * 0.35f, 22f), count + " unit", styleCardRowVal);
-            if (currentState == ScreenState.Lobby && inputCooldownTimer <= 0f && ButtonHit(new Rect(x, y, w, 22f))) selectedResource = id;
-        }
-
-        private void DrawInventoryModal(float sw, float sh)
-        {
-            GUI.color = new Color(0.02f, 0.06f, 0.09f, 0.96f);
-            GUI.DrawTexture(new Rect(0, 0, sw, sh), texWhite);
+            // Glowing border
+            GUI.color = new Color(0.20f, 0.75f, 0.95f, 0.35f);
+            GUI.DrawTexture(new Rect(mx, my, mw, 2f), texWhite);
+            GUI.DrawTexture(new Rect(mx, my + mh - 2f, mw, 2f), texWhite);
+            GUI.DrawTexture(new Rect(mx, my, 2f, mh), texWhite);
+            GUI.DrawTexture(new Rect(mx + mw - 2f, my, 2f, mh), texWhite);
             GUI.color = Color.white;
-            float x = 24f, w = sw - 48f, y = Mathf.Max(95f, sh * 0.2f);
-            GUI.Label(new Rect(x, y, w, 35f), "INVENTORI", styleModalTitle);
-            var save = EnerGoProgress.Current;
-            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold };
-            for (int i = 0; i < ids.Length; i++)
+
+            float curY = my + 14f;
+
+            // Header
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 16), "⚙ PENGATURAN PENGEMBANG & PENGUJIAN", styleDebugTag);
+            curY += 20f;
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 26), "MODE DEBUG", styleModalTitle);
+            curY += 34f;
+
+            // Section 1: PILIH TARGET SUMBER DAYA
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), "1. PILIH TARGET SUMBER DAYA (SDA)", styleCardTag);
+            curY += 22f;
+
+            float sdaBtnH = 34f;
+            float btnGap = 8f;
+
+            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Sun, "☀️ Esensi Matahari", $"{sunCount} unit");
+            curY += sdaBtnH + btnGap;
+
+            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Coal, "🪨 Batu Bara", $"{coalCount} unit");
+            curY += sdaBtnH + btnGap;
+
+            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Gold, "🪙 Emas (Koleksi)", $"{goldCount} ore");
+            curY += sdaBtnH + btnGap + 8f;
+
+            // Section 2: MODE TRACKING KAMERA
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), "2. PILIH METODE TRACKING KAMERA", styleCardTag);
+            curY += 22f;
+
+            float toggleW = (mw - 40f - 8f) * 0.5f;
+            float toggleH = 38f;
+
+            if (DrawDebugToggleBtn(new Rect(mx + 20, curY, toggleW, toggleH), "📱 ARCORE", useARCore))
             {
-                var entry = save.Get(ids[i]);
-                GUI.Label(new Rect(x, y + 55f + i * 72f, w, 28f), ResourceIds.Name(ids[i]) + "  ·  " + entry.Total + " unit", styleCardHeader);
-                GUI.Label(new Rect(x, y + 80f + i * 72f, w, 25f), "Normal " + entry.normalQuantity + "   /   Murni " + entry.pureQuantity, styleCardRowLabel);
+                useARCore = true;
             }
-            GUI.Label(new Rect(x, y + 280f, w, 40f), "Emas adalah mineral koleksi; belum dipakai untuk membangun.", styleModalStepDesc);
-            if (DrawSecondaryBtn(new Rect(x, sh - 155f, w, 42f), "KEMBALI", styleSecBtn))
+            if (DrawDebugToggleBtn(new Rect(mx + 20 + toggleW + 8f, curY, toggleW, toggleH), "🔄 SENSOR 360", !useARCore))
+            {
+                useARCore = false;
+            }
+            curY += toggleH + 6f;
+
+            string modeDesc = useARCore ? "Scene: ARPrototype (Membutuhkan Google Play Services AR)" : "Scene: Sensor360Scene (Kompas 360° / Gyroscope)";
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), modeDesc, styleDebugDesc);
+            curY += 24f;
+
+            // Section 3: RESET PROGRES
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), "3. PENGELOLAAN DATA SAVES", styleCardTag);
+            curY += 22f;
+
+            string resetText = isConfirmingReset ? "⚠ KONFIRMASI RESET SEMUA DATA" : "RESET DATA PROGRES";
+            var resetRect = new Rect(mx + 20, curY, mw - 40, 36f);
+            if (DrawSecondaryBtn(resetRect, resetText, isConfirmingReset ? styleSecBtnWarn : styleSecBtn))
+            {
+                if (!isConfirmingReset)
+                {
+                    isConfirmingReset = true;
+                    resetConfirmTimer = 3.5f;
+                }
+                else if (EnerGoProgress.Reset())
+                {
+                    RefreshStats();
+                    isConfirmingReset = false;
+                }
+            }
+
+            // Close Button
+            var closeRect = new Rect(mx + 20, my + mh - 50f, mw - 40, 40f);
+            if (DrawSecondaryBtn(closeRect, "✓ SIMPAN & TUTUP", styleSecBtn))
             {
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
             }
-            string resetText = isConfirmingReset ? "KONFIRMASI RESET SEMUA PROGRES" : "RESET PROGRES";
-            if (DrawSecondaryBtn(new Rect(x, sh - 100f, w, 42f), resetText, isConfirmingReset ? styleSecBtnWarn : styleSecBtn))
+        }
+
+        private void DrawDebugResourceOption(float x, float y, float w, float h, string id, string label, string count)
+        {
+            bool isSelected = selectedResource == id;
+            var rect = new Rect(x, y, w, h);
+
+            GUI.color = isSelected ? new Color(0.10f, 0.32f, 0.32f, 0.95f) : new Color(0.06f, 0.14f, 0.20f, 0.85f);
+            GUI.DrawTexture(rect, texWhite);
+
+            // Left accent bar
+            GUI.color = isSelected ? new Color(0.12f, 0.90f, 0.70f, 1f) : new Color(0.20f, 0.35f, 0.45f, 0.5f);
+            GUI.DrawTexture(new Rect(rect.x, rect.y, 4f, rect.height), texWhite);
+            GUI.color = Color.white;
+
+            GUI.Label(new Rect(x + 12f, y + 6f, w - 100f, 22f), label, isSelected ? styleDebugOptionActive : styleDebugOptionInactive);
+            GUI.Label(new Rect(x + w - 90f, y + 6f, 80f, 22f), isSelected ? $"✓ {count}" : count, styleCardRowVal);
+
+            if (inputCooldownTimer <= 0f && ButtonHit(rect))
             {
-                if (!isConfirmingReset) { isConfirmingReset = true; resetConfirmTimer = 3.5f; }
-                else if (EnerGoProgress.Reset()) { RefreshStats(); isConfirmingReset = false; }
+                selectedResource = id;
+                inputCooldownTimer = 0.15f;
             }
-            if (!string.IsNullOrEmpty(EnerGoProgress.Error)) GUI.Label(new Rect(x, sh - 45f, w, 35f), EnerGoProgress.Error, styleModalStepDesc);
+        }
+
+        private bool DrawDebugToggleBtn(Rect rect, string text, bool isActive)
+        {
+            GUI.color = isActive ? new Color(0.10f, 0.32f, 0.32f, 0.95f) : new Color(0.06f, 0.14f, 0.20f, 0.85f);
+            GUI.DrawTexture(rect, texWhite);
+
+            GUI.color = isActive ? new Color(0.12f, 0.90f, 0.70f, 1f) : new Color(0.20f, 0.35f, 0.45f, 0.5f);
+            GUI.DrawTexture(new Rect(rect.x, rect.y, 3f, rect.height), texWhite);
+            if (isActive)
+            {
+                GUI.DrawTexture(new Rect(rect.x, rect.y + rect.height - 2f, rect.width, 2f), texWhite);
+            }
+            GUI.color = Color.white;
+
+            GUI.Label(rect, text + (isActive ? "  [✓]" : ""), isActive ? styleDebugOptionActive : styleDebugOptionInactive);
+
+            if (inputCooldownTimer <= 0f && ButtonHit(rect))
+            {
+                inputCooldownTimer = 0.15f;
+                return true;
+            }
+            return false;
+        }
+
+        private bool DrawDebugPill(Rect rect, string text)
+        {
+            bool isPressed = rect.Contains(Event.current.mousePosition) && Mouse.current != null && Mouse.current.leftButton.isPressed;
+            GUI.color = isPressed ? new Color(0.15f, 0.25f, 0.30f, 0.98f) : new Color(0.08f, 0.16f, 0.22f, 0.92f);
+            GUI.DrawTexture(rect, texWhite);
+
+            // Amber top border for tech vibe
+            GUI.color = new Color(1f, 0.72f, 0.28f, 0.85f);
+            GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 2f), texWhite);
+            GUI.color = Color.white;
+
+            GUI.Label(rect, text, styleDebugTag);
+
+            if (inputCooldownTimer <= 0f && ButtonHit(rect))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private void DrawResourceChip(Rect rect, string label, string value, Color accentColor)
+        {
+            GUI.color = new Color(0.05f, 0.11f, 0.16f, 0.90f);
+            GUI.DrawTexture(rect, texWhite);
+
+            GUI.color = accentColor;
+            GUI.DrawTexture(new Rect(rect.x, rect.y, 3f, rect.height), texWhite);
+            GUI.color = Color.white;
+
+            // 1-line compact chip: label left, value right
+            GUI.Label(new Rect(rect.x + 6f, rect.y + 7f, rect.width - 40f, 18f), label, styleHudLabel);
+            GUI.Label(new Rect(rect.x + rect.width - 36f, rect.y + 7f, 30f, 18f), value, styleHudValue);
+        }
+
+        private bool DrawTargetChip(Rect rect, string text)
+        {
+            bool isPressed = rect.Contains(Event.current.mousePosition) && Mouse.current != null && Mouse.current.leftButton.isPressed;
+            GUI.color = isPressed ? new Color(0.10f, 0.24f, 0.28f, 0.95f) : new Color(0.05f, 0.12f, 0.18f, 0.88f);
+            GUI.DrawTexture(rect, texWhite);
+
+            // Subtle border
+            GUI.color = new Color(0.18f, 0.90f, 0.72f, 0.45f);
+            GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 1f), texWhite);
+            GUI.DrawTexture(new Rect(rect.x, rect.y + rect.height - 1f, rect.width, 1f), texWhite);
+            GUI.color = Color.white;
+
+            GUI.Label(rect, text, styleTargetTag);
+
+            if (inputCooldownTimer <= 0f && ButtonHit(rect))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private void DrawInventoryModal(float sw, float sh)
+        {
+            // 1. Dark Backdrop
+            GUI.color = new Color(0.02f, 0.05f, 0.08f, 0.88f);
+            var backdropRect = new Rect(0, 0, sw, sh);
+            GUI.DrawTexture(backdropRect, texWhite);
+            GUI.color = Color.white;
+
+            if (inputCooldownTimer <= 0f && ButtonHit(backdropRect))
+            {
+                currentState = ScreenState.Lobby;
+                inputCooldownTimer = 0.2f;
+            }
+
+            // 2. Modal Card
+            float mw = Mathf.Min(430f, sw - 28f);
+            float mh = Mathf.Min(470f, sh - 50f);
+            float mx = (sw - mw) * 0.5f;
+            float my = (sh - mh) * 0.5f;
+            var modalRect = new Rect(mx, my, mw, mh);
+
+            GUI.Button(modalRect, GUIContent.none, GUIStyle.none);
+
+            GUI.color = Color.white;
+            if (texCard != null)
+            {
+                GUI.DrawTexture(modalRect, texCard, ScaleMode.StretchToFill);
+            }
+            else
+            {
+                GUI.color = new Color(0.05f, 0.12f, 0.18f, 0.98f);
+                GUI.DrawTexture(modalRect, texWhite);
+                GUI.color = Color.white;
+            }
+
+            // Header
+            float topY = my + 12f;
+            GUI.Label(new Rect(mx + 20, topY, mw - 40, 16), "🎒 DATA KOLEKSI & MINERAL", styleModalTag);
+            GUI.Label(new Rect(mx + 20, topY + 24, mw - 40, 26), "INVENTORI SUMBER DAYA", styleModalTitle);
+
+            // Resource Cards
+            var save = EnerGoProgress.Current;
+            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold };
+            string[] icons = { "☀️", "🪨", "🪙" };
+            Color[] colors = { new Color(1f, 0.82f, 0.28f), new Color(0.40f, 0.80f, 0.95f), new Color(0.98f, 0.82f, 0.25f) };
+
+            float startY = topY + 62f;
+            float rowH = 58f;
+            for (int i = 0; i < ids.Length; i++)
+            {
+                var entry = save.Get(ids[i]);
+                float rowY = startY + i * (rowH + 8f);
+                var rowRect = new Rect(mx + 20, rowY, mw - 40, rowH);
+
+                GUI.color = new Color(0.06f, 0.14f, 0.20f, 0.85f);
+                GUI.DrawTexture(rowRect, texWhite);
+
+                GUI.color = colors[i];
+                GUI.DrawTexture(new Rect(rowRect.x, rowRect.y, 3f, rowRect.height), texWhite);
+                GUI.color = Color.white;
+
+                string resTitle = $"{icons[i]} {ResourceIds.Name(ids[i])}";
+                GUI.Label(new Rect(rowRect.x + 12, rowY + 8f, rowRect.width - 120f, 22f), resTitle, styleCardHeader);
+                GUI.Label(new Rect(rowRect.x + rowRect.width - 110f, rowY + 8f, 100f, 22f), $"{entry.Total} unit", styleCardRowVal);
+                GUI.Label(new Rect(rowRect.x + 12, rowY + 30f, rowRect.width - 24f, 20f), $"Normal: {entry.normalQuantity}  ·  Murni: {entry.pureQuantity}", styleCardRowLabel);
+            }
+
+            GUI.Label(new Rect(mx + 20, startY + 3 * (rowH + 8f) + 6f, mw - 40, 36f), "Emas adalah mineral koleksi; belum dipakai untuk membangun.", styleModalStepDesc);
+
+            // Close Button
+            var closeRect = new Rect(mx + 20, my + mh - 50f, mw - 40, 40f);
+            if (DrawSecondaryBtn(closeRect, "TUTUP INVENTORI", styleSecBtn))
+            {
+                currentState = ScreenState.Lobby;
+                inputCooldownTimer = 0.2f;
+            }
         }
 
         private void DrawPillCustom(Rect rect, string label, string value, GUIStyle sLabel, GUIStyle sVal)

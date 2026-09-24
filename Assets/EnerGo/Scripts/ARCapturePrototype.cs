@@ -46,6 +46,22 @@ namespace EnerGo
         private Vector2 previousTouchPos;
         private bool isDraggingLook = false;
 
+        // ─── Swipe Card State ───────────────────────────────────────
+        private Vector2  cardOffset      = Vector2.zero;   // current drag displacement (scaled)
+        private Vector2  cardVelocity    = Vector2.zero;   // momentum for flick
+        private bool     isDraggingCard  = false;          // true while finger is on card
+        private Vector2  cardDragStart   = Vector2.zero;   // screen-space drag start
+        private bool     cardFlicking    = false;          // animating off-screen
+        private bool     cardReturning   = false;          // snapping back to center
+        private const float SwipeThreshold   = 90f;        // pixels (scaled) to commit
+        private const float FlickSpeed       = 2800f;      // pixels/sec exit speed
+        private const float ReturnSmoothing  = 12f;        // lerp speed for snap-back
+        private GUIStyle styleSwipeBenar;
+        private GUIStyle styleSwipeSalah;
+        private GUIStyle styleCardStatement;
+        private GUIStyle styleCardHint;
+        private bool cardStylesInit = false;
+
         // Visual Feedback
         private string feedback = "Memulai inisialisasi sensor spasial...";
         private float lastHitTime = -10f;
@@ -296,8 +312,17 @@ namespace EnerGo
 
         private void HandleInputs()
         {
+            // ── When quiz card is showing, route input to card swipe ──
+            if (EnerGoProgress.Current.pendingCapture != null
+                && EnerGoProgress.Current.pendingCapture.state == "awaiting-analysis")
+            {
+                HandleCardSwipeInput();
+                return;
+            }
+
             if (EnerGoProgress.Current.pendingCapture != null) return;
-            // Touch inputs
+
+            // Touch inputs (AR / Gyro look + tap-to-collect)
             foreach (var touch in EnhancedTouch.activeTouches)
             {
                 if (touch.phase == UnityEngine.InputSystem.TouchPhase.Began)
@@ -320,7 +345,6 @@ namespace EnerGo
                 }
             }
 
-            // Mouse inputs (Editor / Desktop)
 #if UNITY_EDITOR
             if (Mouse.current != null)
             {
@@ -329,8 +353,6 @@ namespace EnerGo
                     Vector2 mPos = Mouse.current.position.ReadValue();
                     CheckTapOnTarget(mPos);
                 }
-
-                // Right click drag to look around
                 if (Mouse.current.rightButton.isPressed && isUsingGyro)
                 {
                     Vector2 delta = Mouse.current.delta.ReadValue();
@@ -340,6 +362,102 @@ namespace EnerGo
                 }
             }
 #endif
+        }
+
+        // ─── Card Swipe Input (called instead of HandleInputs during quiz) ────
+        private void HandleCardSwipeInput()
+        {
+            if (cardFlicking) return; // ignore input while card is animating off
+
+            float scale = HudScale;
+
+            // ── TOUCH ──
+            foreach (var touch in EnhancedTouch.activeTouches)
+            {
+                if (touch.phase == UnityEngine.InputSystem.TouchPhase.Began && !isDraggingCard)
+                {
+                    isDraggingCard  = true;
+                    cardReturning   = false;
+                    cardDragStart   = touch.screenPosition;
+                    cardVelocity    = Vector2.zero;
+                }
+                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Moved && isDraggingCard)
+                {
+                    Vector2 raw = touch.screenPosition - cardDragStart;
+                    cardOffset   = new Vector2(raw.x / scale, -raw.y / scale);
+                    cardVelocity = new Vector2(
+                        (touch.screenPosition.x - previousTouchPos.x) / scale / Time.deltaTime,
+                        -(touch.screenPosition.y - previousTouchPos.y) / scale / Time.deltaTime);
+                    previousTouchPos = touch.screenPosition;
+                }
+                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Ended && isDraggingCard)
+                {
+                    isDraggingCard = false;
+                    CommitOrReturnCard();
+                }
+            }
+
+#if UNITY_EDITOR
+            if (Mouse.current != null)
+            {
+                if (Mouse.current.leftButton.wasPressedThisFrame && !isDraggingCard)
+                {
+                    isDraggingCard  = true;
+                    cardReturning   = false;
+                    cardDragStart   = Mouse.current.position.ReadValue();
+                    cardVelocity    = Vector2.zero;
+                    previousTouchPos = cardDragStart;
+                }
+                else if (Mouse.current.leftButton.isPressed && isDraggingCard)
+                {
+                    Vector2 mPos = Mouse.current.position.ReadValue();
+                    Vector2 raw  = mPos - cardDragStart;
+                    cardOffset   = new Vector2(raw.x / scale, -raw.y / scale);
+                    cardVelocity = new Vector2(
+                        Mouse.current.delta.ReadValue().x / scale / Time.deltaTime,
+                        -Mouse.current.delta.ReadValue().y / scale / Time.deltaTime);
+                    previousTouchPos = mPos;
+                }
+                else if (Mouse.current.leftButton.wasReleasedThisFrame && isDraggingCard)
+                {
+                    isDraggingCard = false;
+                    CommitOrReturnCard();
+                }
+            }
+#endif
+
+            // ── Animate flick / return ──
+            if (cardFlicking)
+            {
+                float exitDir = cardOffset.x >= 0f ? 1f : -1f;
+                cardOffset += new Vector2(exitDir * FlickSpeed * Time.deltaTime,
+                                          cardVelocity.y * Time.deltaTime * 0.4f);
+            }
+            else if (cardReturning)
+            {
+                cardOffset = Vector2.Lerp(cardOffset, Vector2.zero, ReturnSmoothing * Time.deltaTime);
+                if (cardOffset.magnitude < 1f) { cardOffset = Vector2.zero; cardReturning = false; }
+            }
+        }
+
+        private void CommitOrReturnCard()
+        {
+            if (Mathf.Abs(cardOffset.x) >= SwipeThreshold)
+            {
+                // Commit answer: left = true (BENAR), right = false (SALAH)
+                bool answer = cardOffset.x < 0f;
+                cardFlicking = true;
+                // Slight delay via coroutine is not available in OnGUI; we'll
+                // commit immediately and let the flick animation play for one frame.
+                if (EnerGoProgress.Answer(answer))
+                {
+                    resultShownAt = Time.time;
+                }
+            }
+            else
+            {
+                cardReturning = true;
+            }
         }
 
         private bool CheckTapOnTarget(Vector2 screenPosition)
@@ -668,36 +786,179 @@ namespace EnerGo
             GUI.matrix = prevMatrix;
         }
 
+        private void InitCardStyles()
+        {
+            if (cardStylesInit) return;
+            styleSwipeBenar = new GUIStyle(GUI.skin.label)
+            {
+                fontSize       = 28,
+                fontStyle      = FontStyle.Bold,
+                alignment      = TextAnchor.MiddleCenter,
+                wordWrap       = false,
+                normal         = { textColor = new Color(0.12f, 0.95f, 0.62f) }
+            };
+            styleSwipeSalah = new GUIStyle(GUI.skin.label)
+            {
+                fontSize       = 28,
+                fontStyle      = FontStyle.Bold,
+                alignment      = TextAnchor.MiddleCenter,
+                wordWrap       = false,
+                normal         = { textColor = new Color(0.98f, 0.32f, 0.32f) }
+            };
+            styleCardStatement = new GUIStyle(GUI.skin.label)
+            {
+                fontSize       = 15,
+                fontStyle      = FontStyle.Normal,
+                alignment      = TextAnchor.MiddleCenter,
+                wordWrap       = true,
+                normal         = { textColor = Color.white }
+            };
+            styleCardHint = new GUIStyle(GUI.skin.label)
+            {
+                fontSize       = 10,
+                fontStyle      = FontStyle.Normal,
+                alignment      = TextAnchor.MiddleCenter,
+                wordWrap       = false,
+                normal         = { textColor = new Color(0.50f, 0.68f, 0.80f) }
+            };
+            cardStylesInit = true;
+        }
+
         private void DrawAnalysis(float sw, float sh)
         {
-            var session = EnerGoProgress.Current.pendingCapture;
+            InitCardStyles();
+
+            var session  = EnerGoProgress.Current.pendingCapture;
             var question = QuizBank.Find(session.questionId, session.resourceId);
             if (question == null) return;
-            GUI.color = new Color(0.02f, 0.06f, 0.09f, 0.97f);
+
+            // ── Dark full-screen backdrop ──────────────────────────────────
+            GUI.color = new Color(0.03f, 0.07f, 0.11f, 0.96f);
             GUI.DrawTexture(new Rect(0, 0, sw, sh), texWhite);
             GUI.color = Color.white;
-            float x = 24f, w = sw - 48f, y = Mathf.Max(150f, sh * 0.28f);
-            var heading = new GUIStyle(styleRadarLocked) { alignment = TextAnchor.MiddleLeft, fontSize = 17, wordWrap = true };
-            var body = new GUIStyle(styleStatusSub) { alignment = TextAnchor.UpperLeft, fontSize = 14, wordWrap = true };
-            GUI.Label(new Rect(x, y - 45f, w, 30f), session.state == "result" ? "HASIL ANALISIS" : "ANALISIS · " + ResourceIds.Name(resourceId).ToUpperInvariant(), heading);
-            if (session.state == "awaiting-analysis")
+
+            var heading = new GUIStyle(styleRadarLocked) { alignment = TextAnchor.MiddleLeft, fontSize = 14, wordWrap = true };
+            var body    = new GUIStyle(styleStatusSub)   { alignment = TextAnchor.UpperLeft,  fontSize = 14, wordWrap = true };
+
+            // ── RESULT SCREEN (unchanged logic) ──────────────────────────
+            if (session.state == "result")
             {
-                GUI.Label(new Rect(x, y, w, 100f), question.statement, body);
-                if (DrawBtn(new Rect(x, y + 120f, w, 48f), "BENAR", styleBtnText) && EnerGoProgress.Answer(true)) resultShownAt = Time.time;
-                if (DrawBtn(new Rect(x, y + 180f, w, 48f), "SALAH", styleBtnText) && EnerGoProgress.Answer(false)) resultShownAt = Time.time;
-            }
-            else
-            {
-                GUI.Label(new Rect(x, y, w, 45f), (session.correct ? "TEPAT · MURNI" : "BELUM TEPAT · NORMAL") + "  +" + session.rewardQuantity + " unit", heading);
+                float x = 24f, w = sw - 48f, y = Mathf.Max(120f, sh * 0.25f);
+                GUI.Label(new Rect(x, y - 40f, w, 30f), "HASIL ANALISIS", heading);
+                GUI.Label(new Rect(x, y, w, 45f),
+                    (session.correct ? "TEPAT · MURNI" : "BELUM TEPAT · NORMAL") + "  +" + session.rewardQuantity + " unit", heading);
                 GUI.Label(new Rect(x, y + 55f, w, 120f), question.explanation, body);
                 bool canContinue = session.correct || Time.time - resultShownAt >= 3f;
                 if (canContinue && DrawBtn(new Rect(x, y + 190f, w, 48f), "LANJUT KE LOBBY", styleBtnText))
                 {
-                    if (EnerGoProgress.ClearResult()) SceneManager.LoadScene("LobbyScene");
+                    if (EnerGoProgress.ClearResult())
+                    {
+                        cardOffset   = Vector2.zero;
+                        cardFlicking = false;
+                        cardReturning = false;
+                        SceneManager.LoadScene("LobbyScene");
+                    }
                 }
-                else if (!canContinue) GUI.Label(new Rect(x, y + 190f, w, 40f), "Baca penjelasan sebelum melanjutkan...", body);
+                else if (!canContinue)
+                    GUI.Label(new Rect(x, y + 190f, w, 40f), "Baca penjelasan sebelum melanjutkan...", body);
+
+                if (!string.IsNullOrEmpty(EnerGoProgress.Error))
+                    GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, body);
+                return;
             }
-            if (!string.IsNullOrEmpty(EnerGoProgress.Error)) GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, body);
+
+            // ── SWIPE CARD QUIZ ───────────────────────────────────────────
+            if (cardFlicking && Mathf.Abs(cardOffset.x) > sw * 1.1f)
+            {
+                // Card has fully left the screen – stop animating
+                cardFlicking  = false;
+                cardOffset    = Vector2.zero;
+                cardReturning = false;
+                return;
+            }
+
+            // Card dimensions
+            float cw = Mathf.Min(sw - 40f, 360f);
+            float ch = Mathf.Min(sh * 0.55f, 320f);
+            float cx = (sw - cw) * 0.5f + cardOffset.x;
+            float cy = (sh - ch) * 0.5f + cardOffset.y;
+
+            // Rotation (clamped to ±18°)
+            float rotDeg = Mathf.Clamp(cardOffset.x * 0.08f, -18f, 18f);
+            float rotRad = rotDeg * Mathf.Deg2Rad;
+
+            // Save matrix and apply rotation around card centre
+            var prevMatrix = GUI.matrix;
+            Vector2 pivot  = new Vector2(cx + cw * 0.5f, cy + ch * 0.5f);
+            GUIUtility.RotateAroundPivot(rotDeg, pivot);
+
+            // ── Card shadow ──
+            float shadowAlpha = 0.25f + Mathf.Abs(cardOffset.x) / sw * 0.25f;
+            GUI.color = new Color(0f, 0f, 0f, shadowAlpha);
+            GUI.DrawTexture(new Rect(cx + 6f, cy + 8f, cw, ch), texWhite);
+
+            // ── Card face ──
+            GUI.color = new Color(0.06f, 0.14f, 0.22f, 0.98f);
+            GUI.DrawTexture(new Rect(cx, cy, cw, ch), texWhite);
+
+            // Border tint changes with swipe direction
+            float swipeRatio = Mathf.Clamp01(Mathf.Abs(cardOffset.x) / SwipeThreshold);
+            bool  goingLeft  = cardOffset.x < 0f;
+            Color borderCol  = goingLeft
+                ? Color.Lerp(new Color(0.20f, 0.75f, 0.55f, 0.30f), new Color(0.12f, 0.95f, 0.62f, 0.90f), swipeRatio)
+                : Color.Lerp(new Color(0.75f, 0.20f, 0.20f, 0.30f), new Color(0.98f, 0.32f, 0.32f, 0.90f), swipeRatio);
+            GUI.color = borderCol;
+            GUI.DrawTexture(new Rect(cx,          cy,          cw,   2f), texWhite);
+            GUI.DrawTexture(new Rect(cx,          cy + ch - 2, cw,   2f), texWhite);
+            GUI.DrawTexture(new Rect(cx,          cy,          2f, ch   ), texWhite);
+            GUI.DrawTexture(new Rect(cx + cw - 2, cy,          2f, ch   ), texWhite);
+            GUI.color = Color.white;
+
+            // ── Resource tag ──
+            float innerX = cx + 16f;
+            float innerW = cw - 32f;
+            GUI.Label(new Rect(innerX, cy + 14f, innerW, 16f),
+                "ANALISIS · " + ResourceIds.Name(resourceId).ToUpperInvariant(), styleHeaderTag);
+
+            // ── Statement text ──
+            GUI.Label(new Rect(innerX, cy + 38f, innerW, ch - 120f), question.statement, styleCardStatement);
+
+            // ── Hint ──
+            GUI.Label(new Rect(innerX, cy + ch - 36f, innerW, 20f),
+                "← geser kiri: BENAR   |   geser kanan: SALAH →", styleCardHint);
+
+            GUI.matrix = prevMatrix;
+
+            // ── BENAR overlay (left swipe) ──
+            if (cardOffset.x < -4f)
+            {
+                float a = Mathf.Clamp01(-cardOffset.x / SwipeThreshold);
+                Color benarCol = new Color(0.12f, 0.95f, 0.62f, a);
+                // Left badge
+                GUI.color = new Color(benarCol.r, benarCol.g, benarCol.b, a * 0.18f);
+                GUI.DrawTexture(new Rect(cx, cy, cw * 0.5f, ch), texWhite);
+                GUI.color = Color.white;
+                styleSwipeBenar.normal.textColor = benarCol;
+                GUI.Label(new Rect(cx + 8f, cy, cw * 0.45f, ch), "✓ BENAR", styleSwipeBenar);
+            }
+
+            // ── SALAH overlay (right swipe) ──
+            if (cardOffset.x > 4f)
+            {
+                float a = Mathf.Clamp01(cardOffset.x / SwipeThreshold);
+                Color salahCol = new Color(0.98f, 0.32f, 0.32f, a);
+                GUI.color = new Color(salahCol.r, salahCol.g, salahCol.b, a * 0.18f);
+                GUI.DrawTexture(new Rect(cx + cw * 0.5f, cy, cw * 0.5f, ch), texWhite);
+                GUI.color = Color.white;
+                styleSwipeSalah.normal.textColor = salahCol;
+                GUI.Label(new Rect(cx + cw * 0.55f, cy, cw * 0.45f, ch), "✗ SALAH", styleSwipeSalah);
+            }
+
+            if (!string.IsNullOrEmpty(EnerGoProgress.Error))
+            {
+                float x = 24f, w = sw - 48f;
+                GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, body);
+            }
         }
 
         private void DrawRadarHUD(float sw, float sh)
