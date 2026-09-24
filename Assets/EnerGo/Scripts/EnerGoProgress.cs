@@ -27,11 +27,18 @@ namespace EnerGo
     {
         public string sessionId;
         public string resourceId;
-        public string questionId;
-        public string state; // awaiting-analysis or result
+        public string questionId;    // the question currently on screen
+        public string state;         // awaiting-analysis (answering), feedback (after an answer), result (final)
         public bool selectedAnswer;
-        public bool correct;
+        public bool correct;         // was the latest answer right
         public int rewardQuantity;
+        public string[] questionIds; // all questions of this capture; empty in saves from the 1-question version
+        public int questionIndex;
+        public int correctCount;
+
+        public int QuestionCount => questionIds != null && questionIds.Length > 0 ? questionIds.Length : 1;
+        public bool IsLastQuestion => questionIndex >= QuestionCount - 1;
+        public bool Pure => correctCount == QuestionCount; // every answer right
     }
 
     [Serializable]
@@ -125,9 +132,15 @@ namespace EnerGo
                 if (matches != 1) return false;
             }
             var session = value.pendingCapture;
-            return session == null ||
-                   (!string.IsNullOrEmpty(session.sessionId) && QuizBank.Find(session.questionId, session.resourceId) != null &&
-                    (session.state == "awaiting-analysis" || session.state == "result") && session.rewardQuantity >= 0 && session.rewardQuantity <= 3);
+            if (session == null) return true;
+            if (string.IsNullOrEmpty(session.sessionId) || QuizBank.Find(session.questionId, session.resourceId) == null) return false;
+            if (session.state != "awaiting-analysis" && session.state != "feedback" && session.state != "result") return false;
+            if (session.questionIds != null)
+                foreach (var id in session.questionIds)
+                    if (QuizBank.Find(id, session.resourceId) == null) return false;
+            return session.questionIndex >= 0 && session.questionIndex < session.QuestionCount &&
+                   session.correctCount >= 0 && session.correctCount <= session.QuestionCount &&
+                   session.rewardQuantity >= 0 && session.rewardQuantity <= 1 + QuizBank.QuestionsPerCapture; // old 1-question saves stored up to 3
         }
 
         public static bool Commit(SaveGame next)
@@ -170,11 +183,11 @@ namespace EnerGo
         {
             if (Current.pendingCapture != null || QuizBank.ForResource(resourceId).Length == 0) return false;
             var next = Copy();
-            var questions = QuizBank.ForResource(resourceId);
+            var ids = QuizBank.PickForCapture(resourceId, QuizBank.QuestionsPerCapture);
             next.pendingCapture = new CaptureSession
             {
                 sessionId = Guid.NewGuid().ToString("N"), resourceId = resourceId,
-                questionId = questions[UnityEngine.Random.Range(0, questions.Length)].id,
+                questionIds = ids, questionIndex = 0, questionId = ids[0],
                 state = "awaiting-analysis"
             };
             return Commit(next);
@@ -187,14 +200,39 @@ namespace EnerGo
             var question = QuizBank.Find(pending.questionId, pending.resourceId);
             if (question == null) return false;
             var next = Copy();
-            next.pendingCapture.selectedAnswer = answer;
-            next.pendingCapture.correct = question.correctAnswer == answer;
-            next.pendingCapture.rewardQuantity = next.pendingCapture.correct ? 3 : 2;
-            next.pendingCapture.state = "result";
-            var entry = next.Get(pending.resourceId);
-            if (next.pendingCapture.correct) entry.pureQuantity += 3;
-            else entry.normalQuantity += 2;
-            next.lastCommittedCaptureId = pending.sessionId;
+            var session = next.pendingCapture;
+            session.selectedAnswer = answer;
+            session.correct = question.correctAnswer == answer;
+            if (session.correct) session.correctCount++;
+            session.state = "feedback";
+            if (session.IsLastQuestion)
+            {
+                // Reward is granted together with the last answer: 1 unit + 1 per correct answer, "Murni" only if all correct.
+                session.rewardQuantity = RewardFor(session.correctCount);
+                var entry = next.Get(session.resourceId);
+                if (session.Pure) entry.pureQuantity += session.rewardQuantity;
+                else entry.normalQuantity += session.rewardQuantity;
+                next.lastCommittedCaptureId = session.sessionId;
+            }
+            return Commit(next);
+        }
+
+        public static int RewardFor(int correctCount) => 1 + correctCount;
+
+        // From the per-answer feedback card: show the next question, or the final result after the last one.
+        public static bool NextQuestion()
+        {
+            var pending = Current.pendingCapture;
+            if (pending == null || pending.state != "feedback") return false;
+            var next = Copy();
+            var session = next.pendingCapture;
+            if (session.IsLastQuestion) session.state = "result";
+            else
+            {
+                session.questionIndex++;
+                session.questionId = session.questionIds[session.questionIndex];
+                session.state = "awaiting-analysis";
+            }
             return Commit(next);
         }
 

@@ -27,12 +27,12 @@ namespace EnerGo
         // UI Textures
         private Texture2D texLogo;
         private Texture2D texBg;
-        private Texture2D texBtnPlay;
         private Texture2D texBtnSec;
         private Texture2D texCard;
         private Texture2D texPill;
         private Texture2D texWhite;
         private Texture2D texProgressBar;
+        private Texture2D texScrim;
 
         // Splash Timers & Animation
         private float splashTimer = 0f;
@@ -57,10 +57,14 @@ namespace EnerGo
         private int coalCount;
         private string selectedResource = ResourceIds.Gold;
         private bool useARCore;
-        private int lastTouchButtonFrame = -1;
+        private const string PrefUseARCore = "EnerGo.UseARCore";
+        private const string PrefResource = "EnerGo.SelectedResource";
+        private const string RandomResource = "random"; // settings choice: a different SDA picked on every PLAY
+        private static readonly string[] AllResources = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold };
 
         // Custom Styles
         private GUIStyle styleSplashTitle;
+        private GUIStyle styleSplashTitleShadow;
         private GUIStyle styleSplashSub;
         private GUIStyle styleSplashStatus;
         private GUIStyle styleSplashHint;
@@ -100,6 +104,10 @@ namespace EnerGo
 
         private float HudScale => Mathf.Max(1f, Mathf.Min(Screen.width / 480f, Screen.height / 800f));
 
+        // Mini-games are played by tilting and aiming, often without touching the screen, so never let it dim.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void KeepScreenAwake() => Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
         private void OnEnable() { EnhancedTouchSupport.Enable(); }
         private void OnDisable() { EnhancedTouchSupport.Disable(); }
         private void OnApplicationPause(bool paused) { if (paused && EnerGoProgress.Current != null) EnerGoProgress.Commit(EnerGoProgress.Current); }
@@ -107,6 +115,12 @@ namespace EnerGo
         private void Awake()
         {
             Application.targetFrameRate = 60;
+
+            // Settings survive going to the capture scene and restarting the app.
+            useARCore = PlayerPrefs.GetInt(PrefUseARCore, 0) == 1;
+            string savedResource = PlayerPrefs.GetString(PrefResource, ResourceIds.Gold);
+            selectedResource = savedResource == ResourceIds.Sun || savedResource == ResourceIds.Coal || savedResource == RandomResource
+                ? savedResource : ResourceIds.Gold;
 
             if (hasShownSplash)
             {
@@ -150,7 +164,6 @@ namespace EnerGo
         {
             texLogo = Resources.Load<Texture2D>("UI/logo_game");
             texBg = Resources.Load<Texture2D>("UI/bg_lobby");
-            texBtnPlay = Resources.Load<Texture2D>("UI/btn_play");
             texBtnSec = Resources.Load<Texture2D>("UI/btn_secondary");
             texCard = Resources.Load<Texture2D>("UI/card_panel");
             texPill = Resources.Load<Texture2D>("UI/pill_badge");
@@ -172,12 +185,23 @@ namespace EnerGo
                 texProgressBar.SetPixels(new[] { barColor, barColor, barColor, barColor });
                 texProgressBar.Apply();
             }
+
+            if (texScrim == null)
+            {
+                // Vertical fade: transparent at the top, dark navy at the bottom (y=0 is the bottom row).
+                const int h = 32;
+                texScrim = new Texture2D(1, h) { wrapMode = TextureWrapMode.Clamp };
+                for (int y = 0; y < h; y++)
+                    texScrim.SetPixel(0, y, new Color(0.01f, 0.04f, 0.07f, 0.85f * (1f - y / (h - 1f))));
+                texScrim.Apply();
+            }
         }
 
         private void OnDestroy()
         {
             if (texWhite != null) Destroy(texWhite);
             if (texProgressBar != null) Destroy(texProgressBar);
+            if (texScrim != null) Destroy(texScrim);
         }
 
         private void Update()
@@ -250,28 +274,34 @@ namespace EnerGo
                 normal = { textColor = Color.white }
             };
 
+            styleSplashTitleShadow = new GUIStyle(styleSplashTitle)
+            {
+                normal = { textColor = new Color(0f, 0.03f, 0.06f, 0.75f) }
+            };
+
             styleSplashSub = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 12,
-                fontStyle = FontStyle.Normal,
+                fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.55f, 0.78f, 0.92f) }
+                normal = { textColor = new Color(0.72f, 0.92f, 1f) }
             };
 
             styleSplashStatus = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 11,
-                fontStyle = FontStyle.Normal,
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.18f, 0.94f, 0.72f) }
+                richText = true,
+                normal = { textColor = Color.white }
             };
 
             styleSplashHint = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 10,
-                fontStyle = FontStyle.Normal,
+                fontSize = 11,
+                fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.48f, 0.65f, 0.75f) }
+                normal = { textColor = new Color(0.90f, 0.96f, 1f) }
             };
 
             // Top HUD Telemetry
@@ -311,9 +341,9 @@ namespace EnerGo
             styleLobbySub = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 11,
-                fontStyle = FontStyle.Normal,
+                fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.48f, 0.72f, 0.85f) }
+                normal = { textColor = new Color(0.72f, 0.92f, 1f) }
             };
 
             // CTA Button
@@ -468,6 +498,12 @@ namespace EnerGo
                 normal = { textColor = new Color(0.55f, 0.72f, 0.85f) }
             };
 
+            EnerGoUI.ApplyFont(styleSplashTitle, styleSplashTitleShadow, styleSplashSub, styleSplashStatus, styleSplashHint,
+                styleHudLabel, styleHudValue, styleHudGold, styleLobbyTitle, styleLobbySub, stylePlayBtnText,
+                styleCardTag, styleCardTagRight, styleCardHeader, styleCardRowLabel, styleCardRowVal,
+                styleSecBtn, styleSecBtnWarn, styleModalTag, styleModalTitle, styleModalStepNum,
+                styleModalStepTitle, styleModalStepDesc, styleTitleShadow, styleTargetTag, styleDebugTag,
+                styleDebugDesc, styleDebugOptionActive, styleDebugOptionInactive);
             stylesInitialized = true;
         }
 
@@ -476,7 +512,7 @@ namespace EnerGo
             InitStyles();
 
             if (texLogo == null) LoadTextures();
-            if (texWhite == null || texProgressBar == null) CreateSolidTextures();
+            if (texWhite == null || texProgressBar == null || texScrim == null) CreateSolidTextures();
 
             var prevMatrix = GUI.matrix;
             var prevColor = GUI.color;
@@ -567,19 +603,30 @@ namespace EnerGo
                 GUI.DrawTexture(new Rect(logoX, logoY, logoW, logoH), texLogo, ScaleMode.ScaleToFit);
             }
 
+            // Dark scrim from mid-screen down: the bright sky/forest background washes out the text.
+            float scrimY = sh * 0.45f;
+            GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.DrawTexture(new Rect(0, scrimY, sw, sh - scrimY), texScrim, ScaleMode.StretchToFill);
+
             // Typography
             float textY = logoY + logoH + 16f;
+            GUI.Label(new Rect(22, textY + 2, sw - 40, 48), "ENERGO", styleSplashTitleShadow);
             GUI.Label(new Rect(20, textY, sw - 40, 48), "ENERGO", styleSplashTitle);
-            GUI.Label(new Rect(20, textY + 44, sw - 40, 20), "JELAJAHI SUMBER DAYA", styleSplashSub);
+
+            const string tagline = "JELAJAHI SUMBER DAYA";
+            float tagW = styleSplashSub.CalcSize(new GUIContent(tagline)).x + 32f;
+            var tagRect = new Rect((sw - tagW) * 0.5f, textY + 48f, tagW, 26f);
+            if (texBtnSec != null) GUI.DrawTexture(tagRect, texBtnSec, ScaleMode.StretchToFill);
+            GUI.Label(tagRect, tagline, styleSplashSub);
 
             // Loading Track & Bar
             float barW = Mathf.Min(260f, sw - 90f);
-            float barH = 4f; // Clean thin modern telemetry bar
+            float barH = 6f;
             float barX = (sw - barW) * 0.5f;
             float barY = sh * 0.73f;
 
             // Track background
-            GUI.color = new Color(0.12f, 0.25f, 0.32f, 0.7f * alpha);
+            GUI.color = new Color(0.02f, 0.06f, 0.09f, 0.85f * alpha);
             GUI.DrawTexture(new Rect(barX, barY, barW, barH), texWhite);
 
             // Progress Fill
@@ -594,14 +641,14 @@ namespace EnerGo
             else if (fillProgress > 0.40f) statusText = "MEMUAT SUMBER DAYA...";
 
             int percent = Mathf.RoundToInt(smoothFill * 100f);
-            GUI.color = new Color(0.12f, 0.88f, 0.68f, alpha * 0.9f);
-            GUI.Label(new Rect(20, barY + 14, sw - 40, 20), $"{statusText}  [{percent}%]", styleSplashStatus);
+            GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.Label(new Rect(20, barY + 16, sw - 40, 22), $"{statusText}  <color=#2EF0B4>{percent}%</color>", styleSplashStatus);
 
-            // Hint
+            // Hint, gently pulsing so it reads as an instruction
             if (splashTimer > 0.35f)
             {
-                GUI.color = new Color(0.40f, 0.55f, 0.65f, alpha * 0.65f);
-                GUI.Label(new Rect(20, sh - 44f, sw - 40, 20), "SENTUH LAYAR UNTUK MELANJUTKAN", styleSplashHint);
+                GUI.color = new Color(1f, 1f, 1f, alpha * (0.75f + 0.25f * Mathf.Sin(splashTimer * 4f)));
+                GUI.Label(new Rect(20, sh - Screen.safeArea.yMin / HudScale - 52f, sw - 40, 22), "SENTUH LAYAR UNTUK MELANJUTKAN", styleSplashHint);
             }
 
             GUI.color = Color.white;
@@ -624,29 +671,31 @@ namespace EnerGo
             float titleY = logoY + (logoSize * 1.06f) + 10f;
             GUI.Label(new Rect(21, titleY + 1, sw - 40, 38), "ENERGO", styleTitleShadow);
             GUI.Label(new Rect(20, titleY, sw - 40, 38), "ENERGO", styleLobbyTitle);
-            GUI.Label(new Rect(20, titleY + 36, sw - 40, 20), "JELAJAHI SUMBER DAYA · TEMUKAN ENERGI", styleLobbySub);
+            // Dark pill behind the tagline: thin text is unreadable on the bright sky/forest background.
+            const string tagline = "JELAJAHI SUMBER DAYA · TEMUKAN ENERGI";
+            float tagW = Mathf.Min(sw - 40f, styleLobbySub.CalcSize(new GUIContent(tagline)).x + 28f);
+            var tagRect = new Rect((sw - tagW) * 0.5f, titleY + 38f, tagW, 24f);
+            if (texBtnSec != null)
+            {
+                GUI.color = new Color(1f, 1f, 1f, 0.85f);
+                GUI.DrawTexture(tagRect, texBtnSec, ScaleMode.StretchToFill);
+                GUI.color = Color.white;
+            }
+            GUI.Label(tagRect, tagline, styleLobbySub);
 
             // --- PRIMARY ACTION: PLAY BUTTON ---
             float pulse = 1f + 0.018f * Mathf.Sin(Time.time * 3.2f);
             float btnW = Mathf.Min(290f, sw - 48f) * pulse;
             float btnH = 68f * pulse;
             float btnX = (sw - btnW) * 0.5f;
-            float btnY = titleY + 68f;
+            float btnY = titleY + 78f;
             var playBtnRect = new Rect(btnX, btnY, btnW, btnH);
 
             bool playHover = playBtnRect.Contains(Event.current.mousePosition);
             bool playPressed = playHover && Mouse.current != null && Mouse.current.leftButton.isPressed;
 
             GUI.color = playPressed ? new Color(0.82f, 0.82f, 0.82f, 1f) : Color.white;
-            if (texBtnPlay != null)
-            {
-                GUI.DrawTexture(playBtnRect, texBtnPlay, ScaleMode.StretchToFill);
-            }
-            else
-            {
-                GUI.color = new Color(0.08f, 0.92f, 0.65f, 1f);
-                GUI.DrawTexture(playBtnRect, texWhite);
-            }
+            EnerGoUI.DrawPrimaryButton(playBtnRect);
             GUI.color = Color.white;
             GUI.Label(new Rect(btnX, btnY + (btnH - 32f) * 0.5f, btnW, 32f), "PLAY", stylePlayBtnText);
 
@@ -655,32 +704,18 @@ namespace EnerGo
                 if (currentState == ScreenState.Lobby)
                 {
                     if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                    ResourceIds.Selected = selectedResource;
+                    ResourceIds.Selected = selectedResource == RandomResource
+                        ? AllResources[Random.Range(0, AllResources.Length)] : selectedResource;
                     currentState = ScreenState.TransitioningToAR;
                     transitionTimer = 0f;
                 }
             }
 
-            // --- SETTINGS BUTTON (red, below PLAY) ---
+            // --- SETTINGS BUTTON (secondary pill, below PLAY) ---
             float setW = Mathf.Min(220f, sw - 80f);
-            float setH = 46f;
-            float setX = (sw - setW) * 0.5f;
-            float setY = btnY + btnH + 16f;
-            var settingsRect = new Rect(setX, setY, setW, setH);
+            var settingsRect = new Rect((sw - setW) * 0.5f, btnY + btnH + 16f, setW, 46f);
 
-            bool setHover = settingsRect.Contains(Event.current.mousePosition);
-            bool setPressed = setHover && Mouse.current != null && Mouse.current.leftButton.isPressed;
-            GUI.color = setPressed ? new Color(0.55f, 0.08f, 0.08f, 1f) : new Color(0.72f, 0.10f, 0.10f, 1f);
-            GUI.DrawTexture(settingsRect, texWhite);
-
-            // Top accent line
-            GUI.color = new Color(1f, 0.40f, 0.40f, 0.70f);
-            GUI.DrawTexture(new Rect(setX, setY, setW, 2f), texWhite);
-            GUI.color = Color.white;
-
-            GUI.Label(settingsRect, "⚙  PENGATURAN", styleSecBtn);
-
-            if (inputCooldownTimer <= 0f && ButtonHit(settingsRect))
+            if (DrawSecondaryBtn(settingsRect, "SETTING", styleSecBtn))
             {
                 if (currentState == ScreenState.Lobby)
                 {
@@ -755,10 +790,11 @@ namespace EnerGo
             float curY = my + 14f;
 
             // Header
-            GUI.Label(new Rect(mx + 20, curY, mw - 40, 16), "⚙ PENGATURAN PENGEMBANG & PENGUJIAN", styleDebugTag);
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 16), "PENGATURAN PENGEMBANG & PENGUJIAN", styleDebugTag);
             curY += 20f;
             GUI.Label(new Rect(mx + 20, curY, mw - 40, 26), "MODE DEBUG", styleModalTitle);
-            curY += 34f;
+            // card_panel.png header strip is 62/400 of its height; start the sections below it.
+            curY = Mathf.Max(curY + 34f, my + mh * (62f / 400f) + 14f);
 
             // Section 1: PILIH TARGET SUMBER DAYA
             GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), "1. PILIH TARGET SUMBER DAYA (SDA)", styleCardTag);
@@ -767,41 +803,36 @@ namespace EnerGo
             float sdaBtnH = 34f;
             float btnGap = 8f;
 
-            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Sun, "☀️ Esensi Matahari", $"{sunCount} unit");
+            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Sun, "Esensi Matahari", $"{sunCount} unit");
             curY += sdaBtnH + btnGap;
 
-            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Coal, "🪨 Batu Bara", $"{coalCount} unit");
+            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Coal, "Batu Bara", $"{coalCount} unit");
             curY += sdaBtnH + btnGap;
 
-            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Gold, "🪙 Emas (Koleksi)", $"{goldCount} ore");
+            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, ResourceIds.Gold, "Emas (Koleksi)", $"{goldCount} ore");
+            curY += sdaBtnH + btnGap;
+
+            DrawDebugResourceOption(mx + 20, curY, mw - 40, sdaBtnH, RandomResource, "Acak (Random)", "3 SDA");
             curY += sdaBtnH + btnGap + 8f;
 
-            // Section 2: MODE TRACKING KAMERA
-            GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), "2. PILIH METODE TRACKING KAMERA", styleCardTag);
+            // Section 2: MODE AR (on = ARCore scene, off = Sensor 360), remembered across sessions
+            GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), "2. MODE KAMERA", styleCardTag);
             curY += 22f;
 
-            float toggleW = (mw - 40f - 8f) * 0.5f;
-            float toggleH = 38f;
-
-            if (DrawDebugToggleBtn(new Rect(mx + 20, curY, toggleW, toggleH), "📱 ARCORE", useARCore))
+            string arCaption = useARCore ? "Aktif · butuh Google Play Services for AR" : "Mati · pakai Sensor 360 (gyroscope)";
+            if (DrawSwitchRow(new Rect(mx + 20, curY, mw - 40, 52f), "MODE AR (ARCORE)", arCaption, useARCore))
             {
-                useARCore = true;
+                useARCore = !useARCore;
+                PlayerPrefs.SetInt(PrefUseARCore, useARCore ? 1 : 0);
+                PlayerPrefs.Save();
             }
-            if (DrawDebugToggleBtn(new Rect(mx + 20 + toggleW + 8f, curY, toggleW, toggleH), "🔄 SENSOR 360", !useARCore))
-            {
-                useARCore = false;
-            }
-            curY += toggleH + 6f;
-
-            string modeDesc = useARCore ? "Scene: ARPrototype (Membutuhkan Google Play Services AR)" : "Scene: Sensor360Scene (Kompas 360° / Gyroscope)";
-            GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), modeDesc, styleDebugDesc);
-            curY += 24f;
+            curY += 52f + 16f;
 
             // Section 3: RESET PROGRES
             GUI.Label(new Rect(mx + 20, curY, mw - 40, 18), "3. PENGELOLAAN DATA SAVES", styleCardTag);
             curY += 22f;
 
-            string resetText = isConfirmingReset ? "⚠ KONFIRMASI RESET SEMUA DATA" : "RESET DATA PROGRES";
+            string resetText = isConfirmingReset ? "TEKAN LAGI UNTUK RESET SEMUA DATA" : "RESET DATA PROGRES";
             var resetRect = new Rect(mx + 20, curY, mw - 40, 36f);
             if (DrawSecondaryBtn(resetRect, resetText, isConfirmingReset ? styleSecBtnWarn : styleSecBtn))
             {
@@ -820,7 +851,7 @@ namespace EnerGo
 
             // Close Button
             var closeRect = new Rect(mx + 20, my + mh - 50f, mw - 40, 40f);
-            if (DrawSecondaryBtn(closeRect, "✓ SIMPAN & TUTUP", styleSecBtn))
+            if (DrawSecondaryBtn(closeRect, "SIMPAN & TUTUP", styleSecBtn))
             {
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
@@ -842,30 +873,32 @@ namespace EnerGo
             GUI.color = Color.white;
 
             GUI.Label(new Rect(x + 12f, y + 6f, w - 100f, 22f), label, isSelected ? styleDebugOptionActive : styleDebugOptionInactive);
-            GUI.Label(new Rect(x + w - 90f, y + 6f, 80f, 22f), isSelected ? $"✓ {count}" : count, styleCardRowVal);
+            GUI.Label(new Rect(x + w - 90f, y + 6f, 80f, 22f), count, styleCardRowVal);
 
             if (inputCooldownTimer <= 0f && ButtonHit(rect))
             {
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 selectedResource = id;
+                PlayerPrefs.SetString(PrefResource, id);
+                PlayerPrefs.Save();
                 inputCooldownTimer = 0.15f;
             }
         }
 
-        private bool DrawDebugToggleBtn(Rect rect, string text, bool isActive)
+        // Settings row with an on/off switch on the right; the whole row is the tap target.
+        private bool DrawSwitchRow(Rect rect, string title, string caption, bool on)
         {
-            GUI.color = isActive ? new Color(0.10f, 0.32f, 0.32f, 0.95f) : new Color(0.06f, 0.14f, 0.20f, 0.85f);
-            GUI.DrawTexture(rect, texWhite);
+            var mint = new Color(0.12f, 0.90f, 0.70f, 1f);
+            EnerGoUI.DrawPanel(rect, new Color(0.06f, 0.14f, 0.20f, 0.85f), on ? mint : new Color(0.20f, 0.35f, 0.45f, 0.6f), 10f);
 
-            GUI.color = isActive ? new Color(0.12f, 0.90f, 0.70f, 1f) : new Color(0.20f, 0.35f, 0.45f, 0.5f);
-            GUI.DrawTexture(new Rect(rect.x, rect.y, 3f, rect.height), texWhite);
-            if (isActive)
-            {
-                GUI.DrawTexture(new Rect(rect.x, rect.y + rect.height - 2f, rect.width, 2f), texWhite);
-            }
-            GUI.color = Color.white;
+            GUI.Label(new Rect(rect.x + 14f, rect.y + 6f, rect.width - 90f, 22f), title, styleDebugOptionActive);
+            GUI.Label(new Rect(rect.x + 14f, rect.y + 27f, rect.width - 90f, 18f), caption, styleCardRowLabel);
 
-            GUI.Label(rect, text + (isActive ? "  [✓]" : ""), isActive ? styleDebugOptionActive : styleDebugOptionInactive);
+            var track = new Rect(rect.xMax - 14f - 50f, rect.center.y - 14f, 50f, 28f);
+            EnerGoUI.DrawPanel(track, on ? mint : new Color(0.22f, 0.32f, 0.40f, 1f), Color.clear, 14f);
+            const float knob = 22f;
+            var knobRect = new Rect(on ? track.xMax - 3f - knob : track.x + 3f, track.y + 3f, knob, knob);
+            EnerGoUI.DrawPanel(knobRect, Color.white, Color.clear, knob * 0.5f);
 
             if (inputCooldownTimer <= 0f && ButtonHit(rect))
             {
@@ -969,13 +1002,12 @@ namespace EnerGo
 
             // Header
             float topY = my + 12f;
-            GUI.Label(new Rect(mx + 20, topY, mw - 40, 16), "🎒 DATA KOLEKSI & MINERAL", styleModalTag);
+            GUI.Label(new Rect(mx + 20, topY, mw - 40, 16), "DATA KOLEKSI & MINERAL", styleModalTag);
             GUI.Label(new Rect(mx + 20, topY + 24, mw - 40, 26), "INVENTORI SUMBER DAYA", styleModalTitle);
 
             // Resource Cards
             var save = EnerGoProgress.Current;
             string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold };
-            string[] icons = { "☀️", "🪨", "🪙" };
             Color[] colors = { new Color(1f, 0.82f, 0.28f), new Color(0.40f, 0.80f, 0.95f), new Color(0.98f, 0.82f, 0.25f) };
 
             float startY = topY + 62f;
@@ -993,7 +1025,7 @@ namespace EnerGo
                 GUI.DrawTexture(new Rect(rowRect.x, rowRect.y, 3f, rowRect.height), texWhite);
                 GUI.color = Color.white;
 
-                string resTitle = $"{icons[i]} {ResourceIds.Name(ids[i])}";
+                string resTitle = ResourceIds.Name(ids[i]);
                 GUI.Label(new Rect(rowRect.x + 12, rowY + 8f, rowRect.width - 120f, 22f), resTitle, styleCardHeader);
                 GUI.Label(new Rect(rowRect.x + rowRect.width - 110f, rowY + 8f, 100f, 22f), $"{entry.Total} unit", styleCardRowVal);
                 GUI.Label(new Rect(rowRect.x + 12, rowY + 30f, rowRect.width - 24f, 20f), $"Normal: {entry.normalQuantity}  ·  Murni: {entry.pureQuantity}", styleCardRowLabel);
@@ -1039,16 +1071,7 @@ namespace EnerGo
             bool isPressed = rect.Contains(Event.current.mousePosition) && Mouse.current != null && Mouse.current.leftButton.isPressed;
 
             GUI.color = isPressed ? new Color(0.75f, 0.75f, 0.75f, 1f) : Color.white;
-
-            if (texBtnSec != null)
-            {
-                GUI.DrawTexture(rect, texBtnSec, ScaleMode.StretchToFill);
-            }
-            else
-            {
-                GUI.color = new Color(0.08f, 0.18f, 0.26f, 0.90f);
-                GUI.DrawTexture(rect, texWhite);
-            }
+            EnerGoUI.DrawSecondaryButton(rect);
 
             GUI.color = Color.white;
             GUI.Label(rect, text, style);
@@ -1061,20 +1084,7 @@ namespace EnerGo
             return false;
         }
 
-        private bool ButtonHit(Rect rect)
-        {
-            if (GUI.Button(rect, GUIContent.none, GUIStyle.none)) { lastTouchButtonFrame = Time.frameCount; return true; }
-            if (Event.current.type != EventType.Repaint || lastTouchButtonFrame == Time.frameCount) return false;
-            foreach (var touch in EnhancedTouch.activeTouches)
-            {
-                if (touch.phase != UnityEngine.InputSystem.TouchPhase.Began) continue;
-                var point = new Vector2(touch.screenPosition.x / HudScale, (Screen.height - touch.screenPosition.y) / HudScale);
-                if (!rect.Contains(point)) continue;
-                lastTouchButtonFrame = Time.frameCount;
-                return true;
-            }
-            return false;
-        }
+        private bool ButtonHit(Rect rect) => EnerGoUI.TapHit(rect, HudScale);
 
         private void DrawHelpModal(float sw, float sh)
         {

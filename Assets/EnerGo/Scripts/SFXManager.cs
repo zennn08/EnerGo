@@ -22,6 +22,10 @@ namespace EnerGo
         public AudioClip clipPickaxe;
         public AudioClip clipQuizBenar;
         public AudioClip clipQuizSalah;
+        public AudioClip clipMatahari;
+        public AudioClip clipBaraPukul;
+        public AudioClip clipBaraHancur;
+        public AudioClip clipSungai;
 
         [Header("Music")]
         public AudioClip clipLobbyMusic;
@@ -29,6 +33,7 @@ namespace EnerGo
         private AudioSource sfxSource;
         private AudioSource loopSource;  // for looping SFX like aliran air
         private AudioSource musicSource; // for background music
+        private AudioSource ambienceSource; // scene ambience that can run under a looping SFX (river)
 
         private void Awake()
         {
@@ -54,6 +59,10 @@ namespace EnerGo
             musicSource.loop = true;
             musicSource.volume = 0.6f;
 
+            ambienceSource = gameObject.AddComponent<AudioSource>();
+            ambienceSource.playOnAwake = false;
+            ambienceSource.loop = true;
+
             LoadClips();
         }
 
@@ -68,6 +77,10 @@ namespace EnerGo
             clipPickaxe = Resources.Load<AudioClip>("Audio/SFX/sfx_pickaxe");
             clipQuizBenar = Resources.Load<AudioClip>("Audio/SFX/sfx_quiz_benar");
             clipQuizSalah = Resources.Load<AudioClip>("Audio/SFX/sfx_quiz_salah");
+            clipMatahari = Resources.Load<AudioClip>("Audio/SFX/sfx_matahari");
+            clipBaraPukul = Resources.Load<AudioClip>("Audio/SFX/sfx_bara_pukul");
+            clipBaraHancur = Resources.Load<AudioClip>("Audio/SFX/sfx_bara_hancur");
+            clipSungai = Resources.Load<AudioClip>("Audio/SFX/sfx_sungai");
             clipLobbyMusic = Resources.Load<AudioClip>("Audio/SFX/music_lobby");
         }
 
@@ -100,6 +113,10 @@ namespace EnerGo
 
         public void PlayQuizSalah() => PlayOneShot(clipQuizSalah, 1f);
 
+        public void PlayBaraPukul() => PlayOneShot(clipBaraPukul, 1f);
+
+        public void PlayBaraHancur() => PlayOneShot(clipBaraHancur, 1f);
+
         /// <summary>Start looping the water flow ambient sound.</summary>
         public void PlayAliranAir()
         {
@@ -111,6 +128,33 @@ namespace EnerGo
             }
         }
 
+        /// <summary>Glide the water loop's volume (e.g. louder while the gold pan swirls faster).</summary>
+        public void SetAliranAirVolume(float volume)
+        {
+            if (loopSource != null && loopSource.clip == clipAliranAir)
+                loopSource.volume = Mathf.MoveTowards(loopSource.volume, volume, Time.deltaTime * 1.5f);
+        }
+
+        /// <summary>Start the river ambience (gold capture scene). Safe to call repeatedly.</summary>
+        public void PlaySungai(float volume = 0.35f)
+        {
+            if (clipSungai != null && ambienceSource != null && ambienceSource.clip != clipSungai)
+            {
+                ambienceSource.clip = clipSungai;
+                ambienceSource.volume = volume;
+                ambienceSource.Play();
+            }
+        }
+
+        public void StopSungai()
+        {
+            if (ambienceSource != null && ambienceSource.clip == clipSungai)
+            {
+                ambienceSource.Stop();
+                ambienceSource.clip = null;
+            }
+        }
+
         /// <summary>Stop the looping ambient sound.</summary>
         public void StopAliranAir()
         {
@@ -118,6 +162,37 @@ namespace EnerGo
             {
                 loopSource.Stop();
                 loopSource.clip = null;
+            }
+        }
+
+        /// <summary>Start looping the drifting-sun sound (sun capture mini-game). Safe to call every frame.</summary>
+        public void PlayMatahari()
+        {
+            if (clipMatahari != null && loopSource != null && loopSource.clip != clipMatahari)
+            {
+                loopSource.clip = clipMatahari;
+                loopSource.volume = 0f; // faded in by SetMatahariMix
+                loopSource.panStereo = 0f;
+                loopSource.Play();
+            }
+        }
+
+        /// <summary>Glide the sun loop toward a volume and stereo pan (-1 left .. 1 right).</summary>
+        public void SetMatahariMix(float volume, float pan)
+        {
+            if (loopSource == null || loopSource.clip != clipMatahari) return;
+            loopSource.volume = Mathf.MoveTowards(loopSource.volume, volume, Time.deltaTime * 1.5f);
+            loopSource.panStereo = Mathf.MoveTowards(loopSource.panStereo, pan, Time.deltaTime * 3f);
+        }
+
+        /// <summary>Stop the sun loop.</summary>
+        public void StopMatahari()
+        {
+            if (loopSource != null && loopSource.clip == clipMatahari)
+            {
+                loopSource.Stop();
+                loopSource.clip = null;
+                loopSource.panStereo = 0f;
             }
         }
 
