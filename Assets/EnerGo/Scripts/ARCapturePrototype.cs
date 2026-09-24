@@ -347,6 +347,7 @@ namespace EnerGo
             if (SFXManager.Instance != null) // manager outlives the scene
             {
                 SFXManager.Instance.StopMatahari();
+                SFXManager.Instance.StopEkstrakMatahari();
                 SFXManager.Instance.StopAliranAir();
                 SFXManager.Instance.StopSungai();
             }
@@ -687,6 +688,11 @@ namespace EnerGo
             sunInside = sp.z > arCamera.nearClipPlane && Vector2.Distance(sp, centre) <= ReticleRadius * HudScale;
             sunProgress = StepSunProgress(sunProgress, sunInside, Time.deltaTime);
 
+            // Extraction sound: playback position tracks sunProgress so the 8-second clip
+            // maps 1:1 to the 0→100 % bar.  Pauses and seeks back when the sun escapes.
+            if (SFXManager.Instance != null)
+                SFXManager.Instance.SyncEkstrakMatahari(sunProgress, sunInside);
+
             // Whoosh loop: loud while the light is getting away, soft once it is locked,
             // panned toward the sun so it also hints where to turn.
             if (SFXManager.Instance != null)
@@ -710,7 +716,7 @@ namespace EnerGo
         {
             if (EnerGoProgress.BeginAnalysis(resourceId))
             {
-                if (SFXManager.Instance != null) { SFXManager.Instance.StopMatahari(); SFXManager.Instance.StopAliranAir(); }
+                if (SFXManager.Instance != null) { SFXManager.Instance.StopMatahari(); SFXManager.Instance.StopEkstrakMatahari(); SFXManager.Instance.StopAliranAir(); }
                 goldPhase = GoldPhase.None;
                 Destroy(target);
                 target = null;

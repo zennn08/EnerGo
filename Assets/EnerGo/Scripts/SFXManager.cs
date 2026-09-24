@@ -26,6 +26,7 @@ namespace EnerGo
         public AudioClip clipBaraPukul;
         public AudioClip clipBaraHancur;
         public AudioClip clipSungai;
+        public AudioClip clipEkstrakMatahari;
 
         [Header("Music")]
         public AudioClip clipLobbyMusic;
@@ -34,6 +35,7 @@ namespace EnerGo
         private AudioSource loopSource;  // for looping SFX like aliran air
         private AudioSource musicSource; // for background music
         private AudioSource ambienceSource; // scene ambience that can run under a looping SFX (river)
+        private AudioSource ekstrakSource;   // sun extraction SFX — seekable, syncs with sunProgress
 
         private void Awake()
         {
@@ -63,6 +65,10 @@ namespace EnerGo
             ambienceSource.playOnAwake = false;
             ambienceSource.loop = true;
 
+            ekstrakSource = gameObject.AddComponent<AudioSource>();
+            ekstrakSource.playOnAwake = false;
+            ekstrakSource.loop = false;
+
             LoadClips();
         }
 
@@ -81,6 +87,7 @@ namespace EnerGo
             clipBaraPukul = Resources.Load<AudioClip>("Audio/SFX/sfx_bara_pukul");
             clipBaraHancur = Resources.Load<AudioClip>("Audio/SFX/sfx_bara_hancur");
             clipSungai = Resources.Load<AudioClip>("Audio/SFX/sfx_sungai");
+            clipEkstrakMatahari = Resources.Load<AudioClip>("Audio/SFX/sfx_ekstrak_matahari");
             clipLobbyMusic = Resources.Load<AudioClip>("Audio/SFX/music_lobby");
         }
 
@@ -193,6 +200,68 @@ namespace EnerGo
                 loopSource.Stop();
                 loopSource.clip = null;
                 loopSource.panStereo = 0f;
+            }
+        }
+
+        // ────────────────────────────────────────────
+        // Sun extraction sound — plays in sync with sunProgress
+        // ────────────────────────────────────────────
+
+        /// <summary>
+        /// Sync the extraction sound's playback position to the current sun capture progress.
+        /// The clip's timeline maps 1:1 to progress (0 % → start, 100 % → end).
+        /// While the sun is inside the reticle the clip plays forward normally;
+        /// when it escapes, playback pauses and seeks back as progress drains.
+        /// Call every frame from UpdateSun.
+        /// </summary>
+        public void SyncEkstrakMatahari(float progress, bool sunInside)
+        {
+            if (clipEkstrakMatahari == null || ekstrakSource == null) return;
+
+            // Assign clip if not yet set.
+            if (ekstrakSource.clip != clipEkstrakMatahari)
+            {
+                ekstrakSource.clip = clipEkstrakMatahari;
+                ekstrakSource.volume = 1f;
+            }
+
+            float targetTime = Mathf.Clamp(progress, 0f, 0.999f) * clipEkstrakMatahari.length;
+
+            if (progress <= 0f)
+            {
+                // Nothing captured yet: keep silent.
+                if (ekstrakSource.isPlaying) ekstrakSource.Pause();
+                ekstrakSource.time = 0f;
+                return;
+            }
+
+            if (sunInside)
+            {
+                // Sun inside reticle: let the clip play forward.
+                // Only seek if the playback head drifted noticeably from expected position
+                // (happens after a drain or first entry).
+                float drift = Mathf.Abs(ekstrakSource.time - targetTime);
+                if (drift > 0.15f)
+                    ekstrakSource.time = targetTime;
+
+                if (!ekstrakSource.isPlaying)
+                    ekstrakSource.Play();
+            }
+            else
+            {
+                // Sun outside reticle: pause and seek to the (lower) progress position.
+                if (ekstrakSource.isPlaying) ekstrakSource.Pause();
+                ekstrakSource.time = targetTime;
+            }
+        }
+
+        /// <summary>Stop and reset the extraction sound (called when the mini-game ends).</summary>
+        public void StopEkstrakMatahari()
+        {
+            if (ekstrakSource != null && ekstrakSource.clip == clipEkstrakMatahari)
+            {
+                ekstrakSource.Stop();
+                ekstrakSource.clip = null;
             }
         }
 
