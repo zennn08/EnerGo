@@ -444,13 +444,21 @@ namespace EnerGo
         {
             if (Mathf.Abs(cardOffset.x) >= SwipeThreshold)
             {
-                // Commit answer: left = true (BENAR), right = false (SALAH)
-                bool answer = cardOffset.x < 0f;
+                // Commit answer: slide kanan = true (BENAR), swipe kiri = false (SALAH)
+                bool answer = cardOffset.x > 0f;
                 cardFlicking = true;
                 // Slight delay via coroutine is not available in OnGUI; we'll
                 // commit immediately and let the flick animation play for one frame.
                 if (EnerGoProgress.Answer(answer))
                 {
+                    var session = EnerGoProgress.Current.pendingCapture;
+                    if (SFXManager.Instance != null && session != null)
+                    {
+                        if (session.correct)
+                            SFXManager.Instance.PlayQuizBenar();
+                        else
+                            SFXManager.Instance.PlayQuizSalah();
+                    }
                     resultShownAt = Time.time;
                 }
             }
@@ -515,6 +523,17 @@ namespace EnerGo
                 taps++;
                 lastHitTime = Time.time;
                 lastHitScreenPos = screenPosition;
+
+                // Play resource-specific tap SFX
+                if (SFXManager.Instance != null)
+                {
+                    if (resourceId == ResourceIds.Gold)
+                        SFXManager.Instance.PlayDulangEmas();
+                    else if (resourceId == ResourceIds.Coal)
+                        SFXManager.Instance.PlayPickaxe();
+                    else
+                        SFXManager.Instance.PlayBatuJatuh();
+                }
 
                 if (taps < RequiredTaps)
                 {
@@ -726,6 +745,7 @@ namespace EnerGo
             var lobbyRect = new Rect(14f, safeTop, 90f, pillH);
             if (EnerGoProgress.Current.pendingCapture == null && DrawBtn(lobbyRect, "← LOBBY", styleBtnText))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 SceneManager.LoadScene("LobbyScene");
                 return;
             }
@@ -738,6 +758,7 @@ namespace EnerGo
             if (!hasARSession) DrawPill(modeRect, "MODE TANPA ARCORE", modeName, styleHeaderTag, styleHeaderVal);
             if (EnerGoProgress.Current.pendingCapture == null && hasARSession && DrawBtn(modeRect, modeName, isUsingGyro ? styleBtnWarn : styleBtnText))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 // Toggle mode manually
                 ApplyTrackingModeState(!isUsingGyro);
                 if (target != null) Destroy(target);
@@ -851,6 +872,7 @@ namespace EnerGo
                 bool canContinue = session.correct || Time.time - resultShownAt >= 3f;
                 if (canContinue && DrawBtn(new Rect(x, y + 190f, w, 48f), "LANJUT KE LOBBY", styleBtnText))
                 {
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     if (EnerGoProgress.ClearResult())
                     {
                         cardOffset   = Vector2.zero;
@@ -901,10 +923,10 @@ namespace EnerGo
             GUI.color = new Color(0.06f, 0.14f, 0.22f, 0.98f);
             GUI.DrawTexture(new Rect(cx, cy, cw, ch), texWhite);
 
-            // Border tint changes with swipe direction
+            // Border tint changes with swipe direction: right = BENAR (green), left = SALAH (red)
             float swipeRatio = Mathf.Clamp01(Mathf.Abs(cardOffset.x) / SwipeThreshold);
-            bool  goingLeft  = cardOffset.x < 0f;
-            Color borderCol  = goingLeft
+            bool  goingRight = cardOffset.x > 0f;
+            Color borderCol  = goingRight
                 ? Color.Lerp(new Color(0.20f, 0.75f, 0.55f, 0.30f), new Color(0.12f, 0.95f, 0.62f, 0.90f), swipeRatio)
                 : Color.Lerp(new Color(0.75f, 0.20f, 0.20f, 0.30f), new Color(0.98f, 0.32f, 0.32f, 0.90f), swipeRatio);
             GUI.color = borderCol;
@@ -925,33 +947,34 @@ namespace EnerGo
 
             // ── Hint ──
             GUI.Label(new Rect(innerX, cy + ch - 36f, innerW, 20f),
-                "← geser kiri: BENAR   |   geser kanan: SALAH →", styleCardHint);
+                "← geser kiri: SALAH   |   geser kanan: BENAR →", styleCardHint);
 
             GUI.matrix = prevMatrix;
 
-            // ── BENAR overlay (left swipe) ──
+            // ── SALAH overlay (left swipe) ──
             if (cardOffset.x < -4f)
             {
                 float a = Mathf.Clamp01(-cardOffset.x / SwipeThreshold);
-                Color benarCol = new Color(0.12f, 0.95f, 0.62f, a);
+                Color salahCol = new Color(0.98f, 0.32f, 0.32f, a);
                 // Left badge
-                GUI.color = new Color(benarCol.r, benarCol.g, benarCol.b, a * 0.18f);
+                GUI.color = new Color(salahCol.r, salahCol.g, salahCol.b, a * 0.18f);
                 GUI.DrawTexture(new Rect(cx, cy, cw * 0.5f, ch), texWhite);
                 GUI.color = Color.white;
-                styleSwipeBenar.normal.textColor = benarCol;
-                GUI.Label(new Rect(cx + 8f, cy, cw * 0.45f, ch), "✓ BENAR", styleSwipeBenar);
+                styleSwipeSalah.normal.textColor = salahCol;
+                GUI.Label(new Rect(cx + 8f, cy, cw * 0.45f, ch), "✗ SALAH", styleSwipeSalah);
             }
 
-            // ── SALAH overlay (right swipe) ──
+            // ── BENAR overlay (right swipe) ──
             if (cardOffset.x > 4f)
             {
                 float a = Mathf.Clamp01(cardOffset.x / SwipeThreshold);
-                Color salahCol = new Color(0.98f, 0.32f, 0.32f, a);
-                GUI.color = new Color(salahCol.r, salahCol.g, salahCol.b, a * 0.18f);
+                Color benarCol = new Color(0.12f, 0.95f, 0.62f, a);
+                // Right badge
+                GUI.color = new Color(benarCol.r, benarCol.g, benarCol.b, a * 0.18f);
                 GUI.DrawTexture(new Rect(cx + cw * 0.5f, cy, cw * 0.5f, ch), texWhite);
                 GUI.color = Color.white;
-                styleSwipeSalah.normal.textColor = salahCol;
-                GUI.Label(new Rect(cx + cw * 0.55f, cy, cw * 0.45f, ch), "✗ SALAH", styleSwipeSalah);
+                styleSwipeBenar.normal.textColor = benarCol;
+                GUI.Label(new Rect(cx + cw * 0.55f, cy, cw * 0.45f, ch), "✓ BENAR", styleSwipeBenar);
             }
 
             if (!string.IsNullOrEmpty(EnerGoProgress.Error))

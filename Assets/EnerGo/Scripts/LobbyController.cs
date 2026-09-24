@@ -112,6 +112,11 @@ namespace EnerGo
             {
                 currentState = ScreenState.Lobby;
             }
+            else
+            {
+                // Play splash screen sound on first launch
+                if (SFXManager.Instance != null) SFXManager.Instance.PlaySplash();
+            }
 
             LoadTextures();
             CreateSolidTextures();
@@ -125,6 +130,11 @@ namespace EnerGo
                 ResourceIds.Selected = EnerGoProgress.Current.pendingCapture.resourceId;
                 hasShownSplash = true;
                 currentState = ScreenState.TransitioningToAR;
+            }
+            else if (currentState == ScreenState.Lobby)
+            {
+                // Start lobby music immediately if splash already shown
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayLobbyMusic();
             }
         }
 
@@ -194,6 +204,7 @@ namespace EnerGo
                     hasShownSplash = true;
                     currentState = ScreenState.Lobby;
                     inputCooldownTimer = 0.25f;
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayLobbyMusic();
                 }
 
                 if (splashTimer > 0.35f)
@@ -211,6 +222,7 @@ namespace EnerGo
                         hasShownSplash = true;
                         currentState = ScreenState.Lobby;
                         inputCooldownTimer = 0.25f;
+                        if (SFXManager.Instance != null) SFXManager.Instance.PlayLobbyMusic();
                     }
                 }
             }
@@ -219,6 +231,7 @@ namespace EnerGo
                 transitionTimer += Time.deltaTime;
                 if (transitionTimer >= TransitionDuration)
                 {
+                    if (SFXManager.Instance != null) SFXManager.Instance.StopLobbyMusic();
                     SceneManager.LoadScene(useARCore ? "ARPrototype" : "Sensor360Scene");
                 }
             }
@@ -641,6 +654,7 @@ namespace EnerGo
             {
                 if (currentState == ScreenState.Lobby)
                 {
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     ResourceIds.Selected = selectedResource;
                     currentState = ScreenState.TransitioningToAR;
                     transitionTimer = 0f;
@@ -670,6 +684,7 @@ namespace EnerGo
             {
                 if (currentState == ScreenState.Lobby)
                 {
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     currentState = ScreenState.DebugModal;
                     inputCooldownTimer = 0.2f;
                 }
@@ -694,6 +709,7 @@ namespace EnerGo
             if (inputCooldownTimer <= 0f && Event.current.type == EventType.MouseDown
                 && !modalRect.Contains(Event.current.mousePosition))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
                 Event.current.Use();
@@ -707,6 +723,7 @@ namespace EnerGo
                     var pt = new Vector2(touch.screenPosition.x / HudScale, (Screen.height - touch.screenPosition.y) / HudScale);
                     if (!modalRect.Contains(pt))
                     {
+                        if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                         currentState = ScreenState.Lobby;
                         inputCooldownTimer = 0.2f;
                         break;
@@ -788,6 +805,7 @@ namespace EnerGo
             var resetRect = new Rect(mx + 20, curY, mw - 40, 36f);
             if (DrawSecondaryBtn(resetRect, resetText, isConfirmingReset ? styleSecBtnWarn : styleSecBtn))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 if (!isConfirmingReset)
                 {
                     isConfirmingReset = true;
@@ -804,6 +822,7 @@ namespace EnerGo
             var closeRect = new Rect(mx + 20, my + mh - 50f, mw - 40, 40f);
             if (DrawSecondaryBtn(closeRect, "✓ SIMPAN & TUTUP", styleSecBtn))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
             }
@@ -827,6 +846,7 @@ namespace EnerGo
 
             if (inputCooldownTimer <= 0f && ButtonHit(rect))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 selectedResource = id;
                 inputCooldownTimer = 0.15f;
             }
@@ -849,6 +869,7 @@ namespace EnerGo
 
             if (inputCooldownTimer <= 0f && ButtonHit(rect))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 inputCooldownTimer = 0.15f;
                 return true;
             }
@@ -920,6 +941,7 @@ namespace EnerGo
 
             if (inputCooldownTimer <= 0f && ButtonHit(backdropRect))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
             }
@@ -983,6 +1005,7 @@ namespace EnerGo
             var closeRect = new Rect(mx + 20, my + mh - 50f, mw - 40, 40f);
             if (DrawSecondaryBtn(closeRect, "TUTUP INVENTORI", styleSecBtn))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
             }
@@ -1063,6 +1086,7 @@ namespace EnerGo
 
             if (inputCooldownTimer <= 0f && ButtonHit(backdropRect))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
             }
@@ -1108,6 +1132,7 @@ namespace EnerGo
             var closeRect = new Rect(mx + (mw - cbW) * 0.5f, my + mh - 54f, cbW, cbH);
             if (DrawSecondaryBtn(closeRect, "TUTUP PANDUAN", styleSecBtn))
             {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
             }
