@@ -1,0 +1,6 @@
+{
+    "name": "EnerGo.Core",
+    "rootNamespace": "EnerGo",
+    "references": [],
+    "autoReferenced": true
+}

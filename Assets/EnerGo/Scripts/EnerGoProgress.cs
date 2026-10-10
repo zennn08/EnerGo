@@ -4,15 +4,6 @@ using UnityEngine;
 
 namespace EnerGo
 {
-    public static class ResourceIds
-    {
-        public const string Sun = "sun";
-        public const string Coal = "coal";
-        public const string Gold = "gold";
-        public static string Selected = Gold;
-        public static string Name(string id) => id == Sun ? "Matahari" : id == Coal ? "Batu Bara" : "Emas";
-    }
-
     [Serializable]
     public class InventoryEntry
     {
