@@ -15,6 +15,7 @@ namespace EnerGo
             Splash,
             Lobby,
             Settings,
+            Practice,
             TransitioningToAR
         }
 
@@ -38,6 +39,7 @@ namespace EnerGo
         private const float SplashFadeOut = 0.4f;
 
         private float transitionTimer = 0f;
+        private string transitionScene;
         private const float TransitionDuration = 0.45f;
 
         private float inputCooldownTimer = 0.2f;
@@ -76,6 +78,7 @@ namespace EnerGo
 
             if (hasShownSplash) currentState = ScreenState.Lobby;
             else if (SFXManager.Instance != null) SFXManager.Instance.PlaySplash();
+            if (OpenPracticeOnLoad) { OpenPracticeOnLoad = false; hasShownSplash = true; currentState = ScreenState.Practice; }
 
             LoadTextures();
         }
@@ -86,6 +89,7 @@ namespace EnerGo
             {
                 ResourceIds.Selected = EnerGoProgress.Current.pendingCapture.resourceId;
                 hasShownSplash = true;
+                transitionScene = CaptureSceneName();
                 currentState = ScreenState.TransitioningToAR;
             }
             else if (currentState == ScreenState.Lobby)
@@ -136,7 +140,7 @@ namespace EnerGo
                 if (transitionTimer >= TransitionDuration)
                 {
                     if (SFXManager.Instance != null) SFXManager.Instance.StopLobbyMusic();
-                    SceneManager.LoadScene(useARCore ? "ARPrototype" : "Sensor360Scene");
+                    SceneManager.LoadScene(transitionScene ?? CaptureSceneName());
                 }
             }
         }
@@ -181,6 +185,7 @@ namespace EnerGo
             {
                 DrawLobby(sw, sh);
                 if (currentState == ScreenState.Settings) DrawSettings(sw, sh);
+                if (currentState == ScreenState.Practice) DrawPractice(sw, sh);
                 if (currentState == ScreenState.TransitioningToAR) DrawTransition(sw, sh);
             }
 
@@ -266,9 +271,9 @@ namespace EnerGo
             }
 
             // Layout from the bottom up: start button, mode line, resource cards; the brand is centred in what is left.
-            float btnH = 66f, gap = 12f, cardW = (contentW - gap) * 0.5f, cardH = 76f;
+            float btnH = 66f, gap = 10f, cardW = (contentW - gap) * 0.5f, cardH = 62f;
             var playRect = new Rect(x, sh - SafeBottom(scale) - btnH, contentW, btnH);
-            float cardsTop = playRect.y - 44f - (cardH * 2f + gap);
+            float cardsTop = playRect.y - 44f - (cardH * 3f + gap * 2f);
             float symbolH = Mathf.Min(112f, sh * 0.13f);
             float brandH = symbolH * 1.56f + 32f;
             float brandTop = top + 52f + Mathf.Max(0f, (cardsTop - 26f - 24f - (top + 52f) - brandH) * 0.45f);
@@ -276,26 +281,13 @@ namespace EnerGo
             float y = DrawBrand(sw, brandTop, symbolH);
             GUI.Label(new Rect(x, y + 10f, contentW, 22f), "Jelajahi sumber daya, temukan energinya.", sMuted);
 
-            // Resource picker: 2x2 cards, the inventory lives on the cards.
+            // Collection: what the player has caught. Targets now come from the radar, so these are not buttons.
             y = cardsTop - 26f;
-            GUI.Label(new Rect(x, y, contentW, 18f), "PILIH TARGET BURUAN", sSection);
+            GUI.Label(new Rect(x, y, contentW, 18f), "KOLEKSIMU", sSection);
             y += 26f;
-            var save = EnerGoProgress.Current;
-            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold, RandomResource };
+            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold, ResourceIds.Oil, ResourceIds.Uranium };
             for (int i = 0; i < ids.Length; i++)
-            {
-                var rect = new Rect(x + (i % 2) * (cardW + gap), y + (i / 2) * (cardH + gap), cardW, cardH);
-                bool random = ids[i] == RandomResource;
-                string title = random ? "Acak" : ResourceIds.Name(ids[i]);
-                if (DrawResourceCard(rect, ids[i], title, random ? -1 : save.Get(ids[i]).Total, interactive))
-                {
-                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                    selectedResource = ids[i];
-                    PlayerPrefs.SetString(PrefResource, ids[i]);
-                    PlayerPrefs.Save();
-                    inputCooldownTimer = 0.15f;
-                }
-            }
+                DrawCollectionCard(new Rect(x + (i % 2) * (cardW + gap), y + (i / 2) * (cardH + gap), cardW, cardH), ids[i]);
 
             // Start
             GUI.Label(new Rect(x, playRect.y - 30f, contentW, 20f),
@@ -305,11 +297,37 @@ namespace EnerGo
             if (interactive && ButtonHit(playRect))
             {
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                ResourceIds.Selected = selectedResource == RandomResource
-                    ? AllResources[Random.Range(0, AllResources.Length)] : selectedResource;
+                ExploreSession.PendingSpawnId = null;
+                transitionScene = "ExploreScene";
                 currentState = ScreenState.TransitioningToAR;
                 transitionTimer = 0f;
             }
+        }
+
+        // Lobby collection tile: crystal, name, unit count; oil/uranium show a lock until their mini-games exist.
+        private void DrawCollectionCard(Rect r, string id)
+        {
+            bool playable = ResourceIds.IsPlayable(id);
+            DrawCard(r);
+            var iconRect = new Rect(r.x + 12f, r.center.y - 15f, 26f, 30f);
+            var icon = CrystalIcon(id);
+            GUI.color = new Color(1f, 1f, 1f, playable ? 1f : 0.45f);
+            if (icon != null) GUI.DrawTexture(iconRect, icon, ScaleMode.ScaleToFit);
+            GUI.color = Color.white;
+            if (!playable) DrawLock(new Vector2(iconRect.xMax - 2f, iconRect.yMax - 4f), 9f);
+
+            float tx = iconRect.xMax + 10f, tw = r.xMax - 12f - tx;
+            GUI.Label(new Rect(tx, r.y + 10f, tw, 18f), ResourceIds.Name(id), new GUIStyle(sCardTitle) { fontSize = 13 });
+            if (!playable)
+            {
+                GUI.Label(new Rect(tx, r.y + 32f, tw, 18f), "Segera hadir", sCardSub);
+                return;
+            }
+            string n = EnerGoProgress.Current.Get(id).Total.ToString();
+            var count = new GUIStyle(sCount) { fontSize = 18 };
+            float nw = count.CalcSize(new GUIContent(n)).x;
+            GUI.Label(new Rect(tx, r.y + 28f, nw, 24f), n, count);
+            GUI.Label(new Rect(tx + nw + 4f, r.y + 33f, tw - nw - 4f, 16f), "unit", sCardSub);
         }
 
         // `count` < 0 = no inventory to show (the "Acak" card).
@@ -365,7 +383,7 @@ namespace EnerGo
                 GUI.DrawTexture(new Rect((sw - 52f) * 0.5f, sh * 0.44f, 52f, 60f), texSymbol, ScaleMode.ScaleToFit);
             }
             GUI.color = new Color(1f, 1f, 1f, a);
-            GUI.Label(new Rect(20, sh * 0.44f + 72f, sw - 40, 22), "Menyiapkan kamera...", sMuted);
+            GUI.Label(new Rect(20, sh * 0.44f + 72f, sw - 40, 22), transitionScene == "ExploreScene" ? "Menyalakan radar..." : "Menyiapkan kamera...", sMuted);
             GUI.color = Color.white;
         }
 
@@ -377,7 +395,7 @@ namespace EnerGo
             GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float sheetH = 330f + SafeBottom(scale);
+            float sheetH = 398f + SafeBottom(scale);
             var sheet = new Rect(0, sh - sheetH, sw, sheetH + 30f); // extra height hides the bottom corners
             bool ready = inputCooldownTimer <= 0f;
 
@@ -415,6 +433,17 @@ namespace EnerGo
             }
             y += 68f + 14f;
 
+            var practiceRect = new Rect(x, y, w, 54f);
+            GUI.Label(DrawSecondaryButton(practiceRect, IsHeld(practiceRect, scale)), "LATIHAN (TANPA GPS)", sSecondary);
+            if (ready && ButtonHit(practiceRect))
+            {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+                currentState = ScreenState.Practice;
+                inputCooldownTimer = 0.2f;
+                return;
+            }
+            y += 54f + 14f;
+
             // Reset progress: two taps within 3.5 s
             var resetRect = new Rect(x, y, w, 54f);
             var resetFace = DrawSecondaryButton(resetRect, IsHeld(resetRect, scale));
@@ -434,6 +463,61 @@ namespace EnerGo
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.2f;
+            }
+        }
+
+        // Practice: the old picker (Matahari / Batu Bara / Emas / Acak) straight into a mini-game, no GPS.
+        private void DrawPractice(float sw, float sh)
+        {
+            float scale = HudScale;
+            GUI.color = Alpha(Ink, 0.45f);
+            GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            float gap = 12f, cardH = 76f;
+            float sheetH = 32f + 46f + cardH * 2f + gap + 20f + 66f + 12f + SafeBottom(scale);
+            var sheet = new Rect(0, sh - sheetH, sw, sheetH + 30f);
+            bool ready = inputCooldownTimer <= 0f;
+            if (ready && OutsideTap(sheet, scale))
+            {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
+                currentState = ScreenState.Lobby;
+                inputCooldownTimer = 0.2f;
+                return;
+            }
+            DrawPanel(sheet, Cream, Color.clear, 24f);
+            float w = Mathf.Min(sw - 40f, 440f), x = (sw - w) * 0.5f, y = sheet.y + 12f;
+            DrawPanel(new Rect((sw - 40f) * 0.5f, y, 40f, 4f), Line, Color.clear, 2f);
+            y += 20f;
+            GUI.Label(new Rect(x, y, w, 30f), "Latihan (tanpa GPS)", new GUIStyle(sTitle) { alignment = TextAnchor.MiddleLeft });
+            y += 46f;
+            float cardW = (w - gap) * 0.5f;
+            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold, RandomResource };
+            for (int i = 0; i < ids.Length; i++)
+            {
+                var rect = new Rect(x + (i % 2) * (cardW + gap), y + (i / 2) * (cardH + gap), cardW, cardH);
+                bool random = ids[i] == RandomResource;
+                if (DrawResourceCard(rect, ids[i], random ? "Acak" : ResourceIds.Name(ids[i]),
+                        random ? -1 : EnerGoProgress.Current.Get(ids[i]).Total, ready))
+                {
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+                    selectedResource = ids[i];
+                    PlayerPrefs.SetString(PrefResource, ids[i]);
+                    PlayerPrefs.Save();
+                    inputCooldownTimer = 0.15f;
+                }
+            }
+            y += cardH * 2f + gap + 20f;
+            var go = new Rect(x, y, w, 66f);
+            GUI.Label(DrawPrimaryButton(go, IsHeld(go, scale)), "MULAI LATIHAN", sPrimary);
+            if (ready && ButtonHit(go))
+            {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+                ResourceIds.Selected = selectedResource == RandomResource
+                    ? AllResources[Random.Range(0, AllResources.Length)] : selectedResource;
+                ExploreSession.PendingSpawnId = null;
+                transitionScene = CaptureSceneName();
+                currentState = ScreenState.TransitioningToAR;
+                transitionTimer = 0f;
             }
         }
 
