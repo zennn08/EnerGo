@@ -35,6 +35,9 @@ namespace EnerGo
         public string[] questionIds; // all questions of this capture; empty in saves from the 1-question version
         public int questionIndex;
         public int correctCount;
+        public bool timedOut;        // the latest answer ran out of time (counts as wrong)
+        public float performance;    // mini-game result, 0..1 (gold kept, speed); 0 in older saves
+        public int performanceBonus; // extra units earned by the mini-game
 
         public int QuestionCount => questionIds != null && questionIds.Length > 0 ? questionIds.Length : 1;
         public bool IsLastQuestion => questionIndex >= QuestionCount - 1;
@@ -140,7 +143,9 @@ namespace EnerGo
                     if (QuizBank.Find(id, session.resourceId) == null) return false;
             return session.questionIndex >= 0 && session.questionIndex < session.QuestionCount &&
                    session.correctCount >= 0 && session.correctCount <= session.QuestionCount &&
-                   session.rewardQuantity >= 0 && session.rewardQuantity <= 1 + QuizBank.QuestionsPerCapture; // old 1-question saves stored up to 3
+                   session.performance >= 0f && session.performance <= 1f &&
+                   session.performanceBonus >= 0 && session.performanceBonus <= MaxPerformanceBonus &&
+                   session.rewardQuantity >= 0 && session.rewardQuantity <= 1 + QuizBank.QuestionsPerCapture + MaxPerformanceBonus; // old 1-question saves stored up to 3
         }
 
         public static bool Commit(SaveGame next)
@@ -179,7 +184,8 @@ namespace EnerGo
 
         private static SaveGame Copy() => JsonUtility.FromJson<SaveGame>(JsonUtility.ToJson(Current));
 
-        public static bool BeginAnalysis(string resourceId)
+        // `performance` is how well the mini-game went (0..1); it is turned into bonus units now and paid out with the quiz reward.
+        public static bool BeginAnalysis(string resourceId, float performance = 0f)
         {
             if (Current.pendingCapture != null || QuizBank.ForResource(resourceId).Length == 0) return false;
             var next = Copy();
@@ -188,12 +194,15 @@ namespace EnerGo
             {
                 sessionId = Guid.NewGuid().ToString("N"), resourceId = resourceId,
                 questionIds = ids, questionIndex = 0, questionId = ids[0],
-                state = "awaiting-analysis"
+                state = "awaiting-analysis",
+                performance = Mathf.Clamp01(performance),
+                performanceBonus = BonusFor(performance)
             };
             return Commit(next);
         }
 
-        public static bool Answer(bool answer)
+        // `answer` null = the question timer ran out: counted as a wrong answer.
+        public static bool Answer(bool? answer)
         {
             var pending = Current.pendingCapture;
             if (pending == null || pending.state != "awaiting-analysis" || Current.lastCommittedCaptureId == pending.sessionId) return false;
@@ -201,14 +210,16 @@ namespace EnerGo
             if (question == null) return false;
             var next = Copy();
             var session = next.pendingCapture;
-            session.selectedAnswer = answer;
-            session.correct = question.correctAnswer == answer;
+            session.timedOut = answer == null;
+            session.selectedAnswer = answer ?? !question.correctAnswer;
+            session.correct = answer == question.correctAnswer;
             if (session.correct) session.correctCount++;
             session.state = "feedback";
             if (session.IsLastQuestion)
             {
-                // Reward is granted together with the last answer: 1 unit + 1 per correct answer, "Murni" only if all correct.
-                session.rewardQuantity = RewardFor(session.correctCount);
+                // Reward is granted together with the last answer: 1 unit + 1 per correct answer + the mini-game bonus,
+                // "Murni" only if all answers are correct.
+                session.rewardQuantity = RewardFor(session.correctCount, session.performanceBonus);
                 var entry = next.Get(session.resourceId);
                 if (session.Pure) entry.pureQuantity += session.rewardQuantity;
                 else entry.normalQuantity += session.rewardQuantity;
@@ -217,7 +228,14 @@ namespace EnerGo
             return Commit(next);
         }
 
-        public static int RewardFor(int correctCount) => 1 + correctCount;
+        public const int MaxPerformanceBonus = 2;
+
+        public static int RewardFor(int correctCount, int performanceBonus = 0) => 1 + correctCount + performanceBonus;
+
+        // Mini-game score 0..1 -> bonus units: great (>= 0.75) +2, good (>= 0.4) +1.
+        public static int BonusFor(float performance) => performance >= 0.75f ? 2 : performance >= 0.4f ? 1 : 0;
+
+        public static string GradeFor(int bonus) => bonus >= 2 ? "Hebat" : bonus == 1 ? "Bagus" : "Cukup";
 
         // From the per-answer feedback card: show the next question, or the final result after the last one.
         public static bool NextQuestion()

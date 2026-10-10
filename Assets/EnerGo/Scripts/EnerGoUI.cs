@@ -2,9 +2,31 @@ using UnityEngine;
 
 namespace EnerGo
 {
-    // Shared IMGUI look: Poppins text and rounded-rectangle buttons.
+    // Shared IMGUI look ("Solar Clean", see Branding/logo/final/guide.html): palette tokens, Poppins text,
+    // rounded panels and chunky game buttons with a darker lip underneath.
     public static class EnerGoUI
     {
+        // ── Palette ───────────────────────────────────────────────────
+        public static readonly Color Cream = Hex(0xFAF7F0);   // page background
+        public static readonly Color Paper = Color.white;     // cards, panels
+        public static readonly Color Ink = Hex(0x16181D);     // text, icons
+        public static readonly Color Muted = Hex(0x6B6F78);   // secondary text
+        public static readonly Color Line = Hex(0xE6E0D4);    // outlines, tracks
+        public static readonly Color Orange = Hex(0xFF6B2C);  // primary action, "Go"
+        public static readonly Color OrangeLip = Hex(0xC94A14);
+        public static readonly Color Sun = Hex(0xFFC93C);     // highlight, reward
+        public static readonly Color Success = Hex(0x1E9A5A);
+        public static readonly Color Danger = Hex(0xE5484D);
+
+        // In-game colour per resource (the crystal is recoloured per resource; the logo itself never changes).
+        public static Color Resource(string id) =>
+            id == ResourceIds.Sun ? Sun : id == ResourceIds.Coal ? Hex(0x3A3F4B) : id == ResourceIds.Gold ? Hex(0xE8B23A) : Orange;
+
+        public static Color Alpha(Color c, float a) => new Color(c.r, c.g, c.b, a);
+
+        private static Color Hex(int rgb) => new Color(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f, 1f);
+
+        // ── Text ──────────────────────────────────────────────────────
         private static Font regular;
         private static Font bold;
 
@@ -23,6 +45,24 @@ namespace EnerGo
             }
         }
 
+        // One-line label style in Poppins. Call from OnGUI (needs GUI.skin).
+        public static GUIStyle Text(int size, bool isBold, Color color, TextAnchor align = TextAnchor.MiddleCenter, bool wrap = false)
+        {
+            var s = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = size,
+                fontStyle = isBold ? FontStyle.Bold : FontStyle.Normal,
+                alignment = align,
+                wordWrap = wrap,
+                richText = true,
+                padding = new RectOffset(0, 0, 0, 0),
+                normal = { textColor = color }
+            };
+            ApplyFont(s);
+            return s;
+        }
+
+        // ── Input ─────────────────────────────────────────────────────
         private static float tapBlockedUntil;
 
         // One physical tap = one button press. Touches are read on touch-down from EnhancedTouch; IMGUI's own
@@ -49,48 +89,63 @@ namespace EnerGo
             return hit;
         }
 
-        // Corner radius in GUI units; the radius stays the same whatever the button's size.
-        private const float Radius = 12f;
-        private static Texture2D primaryFill;
-        private static Texture2D secondaryFill;
-
-        // Colours sampled from btn_play.png / btn_secondary.png so the buttons keep their look.
-        public static void DrawPrimaryButton(Rect rect)
+        // True while a mouse button or a finger is held down inside `rect` (for the pressed look).
+        public static bool IsHeld(Rect rect, float hudScale)
         {
-            if (primaryFill == null) primaryFill = Gradient(new Color32(76, 238, 177, 255), new Color32(5, 157, 106, 255));
-            DrawRounded(rect, primaryFill, new Color32(120, 255, 205, 255));
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse != null && mouse.leftButton.isPressed && rect.Contains(Event.current.mousePosition)) return true;
+            foreach (var touch in UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches)
+            {
+                var p = new Vector2(touch.screenPosition.x / hudScale, (Screen.height - touch.screenPosition.y) / hudScale);
+                if (rect.Contains(p)) return true;
+            }
+            return false;
         }
 
-        public static void DrawSecondaryButton(Rect rect)
-        {
-            if (secondaryFill == null) secondaryFill = Gradient(new Color32(17, 35, 49, 235), new Color32(9, 22, 31, 243));
-            DrawRounded(rect, secondaryFill, new Color32(58, 110, 132, 255));
-        }
+        // ── Shapes ────────────────────────────────────────────────────
+        public const float Radius = 16f;
+        private const float Lip = 4f; // button depth; a pressed button sinks onto its lip
 
-        // Flat rounded panel (HUD boxes, quiz card). Tinted by GUI.color like the buttons.
+        // Flat rounded panel. Tinted by GUI.color.
         public static void DrawPanel(Rect rect, Color fill, Color outline, float radius = Radius, float outlineWidth = 1.5f)
         {
             if (Event.current.type != EventType.Repaint) return;
             Color tint = GUI.color;
             GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, fill * tint, 0f, radius);
-            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, outline * tint, outlineWidth, radius);
+            if (outline.a > 0f)
+                GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, outline * tint, outlineWidth, radius);
         }
 
-        private static void DrawRounded(Rect rect, Texture2D fill, Color outline)
+        // White card with a soft drop shadow: the default surface on both the cream lobby and the camera feed.
+        public static void DrawCard(Rect rect, float radius = Radius, Color? outline = null, float outlineWidth = 1.5f)
         {
-            if (Event.current.type != EventType.Repaint) return;
-            Color tint = GUI.color; // callers darken GUI.color while the button is pressed
-            GUI.DrawTexture(rect, fill, ScaleMode.StretchToFill, true, 0f, tint, 0f, Radius);
-            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, outline * tint, 1.5f, Radius);
+            DrawPanel(new Rect(rect.x, rect.y + 6f, rect.width, rect.height), Alpha(Ink, 0.10f), Color.clear, radius);
+            DrawPanel(rect, Paper, outline ?? Line, radius, outlineWidth);
         }
 
-        private static Texture2D Gradient(Color top, Color bottom)
+        // Returns the face rect (shifted down while pressed) so callers can place the label on it.
+        public static Rect DrawPrimaryButton(Rect rect, bool pressed = false) => DrawButton(rect, Orange, OrangeLip, Color.clear, pressed);
+
+        public static Rect DrawSecondaryButton(Rect rect, bool pressed = false) => DrawButton(rect, Paper, Line, Line, pressed);
+
+        public static Rect DrawDarkButton(Rect rect, bool pressed = false) => DrawButton(rect, Ink, Hex(0x000000), Color.clear, pressed);
+
+        private static Rect DrawButton(Rect rect, Color face, Color lip, Color outline, bool pressed)
         {
-            const int h = 32;
-            var tex = new Texture2D(1, h, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
-            for (int y = 0; y < h; y++) tex.SetPixel(0, y, Color.Lerp(bottom, top, y / (h - 1f))); // y=0 is the bottom row
-            tex.Apply();
-            return tex;
+            var faceRect = new Rect(rect.x, rect.y + (pressed ? Lip : 0f), rect.width, rect.height - Lip);
+            float r = Mathf.Min(Radius, faceRect.height * 0.5f);
+            if (!pressed) DrawPanel(new Rect(rect.x, rect.y + Lip, rect.width, rect.height - Lip), lip, Color.clear, r);
+            DrawPanel(faceRect, face, outline, r, 2f);
+            return faceRect;
+        }
+
+        // Horizontal progress bar on a Line-coloured track.
+        public static void DrawBar(Rect track, float progress, Color fill)
+        {
+            DrawPanel(track, Line, Color.clear, track.height * 0.5f);
+            if (progress > 0.01f)
+                DrawPanel(new Rect(track.x, track.y, Mathf.Max(track.height, track.width * Mathf.Clamp01(progress)), track.height),
+                    fill, Color.clear, track.height * 0.5f);
         }
     }
 }
