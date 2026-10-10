@@ -20,7 +20,8 @@ namespace EnerGo
 
         // In-game colour per resource (the crystal is recoloured per resource; the logo itself never changes).
         public static Color Resource(string id) =>
-            id == ResourceIds.Sun ? Sun : id == ResourceIds.Coal ? Hex(0x3A3F4B) : id == ResourceIds.Gold ? Hex(0xE8B23A) : Orange;
+            id == ResourceIds.Sun ? Sun : id == ResourceIds.Coal ? Hex(0x3A3F4B) : id == ResourceIds.Gold ? Hex(0xE8B23A)
+            : id == ResourceIds.Oil ? Hex(0x2F5D6B) : id == ResourceIds.Uranium ? Hex(0x1E9A4A) : Orange;
 
         public static Color Alpha(Color c, float a) => new Color(c.r, c.g, c.b, a);
 
@@ -146,6 +147,15 @@ namespace EnerGo
             if (progress > 0.01f)
                 DrawPanel(new Rect(track.x, track.y, Mathf.Max(track.height, track.width * Mathf.Clamp01(progress)), track.height),
                     fill, Color.clear, track.height * 0.5f);
+        }
+
+        // Small padlock badge (locked resources): white backing, ink shackle and body. `size` = body width.
+        public static void DrawLock(Vector2 c, float size)
+        {
+            float bodyH = size * 0.75f, shackle = size * 0.62f;
+            DrawPanel(new Rect(c.x - size * 0.5f - 3f, c.y - shackle - 2f, size + 6f, shackle + bodyH * 0.5f + 5f), Paper, Color.clear, size * 0.35f);
+            DrawPanel(new Rect(c.x - size * 0.3f, c.y - shackle, size * 0.6f, shackle + 2f), Color.clear, Ink, size * 0.3f, Mathf.Max(1.5f, size * 0.14f));
+            DrawPanel(new Rect(c.x - size * 0.5f, c.y - bodyH * 0.5f + 1f, size, bodyH), Ink, Color.clear, size * 0.18f);
         }
     }
 }

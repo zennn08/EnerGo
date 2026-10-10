@@ -37,6 +37,16 @@ def max_radius(scale):
 FG_SCALE = 0.68
 assert max_radius(FG_SCALE) <= 78.2, max_radius(FG_SCALE)
 
+# In-game crystal per resource: (top facet, bottom facet, left facet). Matches the guide's resource colour system.
+CRYSTALS = {
+    "sun": ("#FFE08A", "#FF9F1C", "#FFC93C"),
+    "coal": ("#7A8090", "#16181D", "#3A3F4B"),
+    "gold": ("#F7D98B", "#9A6A0C", "#E8B23A"),
+    "oil": ("#9CC0CC", "#12303A", "#2F5D6B"),
+    "uranium": ("#B9F0B0", "#0F5A2A", "#1E9A4A"),
+    "random": (SUN, INK, ORANGE),
+}
+
 if __name__ == "__main__":
     full = svg("energo-appicon", "0 0 256 256", f'<rect width="256" height="256" fill="{CREAM}"/>' + placed(0.82, gap=11))
     dark = svg("energo-appicon-dark", "0 0 256 256", f'<rect width="256" height="256" fill="{INK}"/>' + placed(0.82, (SUN, CREAM, ORANGE), 11))
@@ -48,3 +58,6 @@ if __name__ == "__main__":
     render(full, "final/png/energo-appicon.png", 1024)
     render(dark, "final/png/energo-appicon-dark.png", 1024)
     print("optical x", round(OPTICAL_X, 1), "fg max radius", round(max_radius(FG_SCALE), 1))
+    for key, cols in CRYSTALS.items():
+        src = svg(f"crystal-{key}", f"54 36 {H3:.2f} 184", symbol(cols, gap=11))
+        render(src, f"{UNITY}/Resources/UI/crystal_{key}.png", 173, 200)
