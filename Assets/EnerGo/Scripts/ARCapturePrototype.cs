@@ -751,8 +751,9 @@ namespace EnerGo
         // Shared finish for every mini-game: open the quiz, or report why it could not.
         private bool CompleteCapture()
         {
-            if (EnerGoProgress.BeginAnalysis(resourceId, capturePerformance))
+            if (EnerGoProgress.BeginAnalysis(resourceId, capturePerformance, ExploreSession.PendingSpawnId ?? ""))
             {
+                ExploreSession.PendingSpawnId = null;
                 if (SFXManager.Instance != null) { SFXManager.Instance.StopMatahari(); SFXManager.Instance.StopEkstrakMatahari(); SFXManager.Instance.StopAliranAir(); }
                 goldPhase = GoldPhase.None;
                 Destroy(target);
@@ -1549,10 +1550,12 @@ namespace EnerGo
 
             // Return to Lobby Button (Left)
             var lobbyRect = new Rect(14f, safeTop, 90f, pillH);
-            if (EnerGoProgress.Current.pendingCapture == null && DrawBtn(lobbyRect, "‹  LOBBY", styleBtnText))
+            bool fromRadar = ExploreSession.PendingSpawnId != null;
+            if (EnerGoProgress.Current.pendingCapture == null && DrawBtn(lobbyRect, fromRadar ? "‹  RADAR" : "‹  LOBBY", styleBtnText))
             {
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
-                SceneManager.LoadScene("LobbyScene");
+                ExploreSession.PendingSpawnId = null; // leaving without catching: the spawn stays on the radar
+                SceneManager.LoadScene(fromRadar ? "ExploreScene" : "LobbyScene");
                 return;
             }
 
@@ -1751,7 +1754,8 @@ namespace EnerGo
                 GUI.Label(new Rect(x + pad, cy2, resW, msgH), message, explain);
                 cy2 += msgH + 20f;
 
-                if (DrawPrimaryBtn(new Rect(x + pad, cy2, resW, 52f), "LANJUT KE LOBBY"))
+                bool backToRadar = !string.IsNullOrEmpty(session.spawnId);
+                if (DrawPrimaryBtn(new Rect(x + pad, cy2, resW, 52f), backToRadar ? "LANJUT BERBURU" : "LANJUT KE LOBBY"))
                 {
                     if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     if (EnerGoProgress.ClearResult())
@@ -1759,7 +1763,7 @@ namespace EnerGo
                         cardOffset   = Vector2.zero;
                         cardFlicking = false;
                         cardReturning = false;
-                        SceneManager.LoadScene("LobbyScene");
+                        SceneManager.LoadScene(backToRadar ? "ExploreScene" : "LobbyScene");
                     }
                 }
 
