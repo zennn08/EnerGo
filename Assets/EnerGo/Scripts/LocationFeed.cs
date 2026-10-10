@@ -28,8 +28,10 @@ namespace EnerGo
         public bool HasCompass { get; private set; }
 
         private float startedAt;
-        private double lastFixTime = -1;
+        private double lastSeenFixTime = -1;
+        private FixFilter fixes = new FixFilter();
         private bool waitingForPermission;
+        private volatile bool permissionGranted; // set from the Android permission callback, acted on in Update (main thread)
 
         private void OnEnable() => Restart();
 
@@ -53,7 +55,7 @@ namespace EnerGo
             {
                 waitingForPermission = true;
                 var callbacks = new PermissionCallbacks();
-                callbacks.PermissionGranted += _ => { waitingForPermission = false; StartDevice(); };
+                callbacks.PermissionGranted += _ => permissionGranted = true;
                 callbacks.PermissionDenied += _ => { waitingForPermission = false; Status = FeedStatus.Denied; };
                 callbacks.PermissionDeniedAndDontAskAgain += _ => { waitingForPermission = false; Status = FeedStatus.Denied; };
                 Permission.RequestUserPermission(Permission.FineLocation, callbacks);
@@ -76,7 +78,8 @@ namespace EnerGo
             Input.compass.enabled = true;
             Input.location.Start(5f, 2f);
             startedAt = Time.unscaledTime;
-            lastFixTime = -1;
+            lastSeenFixTime = -1;
+            fixes = new FixFilter();
             Status = FeedStatus.Starting;
         }
 
@@ -91,6 +94,7 @@ namespace EnerGo
 
         private void UpdateDevice()
         {
+            if (permissionGranted) { permissionGranted = false; waitingForPermission = false; StartDevice(); }
             if (waitingForPermission || Status == FeedStatus.Denied || Status == FeedStatus.Disabled || Status == FeedStatus.Failed) return;
             var service = Input.location.status;
             if (service == LocationServiceStatus.Failed) { Status = FeedStatus.Failed; return; }
@@ -101,18 +105,16 @@ namespace EnerGo
             }
 
             var fix = Input.location.lastData;
-            if (fix.timestamp != lastFixTime)
+            if (fix.timestamp != lastSeenFixTime)
             {
-                bool first = lastFixTime < 0;
-                double moved = GeoSpawner.DistanceM(Lat, Lon, fix.latitude, fix.longitude);
-                if (first || GeoSpawner.PlausibleMove(moved, fix.timestamp - lastFixTime))
+                lastSeenFixTime = fix.timestamp;
+                if (fixes.Offer(fix.latitude, fix.longitude, fix.timestamp, fix.horizontalAccuracy))
                 {
-                    Lat = fix.latitude;
-                    Lon = fix.longitude;
-                    AccuracyM = fix.horizontalAccuracy;
+                    Lat = fixes.Lat;
+                    Lon = fixes.Lon;
+                    AccuracyM = (float)fixes.Accuracy;
+                    Status = FeedStatus.Running; // only once there is a real position to show
                 }
-                lastFixTime = fix.timestamp;
-                Status = FeedStatus.Running;
             }
 
             HasCompass = Input.compass.enabled && Input.compass.timestamp > 0;
