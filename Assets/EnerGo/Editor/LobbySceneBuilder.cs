@@ -11,6 +11,7 @@ namespace EnerGo.Editor
         const string LobbyScenePath = "Assets/EnerGo/LobbyScene.unity";
         const string ARScenePath = "Assets/EnerGo/ARPrototype.unity";
         const string SensorScenePath = "Assets/EnerGo/Sensor360Scene.unity";
+        const string ExploreScenePath = "Assets/EnerGo/ExploreScene.unity";
 
         static LobbySceneBuilder()
         {
@@ -55,6 +56,26 @@ namespace EnerGo.Editor
             Debug.Log("LobbyScene created and saved at: " + LobbyScenePath);
         }
 
+        // Run once from the menu (or via MCP). Not done automatically on load, because it switches the open scene.
+        [MenuItem("EnerGo/Setup Explore Scene")]
+        public static void CreateExploreScene()
+        {
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ExploreScenePath) != null) { UpdateBuildSettings(); return; }
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var camGo = new GameObject("Main Camera");
+            var cam = camGo.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.98f, 0.97f, 0.94f, 1f); // Cream; the radar draws over it anyway
+            cam.orthographic = true;
+            camGo.tag = "MainCamera";
+            var radar = new GameObject("Radar");
+            radar.AddComponent<LocationFeed>();
+            radar.AddComponent<RadarController>();
+            EditorSceneManager.SaveScene(scene, ExploreScenePath);
+            UpdateBuildSettings();
+        }
+
         public static void UpdateBuildSettings()
         {
             var scenes = new List<EditorBuildSettingsScene>();
@@ -62,6 +83,11 @@ namespace EnerGo.Editor
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(LobbyScenePath) != null)
             {
                 scenes.Add(new EditorBuildSettingsScene(LobbyScenePath, true));
+            }
+
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ExploreScenePath) != null)
+            {
+                scenes.Add(new EditorBuildSettingsScene(ExploreScenePath, true));
             }
 
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ARScenePath) != null)

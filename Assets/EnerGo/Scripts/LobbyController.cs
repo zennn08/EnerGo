@@ -24,6 +24,11 @@ namespace EnerGo
         // Static flag so Splash Screen only shows once per app session
         public static bool hasShownSplash = false;
 
+        // Set by the radar's "Main mode Latihan" so the lobby opens straight onto the practice picker.
+        public static bool OpenPracticeOnLoad;
+
+        public static string CaptureSceneName() => PlayerPrefs.GetInt(PrefUseARCore, 0) == 1 ? "ARPrototype" : "Sensor360Scene";
+
         private Texture2D texSymbol;
         private Texture2D texWordmark;
 
@@ -42,7 +47,7 @@ namespace EnerGo
 
         private string selectedResource = ResourceIds.Gold;
         private bool useARCore;
-        private const string PrefUseARCore = "EnerGo.UseARCore";
+        public const string PrefUseARCore = "EnerGo.UseARCore";
         private const string PrefResource = "EnerGo.SelectedResource";
         private const string RandomResource = "random"; // a different SDA picked on every PLAY
         private static readonly string[] AllResources = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold };
