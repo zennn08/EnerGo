@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace EnerGo
@@ -29,6 +30,7 @@ namespace EnerGo
         public bool timedOut;        // the latest answer ran out of time (counts as wrong)
         public float performance;    // mini-game result, 0..1 (gold kept, speed); 0 in older saves
         public int performanceBonus; // extra units earned by the mini-game
+        public string spawnId;       // radar spawn being captured; empty for practice mode and older saves
 
         public int QuestionCount => questionIds != null && questionIds.Length > 0 ? questionIds.Length : 1;
         public bool IsLastQuestion => questionIndex >= QuestionCount - 1;
@@ -48,6 +50,7 @@ namespace EnerGo
         public CaptureSession pendingCapture;
         public string lastCommittedCaptureId = "";
         public bool legacyGoldImported;
+        public string[] capturedSpawns = new string[0]; // radar spawns this player already caught (recent windows only)
 
         public InventoryEntry Get(string id)
         {
@@ -141,6 +144,8 @@ namespace EnerGo
 
         public static bool Commit(SaveGame next)
         {
+            next.capturedSpawns = GeoSpawner.PruneCaptured(next.capturedSpawns,
+                GeoSpawner.WindowOf(DateTimeOffset.UtcNow.ToUnixTimeSeconds()));
             if (recoveryRequired) { Error = "Save rusak. Reset terkonfirmasi diperlukan sebelum menyimpan lagi."; return false; }
             if (!Valid(next)) { Error = "Data progres tidak valid."; return false; }
             string temp = SavePath + ".tmp";
@@ -176,7 +181,7 @@ namespace EnerGo
         private static SaveGame Copy() => JsonUtility.FromJson<SaveGame>(JsonUtility.ToJson(Current));
 
         // `performance` is how well the mini-game went (0..1); it is turned into bonus units now and paid out with the quiz reward.
-        public static bool BeginAnalysis(string resourceId, float performance = 0f)
+        public static bool BeginAnalysis(string resourceId, float performance = 0f, string spawnId = "")
         {
             if (Current.pendingCapture != null || QuizBank.ForResource(resourceId).Length == 0) return false;
             var next = Copy();
@@ -187,7 +192,8 @@ namespace EnerGo
                 questionIds = ids, questionIndex = 0, questionId = ids[0],
                 state = "awaiting-analysis",
                 performance = Mathf.Clamp01(performance),
-                performanceBonus = BonusFor(performance)
+                performanceBonus = BonusFor(performance),
+                spawnId = spawnId ?? ""
             };
             return Commit(next);
         }
@@ -215,6 +221,9 @@ namespace EnerGo
                 if (session.Pure) entry.pureQuantity += session.rewardQuantity;
                 else entry.normalQuantity += session.rewardQuantity;
                 next.lastCommittedCaptureId = session.sessionId;
+                // The spawn disappears from this player's radar in the same commit that pays the reward.
+                if (!string.IsNullOrEmpty(session.spawnId))
+                    next.capturedSpawns = (next.capturedSpawns ?? new string[0]).Concat(new[] { session.spawnId }).ToArray();
             }
             return Commit(next);
         }
