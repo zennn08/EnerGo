@@ -18,7 +18,7 @@ Sekalian: semua mode memakai getaran HP (mengikuti saklar Pengaturan → Getaran
   (bearing serpihan pertama = bijih), pitch acak `HideMinPitchDeg..HideMaxPitchDeg`, jarak `UraniumOreDistance`.
   Serpihan selalu terlihat (bercahaya, berputar).
 - RAD, panah tren, dan Geiger menunjuk serpihan terdekat (sudut terkecil) yang belum diambil.
-- **Jepit:** tombol JEPIT di bawah tengah. Selama tombol ditahan dan serpihan terdekat ada di dalam
+- **Jepit:** tombol JEPIT bulat di kanan tengah (setinggi jempol; bawah tengah sudah dipakai bar dosis dan tombol reset). Selama tombol ditahan dan serpihan terdekat ada di dalam
   `GripAngleDeg` (= `RevealAngleDeg`) dan guncangan < `GripShakeMax`, `grip` naik `1/GripSec` per detik
   (`GripSec = 1`). Lepas tombol, serpihan keluar reticle, atau guncangan → `grip = 0` ("JEPITAN LEPAS").
   `grip >= 1` → serpihan masuk wadah (terbang ke bawah layar lalu hilang), hitungan `n/3` naik.
@@ -28,7 +28,7 @@ Sekalian: semua mode memakai getaran HP (mengikuti saklar Pengaturan → Getaran
   `dose >= 1` → "DOSIS BERLEBIH" → `RetryUranium` (bijih baru, mulai dari Cari).
 - **Dibuang:** reaktivitas, slider, gauge reaktor, lonjakan neutron, drift, meltdown, beserta konstanta & test-nya.
 - **HUD:** kartu atas = teks fase + bar `n/3`; reticle tetap; RAD meter tetap; tombol JEPIT dengan cincin
-  progres `grip`; bar DOSIS tetap.
+  progres `grip` berupa lingkaran yang membesar; bar DOSIS tetap.
 - **Panduan** (`GuideBook`): kartu 2 "Jepit serpihan" (Art.Hold): arahkan lingkaran ke serpihan, tahan JEPIT,
   penjepit menjaga jarak. Kartu 3 "Cepat & stabil" (Art.Shake): dosis terus naik, tiap serpihan di wadah timbal
   memperlambatnya, guncangan melepas jepitan. `Art.Slider` dihapus.

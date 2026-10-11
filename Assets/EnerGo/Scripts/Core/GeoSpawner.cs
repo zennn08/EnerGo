@@ -173,5 +173,26 @@ namespace EnerGo
         }
 
         private static double Next01(ref ulong state) => (SplitMix(ref state) >> 11) * (1.0 / 9007199254740992.0);
+
+        // Tells when a spawn newly comes into capture range, for a single buzz. The first refresh only seeds,
+        // and an id counts as still in range for ForgetSec after it drops out, so GPS jitter at the edge stays quiet.
+        public sealed class RangeAlert
+        {
+            public const float ForgetSec = 10f;
+            private readonly Dictionary<string, float> lastSeen = new Dictionary<string, float>();
+            private bool seeded;
+
+            public bool Update(IEnumerable<string> inRange, float now)
+            {
+                bool entered = false;
+                foreach (var id in inRange)
+                {
+                    if (seeded && (!lastSeen.TryGetValue(id, out float t) || now - t > ForgetSec)) entered = true;
+                    lastSeen[id] = now;
+                }
+                seeded = true;
+                return entered;
+            }
+        }
     }
 }

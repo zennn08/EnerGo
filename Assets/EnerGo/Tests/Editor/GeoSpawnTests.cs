@@ -138,5 +138,27 @@ namespace EnerGo.Tests
             CollectionAssert.AreEquivalent(new[] { "1:2:100:0", "1:2:99:1" }, GeoSpawner.PruneCaptured(ids, 100));
             CollectionAssert.IsEmpty(GeoSpawner.PruneCaptured(null, 100));
         }
+
+        [Test]
+        public void RangeAlertStaysQuietForSpawnsAlreadyInRangeOnTheFirstRefresh()
+        {
+            var alert = new GeoSpawner.RangeAlert();
+            Assert.IsFalse(alert.Update(new[] { "a" }, 0f));
+            Assert.IsTrue(alert.Update(new[] { "a", "b" }, 0.5f));
+            Assert.IsFalse(alert.Update(new[] { "a", "b" }, 1f));
+        }
+
+        [Test]
+        public void RangeAlertIgnoresGpsJitterAtTheEdgeOfRange()
+        {
+            var alert = new GeoSpawner.RangeAlert();
+            alert.Update(new string[0], 0f);
+            Assert.IsTrue(alert.Update(new[] { "a" }, 0.5f));
+            Assert.IsFalse(alert.Update(new string[0], 1f));
+            Assert.IsFalse(alert.Update(new[] { "a" }, 1.5f), "dropping out for a moment is jitter, not a new arrival");
+            Assert.IsFalse(alert.Update(new string[0], 2f));
+            Assert.IsTrue(alert.Update(new[] { "a" }, 2f + GeoSpawner.RangeAlert.ForgetSec + 0.1f), "really walking away and back buzzes again");
+        }
+
     }
 }
