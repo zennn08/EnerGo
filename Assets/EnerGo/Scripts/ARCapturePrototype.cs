@@ -41,6 +41,8 @@ namespace EnerGo
         private GameObject sunModel;   // Resources/Sun/sun; falls back to a yellow sphere while it has no mesh
         private Material goldMaterial;
         private string resourceId;
+        private CompassAnchor compass;
+        private float captureBearing; // compass bearing of this capture's SDA (radar), random in practice mode
         private float resultShownAt;
         private int touches = 0;
         private float nextSpawnTime = 0f;
@@ -235,6 +237,11 @@ namespace EnerGo
             resourceId = save.pendingCapture != null ? save.pendingCapture.resourceId : ResourceIds.Selected;
             if (!ResourceIds.IsPlayable(resourceId)) resourceId = ResourceIds.Gold;
             if (save.pendingCapture != null && save.pendingCapture.state != "awaiting-analysis") resultShownAt = Time.time;
+            compass = gameObject.AddComponent<CompassAnchor>();
+            compass.cam = arCamera;
+            // A bearing only counts together with a radar spawn id; practice mode (or a stale bearing) gets a random one.
+            captureBearing = ExploreSession.PendingSpawnId != null && ExploreSession.PendingBearingDeg.HasValue
+                ? ExploreSession.PendingBearingDeg.Value : Random.Range(0f, 360f);
 
             LoadTextures();
             CreateSolidTextures();
@@ -453,7 +460,7 @@ namespace EnerGo
 
             // 3. Target Spawning
             bool canSpawn = (isUsingGyro || ARSession.state == ARSessionState.SessionTracking);
-            if (EnerGoProgress.Current.pendingCapture == null && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime)
+            if (EnerGoProgress.Current.pendingCapture == null && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime && compass.ReadyToPlace)
             {
                 // Place the first target in view so sensor-mode users see an immediate response.
                 // A failed gold pan hides the next deposit somewhere around the player instead of in front.
@@ -843,12 +850,11 @@ namespace EnerGo
             target = new GameObject("Coal field");
             coalLumps.Clear();
             finishAt = -1f;
-            Vector3 fwd = arCamera.transform.forward;
-            float baseYaw = Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg;
+            float baseYaw = CompassMath.WorldYaw(captureBearing, compass.OffsetDeg);
             coalTotal = Random.Range(CoalMinLumps, CoalMaxLumps + 1);
             coalStartedAt = Time.time;
             // A different layout every round: random centre, random spots on the arc (kept apart), height and distance.
-            float centreYaw = baseYaw + Random.Range(-35f, 35f);
+            float centreYaw = baseYaw + Random.Range(-10f, 10f);
             var yaws = new List<float>();
             for (int i = 0; i < coalTotal; i++)
             {
@@ -871,6 +877,7 @@ namespace EnerGo
                 coalLumps.Add(lump);
                 SetCoalStage(lump, 0);
             }
+            target.transform.SetParent(compass.North, true);
             feedback = "PECAHKAN SEMUA BATU BARA";
         }
 
@@ -1275,6 +1282,10 @@ namespace EnerGo
             EnerGoUI.DrawPanel(new Rect(p.x - r * 0.35f - h, p.y - r * 0.35f - h, h * 2f, h * 2f), new Color(1f, 1f, 1f, 0.85f * alpha), Color.clear, h);
         }
 
+        // World point at this capture's bearing (plus a yaw offset), tilted by pitch, `dist` metres from the camera.
+        private Vector3 AtBearing(float yawOffsetDeg, float pitchDeg, float dist) =>
+            arCamera.transform.position + compass.Direction(captureBearing + yawOffsetDeg, pitchDeg) * dist;
+
         // Where the radar arrow points: the remaining coal lump closest to the view, else the target.
         private Vector3 RadarTargetPosition()
         {
@@ -1374,30 +1385,10 @@ namespace EnerGo
                 }
             }
 
-            if (!isRandomAngle)
-            {
-                // ARCore Standard Spawning: 1.2m directly in front of camera
-                target.transform.position = arCamera.transform.position + arCamera.transform.forward * 1.2f;
-                target.transform.rotation = Quaternion.LookRotation(arCamera.transform.forward, Vector3.up);
-            }
-            else
-            {
-                // Gyro 360 Fallback: Spawns in room at random angle around player
-                // Random horizontal angle between -135° and +135°
-                float randYaw = Random.Range(-135f, 135f);
-                float randPitch = Random.Range(-12f, 18f);
-                float randDist = Random.Range(1.8f, 2.3f);
-
-                Quaternion spawnRot = Quaternion.Euler(randPitch, randYaw, 0f);
-                Vector3 forwardDir = arCamera.transform.forward;
-                forwardDir.y = 0f;
-                if (forwardDir.sqrMagnitude < 0.01f) forwardDir = Vector3.forward;
-                forwardDir.Normalize();
-
-                Vector3 spawnOffset = (Quaternion.LookRotation(forwardDir) * spawnRot) * Vector3.forward * randDist;
-                target.transform.position = arCamera.transform.position + spawnOffset;
-                target.transform.rotation = Quaternion.LookRotation(-spawnOffset.normalized, Vector3.up);
-            }
+            // Gold sits at the radar bearing; after a spilled pan the next deposit hides a little to the side.
+            float side = isRandomAngle ? Random.Range(25f, 50f) * (Random.value < 0.5f ? -1f : 1f) : 0f;
+            target.transform.position = AtBearing(side, Random.Range(-12f, 10f), Random.Range(1.4f, 2.0f));
+            target.transform.rotation = Quaternion.LookRotation(arCamera.transform.position - target.transform.position, Vector3.up);
 
             if (resourceId == ResourceIds.Sun)
             {
@@ -1408,6 +1399,7 @@ namespace EnerGo
                 sunProgress = 0f;
                 UpdateSun();
             }
+            if (resourceId != ResourceIds.Sun) target.transform.SetParent(compass.North, true);
 
             feedback = isRandomAngle ? "TARGET TERDETEKSI // PUTAR PERANGKAT" : ResourceIds.Name(resourceId) + " SIAP DIKUMPULKAN";
         }
@@ -1599,6 +1591,7 @@ namespace EnerGo
 
             // --- 2. RADAR & TARGET DIRECTION HUD ---
             DrawRadarHUD(sw, safeTop + pillH + 10f);
+            if (EnerGoProgress.Current.pendingCapture == null) DrawCompassStrip(sw, safeTop + pillH + 10f + 72f);
 
             // --- 3. BOTTOM CONTROL BAR ---
             float botY = sh - 52f;
@@ -1912,7 +1905,7 @@ namespace EnerGo
                 int deg = Mathf.RoundToInt(Mathf.Abs(signedAngle));
 
                 // Is target roughly within view frustum?
-                if (Mathf.Abs(signedAngle) > 28f)
+                if (resourceId == ResourceIds.Sun && Mathf.Abs(signedAngle) > 28f)
                 {
                     line1 = signedAngle < 0 ? $"‹  PUTAR KE KIRI  {deg}°" : $"PUTAR KE KANAN  {deg}°  ›";
                     line2 = "Mineral di luar bidang pandang";
@@ -1971,6 +1964,56 @@ namespace EnerGo
             int done = 0, total = 0;
             foreach (var lump in coalLumps) { done += Mathf.Min(lump.hits, lump.required); total += lump.required; }
             return total > 0 ? (float)done / total : 0f;
+        }
+
+        private GUIStyle stripLabelStyle;
+
+        // HUD compass: ticks every 15°, U/TL/T/... every 45°, the view direction in the centre, and the SDA marker
+        // (a dot, or for uranium only a rough green sector). Off-strip markers show "‹ 75°" / "75° ›" at the edge.
+        private void DrawCompassStrip(float sw, float y)
+        {
+            if (compass == null || arCamera == null) return;
+            if (stripLabelStyle == null) stripLabelStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
+            var r = new Rect(16f, y, sw - 32f, 34f);
+            EnerGoUI.DrawCard(r, EnerGoUI.Radius, HudOutline, 1.5f);
+            float half = CompassMath.StripHalfSpanDeg, heading = compass.HeadingDeg;
+            float X(float x01) => r.center.x + x01 * (r.width * 0.5f - 14f);
+
+            if (!compass.HasCompass)
+                GUI.Label(new Rect(r.x, r.y, r.width, r.height), "KOMPAS TIDAK TERSEDIA", stripLabelStyle);
+            else
+                for (int d = 0; d < 360; d += 15)
+                {
+                    float x01 = CompassMath.StripX(d, heading, half);
+                    if (Mathf.Abs(x01) > 1f) continue;
+                    if (d % 45 == 0) GUI.Label(new Rect(X(x01) - 16f, r.y + 2f, 32f, r.height - 4f), CompassMath.DirectionLabel(d), stripLabelStyle);
+                    else EnerGoUI.DrawPanel(new Rect(X(x01) - 1f, r.y + 12f, 2f, 10f), EnerGoUI.Line, Color.clear, 1f);
+                }
+
+            if (resourceId == ResourceIds.Uranium)
+            {
+                float c = CompassMath.StripX(captureBearing, heading, half), w = CompassMath.UraniumSectorHalfDeg / half;
+                float lo = Mathf.Max(-1f, c - w), hi = Mathf.Min(1f, c + w);
+                if (hi > lo) EnerGoUI.DrawPanel(new Rect(X(lo), r.y + 4f, X(hi) - X(lo), r.height - 8f), EnerGoUI.Alpha(EnerGoUI.Success, 0.3f), Color.clear, 6f);
+                else StripEdge(r, c, Mathf.Abs(Mathf.DeltaAngle(heading, captureBearing)) - CompassMath.UraniumSectorHalfDeg);
+            }
+            else if (resourceId != ResourceIds.Sun && target != null)
+            {
+                Vector3 to = RadarTargetPosition() - arCamera.transform.position;
+                float bearing = CompassMath.CameraHeading(Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, compass.OffsetDeg);
+                float x01 = CompassMath.StripX(bearing, heading, half);
+                if (Mathf.Abs(x01) <= 1f) EnerGoUI.DrawPanel(new Rect(X(x01) - 6f, r.center.y - 6f, 12f, 12f), EnerGoUI.Orange, EnerGoUI.Ink, 6f, 1.5f);
+                else StripEdge(r, x01, Mathf.Abs(Mathf.DeltaAngle(heading, bearing)));
+            }
+            EnerGoUI.DrawPanel(new Rect(r.center.x - 1f, r.y + 2f, 2f, r.height - 4f), EnerGoUI.Ink, Color.clear, 1f); // view direction
+        }
+
+        private void StripEdge(Rect r, float x01, float deg)
+        {
+            string t = x01 < 0f ? "‹ " + Mathf.RoundToInt(deg) + "°" : Mathf.RoundToInt(deg) + "° ›";
+            var cell = x01 < 0f ? new Rect(r.x + 4f, r.y, 64f, r.height) : new Rect(r.xMax - 68f, r.y, 64f, r.height);
+            EnerGoUI.DrawPanel(new Rect(cell.x, r.y + 5f, cell.width, r.height - 10f), EnerGoUI.Orange, Color.clear, 8f);
+            GUI.Label(cell, t, stripLabelStyle);
         }
 
         // Horizontal progress bar with a short label (percentage or count) on the right.

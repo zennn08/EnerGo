@@ -52,12 +52,10 @@ namespace EnerGo
             OilPart(PrimitiveType.Cube, oilBeam, new Vector3(0.7f, -0.08f, 0f), new Vector3(0.12f, 0.3f, 0.16f), orange);     // horse head
             target.transform.localScale = Vector3.one * 0.35f;
 
-            Vector3 fwd = arCamera.transform.forward;
-            fwd.y = 0f;
-            if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
-            fwd.Normalize();
+            Vector3 fwd = compass.Direction(captureBearing, 0f);
             target.transform.position = arCamera.transform.position + fwd * 1.4f + Vector3.up * 0.05f;
             target.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up); // beam runs left-right, seen side-on
+            target.transform.SetParent(compass.North, true);
 
             oilLayers = OilMath.Layers(Random.Range(int.MinValue, int.MaxValue));
             oilPhase = OilPhase.Drill;

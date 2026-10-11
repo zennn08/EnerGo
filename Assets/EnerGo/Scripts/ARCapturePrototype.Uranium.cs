@@ -52,13 +52,9 @@ namespace EnerGo
             }
             target.transform.localScale = Vector3.one * UraniumOreSize;
 
-            Vector3 fwd = arCamera.transform.forward;
-            fwd.y = 0f;
-            if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
-            float yaw = Random.Range(60f, 150f) * (Random.value < 0.5f ? -1f : 1f);
             float pitch = Random.Range(UraniumMath.HideMinPitchDeg, UraniumMath.HideMaxPitchDeg);
-            Vector3 dir = Quaternion.LookRotation(fwd.normalized) * Quaternion.Euler(-pitch, yaw, 0f) * Vector3.forward;
-            target.transform.position = arCamera.transform.position + dir * UraniumOreDistance;
+            target.transform.position = AtBearing(0f, pitch, UraniumOreDistance);
+            target.transform.SetParent(compass.North, true);
             target.SetActive(false); // invisible until the Geiger counter finds it
 
             uraniumPhase = UraniumPhase.Search;

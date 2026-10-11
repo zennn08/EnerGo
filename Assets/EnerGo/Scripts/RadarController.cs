@@ -272,6 +272,7 @@ namespace EnerGo
             if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
             ResourceIds.Selected = s.ResourceId;
             ExploreSession.PendingSpawnId = s.Id;
+            ExploreSession.PendingBearingDeg = (float)GeoSpawner.BearingDeg(feed.Lat, feed.Lon, s.Lat, s.Lon);
             SceneManager.LoadScene(LobbyController.CaptureSceneName());
         }
 
