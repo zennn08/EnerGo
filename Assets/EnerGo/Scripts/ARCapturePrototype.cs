@@ -573,7 +573,7 @@ namespace EnerGo
                     bool hitTarget = CheckTapOnTarget(touch.screenPosition);
                     isDraggingLook = !hitTarget;
                 }
-                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Moved && isDraggingLook && isUsingGyro && !goldPanning)
+                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Moved && isDraggingLook && isUsingGyro && !goldPanning && uraniumPhase != UraniumPhase.Secure)
                 {
                     Vector2 delta = touch.screenPosition - previousTouchPos;
                     previousTouchPos = touch.screenPosition;
@@ -595,7 +595,7 @@ namespace EnerGo
                     Vector2 mPos = Mouse.current.position.ReadValue();
                     CheckTapOnTarget(mPos);
                 }
-                if (Mouse.current.rightButton.isPressed && isUsingGyro)
+                if (Mouse.current.rightButton.isPressed && isUsingGyro && uraniumPhase != UraniumPhase.Secure)
                 {
                     Vector2 delta = Mouse.current.delta.ReadValue();
                     lookYaw += delta.x * 0.18f;

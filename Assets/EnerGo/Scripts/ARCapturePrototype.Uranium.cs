@@ -3,8 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace EnerGo
 {
-    // Uranium "Pemburu Geiger": find the hidden ore by its Geiger clicks and vibration, then keep its
-    // reactivity in the green zone with the control rod (forward tilt) before the radiation dose fills up.
+    // Uranium "Pemburu Geiger" (v2): follow the compass sector and the RAD meter to the hidden ore, then keep the reactivity in the green zone with the control-rod slider before the radiation dose fills up.
     public partial class ARCapturePrototype
     {
         private enum UraniumPhase { None, Search, Secure, Done, Failed }
@@ -18,7 +17,10 @@ namespace EnerGo
         private float uraniumNextClickAt, uraniumLastPulseAt = -10f;
         private float uraniumR, uraniumRod = 0.5f, uraniumDose, uraniumProgress;
         private float uraniumNextSpikeAt, uraniumNoiseSeed;
-        private float uraniumTiltBase = float.NaN, uraniumGravity;
+        private float uraniumGravity;
+        private int uraniumMeter, uraniumTrendFrom, uraniumTrend;   // RAD 0..100, value at the start of the trend window, -1/0/+1
+        private float uraniumTrendAt;
+        private GUIStyle uraniumRadStyle;
         private float uraniumRevealAt, uraniumPhaseAt;
         private string uraniumFailText = "";
 
@@ -65,7 +67,9 @@ namespace EnerGo
             uraniumRod = 0.5f;
             uraniumDose = 0f;
             uraniumProgress = 0f;
-            uraniumTiltBase = float.NaN;
+            uraniumMeter = uraniumTrendFrom = 0;
+            uraniumTrend = 0;
+            uraniumTrendAt = Time.time;
             uraniumGravity = 0f;
             uraniumFailText = "";
             feedback = "DENGARKAN PENCACAH GEIGER";
@@ -79,7 +83,14 @@ namespace EnerGo
             {
                 case UraniumPhase.Search:
                     uraniumAngle = Vector3.Angle(arCamera.transform.forward, target.transform.position - arCamera.transform.position);
-                    TickGeiger(1f / UraniumMath.GeigerInterval(uraniumAngle));
+                    uraniumMeter = UraniumMath.Meter(uraniumAngle);
+                    if (Time.time - uraniumTrendAt >= UraniumMath.TrendWindowSec)
+                    {
+                        uraniumTrend = UraniumMath.Trend(uraniumTrendFrom, uraniumMeter);
+                        uraniumTrendFrom = uraniumMeter;
+                        uraniumTrendAt = Time.time;
+                    }
+                    TickGeiger(UraniumMath.GeigerInterval(uraniumAngle));
                     uraniumLockHold = uraniumAngle <= UraniumMath.RevealAngleDeg ? uraniumLockHold + dt : 0f;
                     if (uraniumLockHold >= UraniumMath.RevealHoldSec) BeginUraniumSecure();
                     break;
@@ -99,8 +110,8 @@ namespace EnerGo
             }
         }
 
-        // One random Geiger click (and a vibration pulse, rate-limited) at `rate` clicks per second on average.
-        private void TickGeiger(float rate)
+        // One regular Geiger click (and a vibration pulse, rate-limited) every `interval` seconds.
+        private void TickGeiger(float interval)
         {
             if (Time.time < uraniumNextClickAt) return;
             if (SFXManager.Instance != null) SFXManager.Instance.PlayGeigerClick();
@@ -109,7 +120,7 @@ namespace EnerGo
                 Haptics.Pulse(12);
                 uraniumLastPulseAt = Time.time;
             }
-            uraniumNextClickAt = Time.time + 1f / Mathf.Max(rate, 0.01f);
+            uraniumNextClickAt = Time.time + interval;
         }
 
         private void BeginUraniumSecure()
@@ -119,7 +130,6 @@ namespace EnerGo
             target.SetActive(true);
             uraniumR = 0.5f;
             uraniumRod = 0.5f;
-            uraniumTiltBase = float.NaN; // "halfway" is however the player holds the phone right now
             uraniumNextSpikeAt = Time.time + UraniumMath.NextSpikeDelay(Random.value);
             uraniumNoiseSeed = Random.Range(0f, 100f);
             Haptics.Pulse(80);
@@ -140,7 +150,7 @@ namespace EnerGo
             uraniumR = UraniumMath.StepReactivity(uraniumR, uraniumRod, jolt, spike, noise, dt);
             uraniumProgress = UraniumMath.StepProgress(uraniumProgress, uraniumR, dt);
             uraniumDose = UraniumMath.StepDose(uraniumDose, uraniumR, dt);
-            TickGeiger(UraniumMath.SecureClickRate(uraniumR));
+            TickGeiger(1f / UraniumMath.SecureClickRate(uraniumR));
 
             switch (UraniumMath.Check(uraniumR, uraniumDose, uraniumProgress))
             {
@@ -156,8 +166,7 @@ namespace EnerGo
             }
         }
 
-        // Control rod from the forward tilt relative to how the phone was held at the reveal, plus how hard it was shaken.
-        // Editor (no accelerometer): W pushes the rod in, S pulls it out.
+        // Control rod from the slider on the right (finger or mouse), W/S in the editor; the accelerometer only measures shaking.
         private void ReadUraniumRod(float dt, out float jolt)
         {
             jolt = 0f;
@@ -165,13 +174,22 @@ namespace EnerGo
             {
                 if (uraniumGravity <= 0f) uraniumGravity = a.magnitude;
                 jolt = Mathf.Abs(a.magnitude / uraniumGravity - 1f);
-                uraniumRod = Mathf.Clamp01(uraniumRod);
-                return;
+            }
+            Vector2? p = PointerScreen();
+            if (p != null)
+            {
+                UraniumSliderRect(Screen.width / HudScale, Screen.height / HudScale, out Rect track);
+                Vector2 gui = new Vector2(p.Value.x, Screen.height - p.Value.y) / HudScale;
+                var grab = new Rect(track.x - 24f, track.y - 30f, track.width + 40f, track.height + 60f); // generous for thumbs
+                if (grab.Contains(gui)) uraniumRod = UraniumMath.RodFromSlider((gui.y - track.y) / track.height);
             }
             if (Keyboard.current == null) return;
-            float dir = (Keyboard.current.wKey.isPressed ? 1f : 0f) - (Keyboard.current.sKey.isPressed ? 1f : 0f);
-            uraniumRod = Mathf.Clamp01(uraniumRod + dir * 0.8f * dt);
+            float dir = (Keyboard.current.sKey.isPressed ? 1f : 0f) - (Keyboard.current.wKey.isPressed ? 1f : 0f);
+            uraniumRod = Mathf.Clamp01(uraniumRod + dir * 1.5f * dt);
         }
+
+        private static void UraniumSliderRect(float sw, float sh, out Rect track) =>
+            track = new Rect(sw - 16f - 64f, sh * 0.32f, 64f, sh * 0.38f);
 
         private void FailUranium(string text)
         {
@@ -202,8 +220,8 @@ namespace EnerGo
             switch (uraniumPhase)
             {
                 case UraniumPhase.Search:
-                    int meter = UraniumMath.Meter(uraniumAngle);
-                    line = uraniumLockHold > 0f ? "SINYAL KUAT! TAHAN ARAH HP" : "SINYAL RAD · PUTAR PELAN-PELAN";
+                    int meter = uraniumMeter;
+                    line = uraniumLockHold > 0f ? "SINYAL KUAT! TAHAN ARAH HP" : "IKUTI SEKTOR HIJAU · CARI RAD TERTINGGI";
                     warn = false;
                     bar = meter / 100f;
                     label = meter.ToString();
@@ -222,8 +240,8 @@ namespace EnerGo
                     break;
                 default:
                     line = UraniumSpikeSoon ? "LONJAKAN NEUTRON!"
-                        : uraniumR > UraniumMath.GreenMax ? "TERLALU PANAS · MIRINGKAN HP KE DEPAN"
-                        : uraniumR < UraniumMath.GreenMin ? "REAKSI MELEMAH · MIRINGKAN KE BELAKANG"
+                        : uraniumR > UraniumMath.GreenMax ? "TERLALU PANAS · GESER BATANG KE BAWAH"
+                        : uraniumR < UraniumMath.GreenMin ? "REAKSI MELEMAH · GESER BATANG KE ATAS"
                         : "STABIL · TAHAN HP";
                     warn = !UraniumMath.InGreen(uraniumR) || UraniumSpikeSoon;
                     bar = uraniumProgress;
@@ -246,28 +264,48 @@ namespace EnerGo
         }
         private GUIStyle hudTagStyle;
 
-        // Secure phase: reactor gauge (right), control rod (left), dose bar (bottom).
+        // Search: aiming reticle + big RAD meter with a trend line. Secure: reactor gauge, control-rod slider (right), dose bar.
         private void DrawUraniumOverlay(float sw, float sh)
         {
-            if (uraniumPhase == UraniumPhase.Search) return;
-            float gw = 30f, gh = sh * 0.38f, gy = sh * 0.32f;
+            if (uraniumPhase == UraniumPhase.Search)
+            {
+                bool near = uraniumAngle <= UraniumMath.RevealAngleDeg;
+                float rr = ReticleRadius * (near ? 1f + 0.06f * Mathf.Sin(Time.time * 10f) : 1f);
+                EnerGoUI.DrawPanel(new Rect(sw * 0.5f - rr, sh * 0.5f - rr, rr * 2f, rr * 2f),
+                    near ? EnerGoUI.Alpha(UraniumGlow, 0.15f) : Color.clear, near ? UraniumGlow : new Color(1f, 1f, 1f, 0.9f), rr, 3f);
 
-            var g = new Rect(sw - 16f - gw, gy, gw, gh);
+                if (uraniumRadStyle == null) uraniumRadStyle = new GUIStyle(styleRadarLocked) { fontSize = 26, alignment = TextAnchor.MiddleCenter };
+                float mw = Mathf.Min(sw - 64f, 300f);
+                var m = new Rect((sw - mw) * 0.5f, sh - 176f, mw, 64f);
+                EnerGoUI.DrawCard(m, EnerGoUI.Radius, near ? HudOk : HudOutline, 2f);
+                GUI.Label(new Rect(m.x, m.y + 4f, mw, 30f), "RAD " + uraniumMeter, uraniumRadStyle);
+                Color heat = Color.Lerp(EnerGoUI.Muted, UraniumGlow, uraniumMeter / 100f);
+                EnerGoUI.DrawBar(new Rect(m.x + 16f, m.y + 38f, mw - 32f, 10f), uraniumMeter / 100f, heat);
+                string trend = uraniumTrend > 0 ? "SINYAL MENGUAT" : uraniumTrend < 0 ? "SINYAL MELEMAH" : "";
+                if (trend.Length > 0) DrawHudTag(sw * 0.5f, m.yMax + 4f, 160f, trend, sw);
+                return;
+            }
+
+            UraniumSliderRect(sw, sh, out Rect track);
+            float gw = 30f;
+            var g = new Rect(track.x - 12f - gw, track.y, gw, track.height);
             bool blink = UraniumSpikeSoon && Mathf.Repeat(Time.time * 8f, 1f) < 0.5f;
             EnerGoUI.DrawPanel(g, HudFill, blink ? HudWarn : HudOutline, 8f, 2f);
-            float Y(float v) => g.yMax - 4f - v * (gh - 8f);
+            float Y(float v) => g.yMax - 4f - v * (g.height - 8f);
             EnerGoUI.DrawPanel(new Rect(g.x + 4f, Y(UraniumMath.GreenMax), gw - 8f, Y(UraniumMath.GreenMin) - Y(UraniumMath.GreenMax)),
                 EnerGoUI.Alpha(EnerGoUI.Success, 0.35f), Color.clear, 4f);
             EnerGoUI.DrawPanel(new Rect(g.x + 4f, Y(1f), gw - 8f, Y(UraniumMath.HotAbove) - Y(1f)),
                 EnerGoUI.Alpha(EnerGoUI.Danger, 0.3f), Color.clear, 4f);
             float my = Y(uraniumR);
             EnerGoUI.DrawPanel(new Rect(g.x - 4f, my - 3f, gw + 8f, 6f), UraniumMath.InGreen(uraniumR) ? EnerGoUI.Success : EnerGoUI.Orange, Color.clear, 3f);
-            DrawHudTag(g.center.x, g.yMax + 4f, 80f, "REAKTOR", sw);
+            DrawHudTag(g.center.x, g.y - 26f, 84f, "REAKTOR", sw);
 
-            var rod = new Rect(16f, gy, gw, gh);
-            EnerGoUI.DrawPanel(rod, HudFill, HudOutline, 8f, 2f);
-            EnerGoUI.DrawPanel(new Rect(rod.x + 8f, rod.y + 4f, gw - 16f, (gh - 8f) * uraniumRod), EnerGoUI.Ink, Color.clear, 4f);
-            DrawHudTag(rod.center.x, rod.yMax + 4f, 80f, "BATANG", sw);
+            // Slider: the rod hangs from the top; dragging down pushes it in. Knob = where the finger sets it.
+            EnerGoUI.DrawPanel(track, HudFill, HudOutline, 12f, 2f);
+            float knobY = track.y + uraniumRod * track.height;
+            EnerGoUI.DrawPanel(new Rect(track.x + 22f, track.y + 6f, 20f, Mathf.Max(0f, knobY - track.y - 6f)), EnerGoUI.Ink, Color.clear, 6f);
+            EnerGoUI.DrawPanel(new Rect(track.x - 4f, knobY - 14f, track.width + 8f, 28f), EnerGoUI.Orange, EnerGoUI.Ink, 10f, 2f);
+            DrawHudTag(track.center.x, track.yMax + 6f, 84f, "BATANG", sw);
 
             float dw = Mathf.Min(sw - 64f, 320f);
             var dose = new Rect((sw - dw) * 0.5f, sh - 104f, dw, 34f);
