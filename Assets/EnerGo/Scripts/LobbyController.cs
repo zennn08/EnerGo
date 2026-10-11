@@ -16,6 +16,7 @@ namespace EnerGo
             Lobby,
             Settings,
             Practice,
+            Guides,
             TransitioningToAR
         }
 
@@ -43,6 +44,9 @@ namespace EnerGo
         private const float TransitionDuration = 0.45f;
 
         private float inputCooldownTimer = 0.2f;
+
+        private GuideViewer lobbyGuide;   // card viewer opened from the PANDUAN sheet
+        private float guidesResetAt = -10f;
 
         private bool isConfirmingReset = false;
         private float resetConfirmTimer = 0f;
@@ -186,6 +190,7 @@ namespace EnerGo
                 DrawLobby(sw, sh);
                 if (currentState == ScreenState.Settings) DrawSettings(sw, sh);
                 if (currentState == ScreenState.Practice) DrawPractice(sw, sh);
+                if (currentState == ScreenState.Guides) DrawGuides(sw, sh);
                 if (currentState == ScreenState.TransitioningToAR) DrawTransition(sw, sh);
             }
 
@@ -267,6 +272,16 @@ namespace EnerGo
             {
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 currentState = ScreenState.Settings;
+                inputCooldownTimer = 0.2f;
+            }
+
+            // Guide (left of settings): round "?" button opening the PANDUAN sheet.
+            var helpRect = new Rect(setRect.x - 58f, top, 48f, 52f);
+            GUI.Label(DrawSecondaryButton(helpRect, IsHeld(helpRect, scale)), "?", new GUIStyle(sTitle) { alignment = TextAnchor.MiddleCenter });
+            if (interactive && ButtonHit(helpRect))
+            {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+                currentState = ScreenState.Guides;
                 inputCooldownTimer = 0.2f;
             }
 
@@ -519,6 +534,60 @@ namespace EnerGo
                 currentState = ScreenState.TransitioningToAR;
                 transitionTimer = 0f;
             }
+        }
+
+        // PANDUAN: the 5 SDA as cards; tap one to read its guide. Also resets every "Jangan ingatkan lagi".
+        private void DrawGuides(float sw, float sh)
+        {
+            float scale = HudScale;
+            if (lobbyGuide != null)
+            {
+                if (lobbyGuide.Draw(sw, sh, scale) != GuideViewer.Result.None) { lobbyGuide = null; inputCooldownTimer = 0.2f; }
+                return;
+            }
+            GUI.color = Alpha(Ink, 0.45f);
+            GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            float gap = 10f, cardH = 62f;
+            float sheetH = 32f + 46f + cardH * 3f + gap * 2f + 20f + 56f + 30f + SafeBottom(scale);
+            var sheet = new Rect(0, sh - sheetH, sw, sheetH + 30f);
+            bool ready = inputCooldownTimer <= 0f;
+            if (ready && OutsideTap(sheet, scale))
+            {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
+                currentState = ScreenState.Lobby;
+                inputCooldownTimer = 0.2f;
+                return;
+            }
+            DrawPanel(sheet, Cream, Color.clear, 24f);
+            float w = Mathf.Min(sw - 40f, 440f), x = (sw - w) * 0.5f, y = sheet.y + 12f;
+            DrawPanel(new Rect((sw - 40f) * 0.5f, y, 40f, 4f), Line, Color.clear, 2f);
+            y += 20f;
+            GUI.Label(new Rect(x, y, w, 30f), "Panduan", new GUIStyle(sTitle) { alignment = TextAnchor.MiddleLeft });
+            y += 46f;
+            float cardW = (w - gap) * 0.5f;
+            for (int i = 0; i < GuideBook.Ids.Length; i++)
+            {
+                var rect = new Rect(x + (i % 2) * (cardW + gap), y + (i / 2) * (cardH + gap), cardW, cardH);
+                DrawCollectionCard(rect, GuideBook.Ids[i]);
+                if (ready && ButtonHit(rect))
+                {
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+                    lobbyGuide = new GuideViewer(GuideBook.Ids[i], withStart: false);
+                    inputCooldownTimer = 0.15f;
+                }
+            }
+            y += cardH * 3f + gap * 2f + 20f;
+            var reset = new Rect(x, y, w, 56f);
+            GUI.Label(DrawSecondaryButton(reset, IsHeld(reset, scale)), "TAMPILKAN SEMUA PANDUAN LAGI", new GUIStyle(sSecondary) { fontSize = 14 });
+            if (ready && ButtonHit(reset))
+            {
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+                GuideViewer.ResetAll();
+                guidesResetAt = Time.time;
+            }
+            if (Time.time - guidesResetAt < 2f)
+                GUI.Label(new Rect(x, reset.yMax + 4f, w, 22f), "Panduan akan muncul lagi", new GUIStyle(sMuted) { alignment = TextAnchor.MiddleCenter });
         }
 
         // A tap or click that started outside `rect`.
