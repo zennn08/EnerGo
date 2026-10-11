@@ -245,7 +245,7 @@ namespace EnerGo
             Q("uranium-27", ResourceIds.Uranium, "Meltdown berarti reaktor sedang bekerja paling efisien.", false, "Meltdown adalah kecelakaan saat inti reaktor terlalu panas hingga bahan bakarnya meleleh.", Reactors),
             Q("uranium-28", ResourceIds.Uranium, "Banyak reaktor nuklir memakai air sebagai pendingin.", true, "Air mengambil panas dari inti reaktor dan sekaligus dipakai untuk membuat uap.", Reactors),
             Q("uranium-29", ResourceIds.Uranium, "Uranium hanya ditemukan di luar angkasa, tidak di Bumi.", false, "Uranium ditambang dari batuan di Bumi, misalnya di Kazakhstan, Kanada, dan Australia.", WhatIsUranium),
-            Q("uranium-30", ResourceIds.Uranium, "Kazakhstan termasuk produsen uranium terbesar di dunia.", true, "Kazakhstan menambang uranium lebih banyak daripada negara lain mana pun.", UraniumMining)
+            Q("uranium-30", ResourceIds.Uranium, "Kazakhstan termasuk produsen uranium terbesar di dunia.", true, "Kazakhstan menambang uranium lebih banyak daripada negara lain mana pun.", UraniumMining),
             Q("uranium-31", ResourceIds.Uranium, "Tiga cara melindungi diri dari radiasi adalah membatasi waktu, menjaga jarak, dan memakai perisai.", true, "Prinsip ALARA: sesingkat mungkin di dekat sumber, sejauh mungkin darinya, dan pasang penghalang seperti timbal.", Alara),
         };
 
