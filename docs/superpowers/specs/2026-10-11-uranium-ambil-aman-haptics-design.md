@@ -32,7 +32,7 @@ Sekalian: semua mode memakai getaran HP (mengikuti saklar Pengaturan → Getaran
 - **Panduan** (`GuideBook`): kartu 2 "Jepit serpihan" (Art.Hold): arahkan lingkaran ke serpihan, tahan JEPIT,
   penjepit menjaga jarak. Kartu 3 "Cepat & stabil" (Art.Shake): dosis terus naik, tiap serpihan di wadah timbal
   memperlambatnya, guncangan melepas jepitan. `Art.Slider` dihapus.
-- **Kuis:** tambah `uranium-08` tentang Waktu, Jarak, Perisai (sumber diverifikasi saat implementasi).
+- **Kuis:** tambah `uranium-31` (id 08 sudah terpakai) tentang Waktu, Jarak, Perisai (sumber diverifikasi saat implementasi).
 
 Logika murni tetap di `Core/UraniumMath.cs` (penempatan bearing, langkah grip, langkah dosis, terdekat, hasil),
 diuji di `UraniumMathTests`.
