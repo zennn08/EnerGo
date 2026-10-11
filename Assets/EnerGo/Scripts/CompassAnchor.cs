@@ -59,7 +59,7 @@ namespace EnerGo
                 float pitch = Mathf.Asin(Mathf.Clamp(f.y, -1f, 1f)) * Mathf.Rad2Deg;
                 if (CompassMath.CanCalibrate(pitch))
                 {
-                    float heading = GeoSpawner.HeadingFromRotation(rotationSensor.attitude.ReadValue());
+                    float heading = CompassMath.BackCameraHeading(rotationSensor.attitude.ReadValue());
                     float target = CompassMath.OffsetTarget(heading, Yaw(f));
                     OffsetDeg = calibrated ? CompassMath.SmoothOffset(OffsetDeg, target, Time.deltaTime) : target; // first fix: snap
                     calibrated = true;

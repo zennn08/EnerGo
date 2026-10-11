@@ -797,7 +797,7 @@ namespace EnerGo
         private bool CheckTapOnTarget(Vector2 screenPosition)
         {
             if (EnerGoProgress.Current.pendingCapture != null) return false;
-            if (resourceId == ResourceIds.Uranium) return false; // found by listening, secured by tilting
+            if (resourceId == ResourceIds.Uranium) return false; // found by listening, secured with the slider
             if (resourceId == ResourceIds.Oil) return false;     // drilled and pumped by holding, not tapping
             if (resourceId == ResourceIds.Sun) return false; // sun is caught by aiming, so touches only drag the view
             if (goldPanning) return false;                    // the pan is controlled by tilting, not tapping
@@ -1621,7 +1621,7 @@ namespace EnerGo
             float botBtnW = Mathf.Min(260f, sw - 32f);
             var resetRect = new Rect((sw - botBtnW) * 0.5f, botY, botBtnW, 40f);
 
-            string resetLabel = isUsingGyro ? "RESET POSISI KE HADAPAN" : "MUNCULKAN ULANG TARGET";
+            string resetLabel = "MUNCULKAN ULANG TARGET";
             if (guide == null && EnerGoProgress.Current.pendingCapture == null && DrawBtn(resetRect, resetLabel, styleBtnText))
             {
                 if (target != null) Destroy(target);
@@ -1632,7 +1632,7 @@ namespace EnerGo
                 lookYaw = 0f;
                 if (arCamera != null) arCamera.transform.localRotation = Quaternion.identity;
                 nextSpawnTime = Time.time + 0.2f;
-                feedback = "TARGET DIPOSISIKAN TEPAT DI HADAPAN";
+                feedback = resourceId == ResourceIds.Sun ? "CARI CAHAYA DI DEPAN" : "IKUTI PITA KOMPAS";
             }
 
             // Hit Spark Ripple
@@ -1936,7 +1936,7 @@ namespace EnerGo
                 if (resourceId == ResourceIds.Sun && Mathf.Abs(signedAngle) > 28f)
                 {
                     line1 = signedAngle < 0 ? $"‹  PUTAR KE KIRI  {deg}°" : $"PUTAR KE KANAN  {deg}°  ›";
-                    line2 = "Mineral di luar bidang pandang";
+                    line2 = "SISA " + Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft())) + " DTK";
                     style1 = styleRadarAlert;
                     accent = HudWarn;
                 }
@@ -2035,7 +2035,7 @@ namespace EnerGo
                 if (Mathf.Abs(x01) <= 1f) EnerGoUI.DrawPanel(new Rect(X(x01) - 6f, r.center.y - 6f, 12f, 12f), EnerGoUI.Orange, EnerGoUI.Ink, 6f, 1.5f);
                 else StripEdge(r, x01, Mathf.Abs(Mathf.DeltaAngle(heading, bearing)));
             }
-            EnerGoUI.DrawPanel(new Rect(r.center.x - 1f, r.y + 2f, 2f, r.height - 4f), EnerGoUI.Ink, Color.clear, 1f); // view direction
+            if (compass.HasCompass) EnerGoUI.DrawPanel(new Rect(r.center.x - 1f, r.y + 2f, 2f, r.height - 4f), EnerGoUI.Ink, Color.clear, 1f); // view direction
         }
 
         private void StripEdge(Rect r, float x01, float deg)

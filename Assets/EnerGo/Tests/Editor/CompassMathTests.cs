@@ -57,6 +57,31 @@ namespace EnerGo.Tests
         }
 
         [Test]
+        public void BackCameraHeadingUprightNorthAndEast()
+        {
+            Quaternion north = Quaternion.AngleAxis(90f, Vector3.right);
+            Assert.AreEqual(0f, Mathf.DeltaAngle(0f, CompassMath.BackCameraHeading(north)), 1e-3f);
+            Quaternion east = Quaternion.AngleAxis(-90f, Vector3.forward) * north;
+            Assert.AreEqual(90f, CompassMath.BackCameraHeading(east), 1e-3f);
+        }
+
+        [Test]
+        public void BackCameraHeadingDoesNotFlipWhenPitchedUp()
+        {
+            Quaternion up50 = Quaternion.AngleAxis(140f, Vector3.right); // facing north, 50° up
+            Assert.AreEqual(0f, Mathf.DeltaAngle(0f, CompassMath.BackCameraHeading(up50)), 1e-3f);
+            Assert.AreEqual(180f, GeoSpawner.HeadingFromRotation(up50), 1e-3f); // why the radar function can't be used here
+        }
+
+        [Test]
+        public void WorldYawAndCameraHeadingRoundTrip()
+        {
+            foreach (float b in new[] { 0f, 90f, 200f, 359f })
+                foreach (float off in new[] { 0f, 45f, 300f })
+                    Assert.AreEqual(0f, Mathf.DeltaAngle(b, CompassMath.CameraHeading(CompassMath.WorldYaw(b, off), off)), 1e-3f);
+        }
+
+        [Test]
         public void DirectionLabels()
         {
             string[] expect = { "U", "TL", "T", "TG", "S", "BD", "B", "BL", "U" };

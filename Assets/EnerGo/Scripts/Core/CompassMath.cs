@@ -15,6 +15,15 @@ namespace EnerGo
 
         public static float CameraHeading(float cameraYawDeg, float offsetDeg) => Mathf.Repeat(cameraYawDeg + offsetDeg, 360f);
 
+        // Heading (0 = north, clockwise) of the back camera from an Android rotation-vector quaternion (device -> world,
+        // x East, y North, z Up). Unlike GeoSpawner.HeadingFromRotation it never switches to the top edge, which points
+        // behind the camera once the phone is pitched up past 45°.
+        public static float BackCameraHeading(Quaternion deviceToWorld)
+        {
+            Vector3 back = deviceToWorld * Vector3.back;
+            return Mathf.Repeat(Mathf.Atan2(back.x, back.y) * Mathf.Rad2Deg, 360f);
+        }
+
         public static float OffsetTarget(float compassHeadingDeg, float cameraYawDeg) => Mathf.Repeat(compassHeadingDeg - cameraYawDeg, 360f);
 
         public static bool CanCalibrate(float cameraPitchDeg) => Mathf.Abs(cameraPitchDeg) <= MaxCalibratePitchDeg;
