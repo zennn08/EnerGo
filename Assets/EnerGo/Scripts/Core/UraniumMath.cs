@@ -2,7 +2,8 @@ using UnityEngine;
 
 namespace EnerGo
 {
-    // Pure rules of the uranium "Pemburu Geiger" mini-game (v2). r = reactivity 0..1, rod = control rod 0 (out) .. 1 (fully in).
+    // Pure rules of the uranium "Pemburu Geiger" mini-game (v3, Ambil dengan Aman): find the ore with the Geiger counter,
+    // then pick its fragments up with the tongs before the dose fills. Teaches Waktu, Jarak, Perisai.
     public static class UraniumMath
     {
         // Search: the ore sits at the radar bearing, a little above or below eye level.
@@ -12,27 +13,20 @@ namespace EnerGo
         public const float MaxPulsesPerSec = 12f;   // vibration pulses blur together faster than this
         public const int TrendThreshold = 3;        // RAD points per window that count as "menguat"/"melemah"
         public const float TrendWindowSec = 0.3f;
-        // Secure: reactivity.
-        public const float GreenMin = 0.40f, GreenMax = 0.60f, HotAbove = 0.80f;
-        public const float Growth = 0.05f;          // per second: an unchecked chain reaction creeps up
-        public const float RodPull = 1.2f;          // per second: r is pulled toward (1 - rod + drift) — with lag, so you have to lead it
-        public const float NoiseGain = 0.15f;       // per second, Perlin noise in [-1, 1] times this
-        public const float DriftAmp = 0.45f, DriftSpeed = 0.12f; // the fuel's own pull: moves the rod's sweet spot, so no position stays safe for long
-        public const float JoltDeadzone = 0.08f;    // accelerometer jitter below this is not a shake
-        public const float JoltGain = 2.0f;         // per second per unit of jolt above the deadzone
-        public const float SpikeSize = 0.25f;       // neutron spike, added at once
-        public const float SpikeMinSec = 4f, SpikeMaxSec = 7f, SpikeWarnSec = 0.8f;
-        public const float FillPerSec = 1f / 8f, DrainPerSec = 1f / 8f;
-        public const float DosePerSec = 1f / 45f, HotDoseMul = 2f;
-        public const float ParSec = 24f;            // a good secure phase, for the speed score
+        // Collect: fragments around the player, picked up with the tongs.
+        public const int FragmentCount = 3;
+        public const float FragmentMinSepDeg = 80f;
+        public const float GripAngleDeg = RevealAngleDeg; // the fragment has to sit inside the reticle
+        public const float GripSec = 1f;
+        public const float GripShakeMax = 0.35f;    // accelerometer jolt (|a| / g - 1) that knocks a fragment out of the tongs
+        public const float DoseBasePerSec = 1f / 40f; // every fragment still out
+        public const float DoseFloorShare = 0.25f;  // what is left of the dose rate with everything in the lead box
+        public const float ParSec = 20f;            // a good collect phase, for the speed score
         public const float FailShowSec = 1.5f;
 
         // Seconds between Geiger clicks: 1/20 s straight at the ore, 1/2 s at 150° or more away.
         public static float GeigerInterval(float angleDeg) =>
             1f / Mathf.Lerp(NearClicksPerSec, FarClicksPerSec, Mathf.Clamp01(angleDeg / 150f));
-
-        // While securing, the counter follows the reactivity instead of the aim.
-        public static float SecureClickRate(float r) => Mathf.Lerp(4f, NearClicksPerSec, Mathf.Clamp01(r));
 
         public static int Meter(float angleDeg) => Mathf.RoundToInt(100f * (1f - Mathf.Clamp(angleDeg, 0f, 180f) / 180f));
 
@@ -40,33 +34,52 @@ namespace EnerGo
         public static int Trend(int prevMeter, int meter) =>
             meter - prevMeter >= TrendThreshold ? 1 : prevMeter - meter >= TrendThreshold ? -1 : 0;
 
-        // Finger position on the slider track, 0 = top (rod out) .. 1 = bottom (rod fully in).
-        public static float RodFromSlider(float pointerY01) => Mathf.Clamp01(pointerY01);
-
-        // Drift in about [-DriftAmp, DriftAmp] * 0.6 from a Perlin sample p01 in [0, 1]: the rod has to move this much off the middle to stay green.
-        public static float Drift(float p01) => (Mathf.Clamp01(p01) - 0.5f) * 2f * DriftAmp;
-
-        public static float StepReactivity(float r, float rod, float jolt, float spike, float noise, float dt, float drift = 0f)
+        // Yaw offsets (degrees from the ore's bearing): the first fragment stays where the ore was, the rest land
+        // anywhere around the player at least FragmentMinSepDeg from each other. rand01 returns [0, 1).
+        public static float[] FragmentYaws(System.Func<float> rand01)
         {
-            float shake = Mathf.Max(0f, jolt - JoltDeadzone) * JoltGain;
-            r += (Growth + ((1f - Mathf.Clamp01(rod)) + drift - r) * RodPull + shake + noise) * dt + spike;
-            return Mathf.Clamp01(r);
+            var yaws = new float[FragmentCount];
+            for (int i = 1; i < FragmentCount; i++)
+            {
+                float y = 0f;
+                bool ok = false;
+                for (int tries = 0; tries < 50 && !ok; tries++)
+                {
+                    y = rand01() * 360f - 180f;
+                    ok = true;
+                    for (int j = 0; j < i; j++)
+                        if (Mathf.Abs(Mathf.DeltaAngle(y, yaws[j])) < FragmentMinSepDeg) { ok = false; break; }
+                }
+                yaws[i] = ok ? y : i * 360f / FragmentCount; // ponytail: even spread if the dice keep colliding
+            }
+            return yaws;
         }
 
-        public static bool InGreen(float r) => r >= GreenMin && r <= GreenMax;
+        // Index of the untaken fragment with the smallest angle to the aim, or -1 when all are taken.
+        public static int Nearest(float[] anglesDeg, bool[] taken)
+        {
+            int best = -1;
+            for (int i = 0; i < anglesDeg.Length; i++)
+                if (!taken[i] && (best < 0 || anglesDeg[i] < anglesDeg[best])) best = i;
+            return best;
+        }
 
-        public static float StepProgress(float progress, float r, float dt) =>
-            Mathf.Clamp01(progress + (InGreen(r) ? FillPerSec : -DrainPerSec) * dt);
+        // Tongs: fill while JEPIT is held, the fragment is in the reticle and the phone is steady; anything else lets go.
+        public static float StepGrip(float grip, bool held, float angleDeg, float jolt, float dt) =>
+            held && angleDeg <= GripAngleDeg && jolt < GripShakeMax ? Mathf.Min(1f, grip + dt / GripSec) : 0f;
 
-        public static float StepDose(float dose, float r, float dt) =>
-            Mathf.Clamp01(dose + DosePerSec * (r > HotAbove ? HotDoseMul : 1f) * dt);
+        // Every fragment in the lead box (`left` = still out) slows the dose; it never stops while you are near the ore.
+        public static float StepDose(float dose, int left, float dt)
+        {
+            float share = DoseFloorShare + (1f - DoseFloorShare) * Mathf.Clamp(left, 0, FragmentCount) / FragmentCount;
+            return Mathf.Clamp01(dose + DoseBasePerSec * share * dt);
+        }
 
-        public static float NextSpikeDelay(float u01) => Mathf.Lerp(SpikeMinSec, SpikeMaxSec, Mathf.Clamp01(u01));
+        public enum Outcome { None, Captured, Overdose }
 
-        public enum Outcome { None, Captured, Meltdown, Overdose }
-
-        public static Outcome Check(float r, float dose, float progress) =>
-            r >= 1f ? Outcome.Meltdown : dose >= 1f ? Outcome.Overdose : progress >= 1f ? Outcome.Captured : Outcome.None;
+        // Grabbing the last fragment on the frame the dose fills still counts.
+        public static Outcome Check(float dose, int collected) =>
+            collected >= FragmentCount ? Outcome.Captured : dose >= 1f ? Outcome.Overdose : Outcome.None;
 
         // Half speed, half dose left.
         public static float Performance(float elapsed, float dose) =>

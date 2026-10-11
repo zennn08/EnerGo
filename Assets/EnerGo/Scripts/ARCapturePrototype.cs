@@ -576,7 +576,7 @@ namespace EnerGo
                     bool hitTarget = CheckTapOnTarget(touch.screenPosition);
                     isDraggingLook = !hitTarget;
                 }
-                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Moved && isDraggingLook && isUsingGyro && !goldPanning && uraniumPhase != UraniumPhase.Secure)
+                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Moved && isDraggingLook && isUsingGyro && !goldPanning && !uraniumGripHeld)
                 {
                     Vector2 delta = touch.screenPosition - previousTouchPos;
                     previousTouchPos = touch.screenPosition;
@@ -598,7 +598,7 @@ namespace EnerGo
                     Vector2 mPos = Mouse.current.position.ReadValue();
                     CheckTapOnTarget(mPos);
                 }
-                if (Mouse.current.rightButton.isPressed && isUsingGyro && uraniumPhase != UraniumPhase.Secure)
+                if (Mouse.current.rightButton.isPressed && isUsingGyro && !uraniumGripHeld)
                 {
                     Vector2 delta = Mouse.current.delta.ReadValue();
                     lookYaw += delta.x * 0.18f;
@@ -797,7 +797,7 @@ namespace EnerGo
         private bool CheckTapOnTarget(Vector2 screenPosition)
         {
             if (EnerGoProgress.Current.pendingCapture != null) return false;
-            if (resourceId == ResourceIds.Uranium) return false; // found by listening, secured with the slider
+            if (resourceId == ResourceIds.Uranium) return false; // found by listening, picked up with JEPIT
             if (resourceId == ResourceIds.Oil) return false;     // drilled and pumped by holding, not tapping
             if (resourceId == ResourceIds.Sun) return false; // sun is caught by aiming, so touches only drag the view
             if (goldPanning) return false;                    // the pan is controlled by tilting, not tapping
@@ -2022,10 +2022,13 @@ namespace EnerGo
 
             if (resourceId == ResourceIds.Uranium)
             {
-                float c = CompassMath.StripX(captureBearing, heading, half), w = CompassMath.UraniumSectorHalfDeg / half;
-                float lo = Mathf.Max(-1f, c - w), hi = Mathf.Min(1f, c + w);
-                if (hi > lo) EnerGoUI.DrawPanel(new Rect(X(lo), r.y + 4f, X(hi) - X(lo), r.height - 8f), EnerGoUI.Alpha(EnerGoUI.Success, 0.3f), Color.clear, 6f);
-                else StripEdge(r, c, Mathf.Abs(Mathf.DeltaAngle(heading, captureBearing)) - CompassMath.UraniumSectorHalfDeg);
+                if (uraniumPhase == UraniumPhase.Search) // fragments are found with the RAD meter, not the strip
+                {
+                    float c = CompassMath.StripX(captureBearing, heading, half), w = CompassMath.UraniumSectorHalfDeg / half;
+                    float lo = Mathf.Max(-1f, c - w), hi = Mathf.Min(1f, c + w);
+                    if (hi > lo) EnerGoUI.DrawPanel(new Rect(X(lo), r.y + 4f, X(hi) - X(lo), r.height - 8f), EnerGoUI.Alpha(EnerGoUI.Success, 0.3f), Color.clear, 6f);
+                    else StripEdge(r, c, Mathf.Abs(Mathf.DeltaAngle(heading, captureBearing)) - CompassMath.UraniumSectorHalfDeg);
+                }
             }
             else if (resourceId != ResourceIds.Sun && target != null)
             {

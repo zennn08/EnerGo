@@ -37,117 +37,89 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void SliderTopPullsTheRodOutBottomPushesItIn()
-        {
-            Assert.AreEqual(0f, UraniumMath.RodFromSlider(0f), 1e-4f);
-            Assert.AreEqual(1f, UraniumMath.RodFromSlider(1f), 1e-4f);
-            Assert.AreEqual(0.25f, UraniumMath.RodFromSlider(0.25f), 1e-4f);
-            Assert.AreEqual(0f, UraniumMath.RodFromSlider(-0.3f), 1e-4f);
-            Assert.AreEqual(1f, UraniumMath.RodFromSlider(1.4f), 1e-4f);
-        }
-
-        [Test]
-        public void HalfRodWithoutDisturbanceSettlesInTheGreenZone()
-        {
-            float r = 0.5f;
-            for (int i = 0; i < 100; i++) r = UraniumMath.StepReactivity(r, 0.5f, 0f, 0f, 0f, 0.1f);
-            Assert.IsTrue(UraniumMath.InGreen(r), "r = " + r);
-        }
-
-        [Test]
-        public void FullRodCoolsWithinASecond()
-        {
-            float r = 0.8f;
-            for (int i = 0; i < 10; i++) r = UraniumMath.StepReactivity(r, 1f, 0f, 0f, 0f, 0.1f);
-            Assert.Less(r, UraniumMath.GreenMin, "rod response must be visible within a second");
-        }
-
-        [Test]
-        public void PulledRodHeatsUp()
-        {
-            float r = 0.5f;
-            for (int i = 0; i < 10; i++) r = UraniumMath.StepReactivity(r, 0f, 0f, 0f, 0f, 0.1f);
-            Assert.Greater(r, UraniumMath.HotAbove);
-        }
-
-        [Test]
-        public void SpikeAndShakingRaiseReactivity()
-        {
-            Assert.AreEqual(0.5f + UraniumMath.SpikeSize, UraniumMath.StepReactivity(0.5f, 0.5f, 0f, UraniumMath.SpikeSize, 0f, 0f), 1e-4f);
-            float calm = UraniumMath.StepReactivity(0.5f, 0.5f, 0f, 0f, 0f, 0.1f);
-            float shaken = UraniumMath.StepReactivity(0.5f, 0.5f, 0.6f, 0f, 0f, 0.1f);
-            Assert.Greater(shaken, calm);
-            Assert.AreEqual(1f, UraniumMath.StepReactivity(0.95f, 0f, 0f, 0.5f, 0f, 0f), 1e-4f);
-        }
-
-        [Test]
-        public void TinySensorJitterDoesNotCountAsShaking()
-        {
-            Assert.AreEqual(UraniumMath.StepReactivity(0.5f, 0.5f, 0f, 0f, 0f, 0.1f),
-                            UraniumMath.StepReactivity(0.5f, 0.5f, 0.05f, 0f, 0f, 0.1f), 1e-5f);
-        }
-
-        [Test]
-        public void GreenZoneAndProgress()
-        {
-            Assert.IsTrue(UraniumMath.InGreen(0.40f));
-            Assert.IsTrue(UraniumMath.InGreen(0.60f));
-            Assert.IsFalse(UraniumMath.InGreen(0.39f));
-            Assert.IsFalse(UraniumMath.InGreen(0.61f));
-            Assert.AreEqual(1f / 8f, UraniumMath.StepProgress(0f, 0.5f, 1f), 1e-4f);
-            Assert.AreEqual(0.5f - 1f / 8f, UraniumMath.StepProgress(0.5f, 0.9f, 1f), 1e-4f);
-        }
-
-        [Test]
-        public void DriftMakesTheMiddleRodUnsafeSoTheRodMustFollowIt()
-        {
-            float drift = UraniumMath.Drift(0.8f); // fuel pulling hot
-            float idle = 0.5f, chased = 0.5f;
-            for (int i = 0; i < 100; i++)
-            {
-                idle = UraniumMath.StepReactivity(idle, 0.5f, 0f, 0f, 0f, 0.1f, drift);
-                chased = UraniumMath.StepReactivity(chased, 0.5f + drift, 0f, 0f, 0f, 0.1f, drift);
-            }
-            Assert.IsFalse(UraniumMath.InGreen(idle), "parking the rod in the middle must not win: r = " + idle);
-            Assert.IsTrue(UraniumMath.InGreen(chased), "moving the rod with the drift holds green: r = " + chased);
-        }
-
-        [Test]
-        public void RodHasLagSoItMustBeLed()
-        {
-            float r = UraniumMath.StepReactivity(0.8f, 1f, 0f, 0f, 0f, 0.1f);
-            Assert.Greater(r, UraniumMath.GreenMax, "one tenth of a second of full rod is not an instant fix");
-        }
-
-        [Test]
-        public void DoseBudgetIsFortyFiveSecondsDoubledWhenHot()
-        {
-            Assert.AreEqual(1f / 45f, UraniumMath.StepDose(0f, 0.5f, 1f), 1e-4f);
-            Assert.AreEqual(2f / 45f, UraniumMath.StepDose(0f, 0.9f, 1f), 1e-4f);
-        }
-
-        [Test]
-        public void MeltdownBeatsOverdoseBeatsCapture()
-        {
-            Assert.AreEqual(UraniumMath.Outcome.Meltdown, UraniumMath.Check(1f, 1f, 1f));
-            Assert.AreEqual(UraniumMath.Outcome.Overdose, UraniumMath.Check(0.5f, 1f, 1f));
-            Assert.AreEqual(UraniumMath.Outcome.Captured, UraniumMath.Check(0.5f, 0.4f, 1f));
-            Assert.AreEqual(UraniumMath.Outcome.None, UraniumMath.Check(0.5f, 0.4f, 0.9f));
-        }
-
-        [Test]
-        public void SpikesComeEveryFourToSevenSecondsWithLongerWarning()
-        {
-            Assert.AreEqual(4f, UraniumMath.NextSpikeDelay(0f), 1e-4f);
-            Assert.AreEqual(7f, UraniumMath.NextSpikeDelay(1f), 1e-4f);
-            Assert.AreEqual(0.8f, UraniumMath.SpikeWarnSec, 1e-4f);
-        }
-
-        [Test]
-        public void RevealIsMoreForgiving()
+        public void RevealIsForgiving()
         {
             Assert.AreEqual(20f, UraniumMath.RevealAngleDeg, 1e-4f);
             Assert.AreEqual(0.8f, UraniumMath.RevealHoldSec, 1e-4f);
+        }
+
+        [Test]
+        public void FirstFragmentStaysWhereTheOreWasAndTheRestAreSpreadOut()
+        {
+            var rng = new System.Random(1);
+            for (int run = 0; run < 200; run++)
+            {
+                float[] yaws = UraniumMath.FragmentYaws(() => (float)rng.NextDouble());
+                Assert.AreEqual(UraniumMath.FragmentCount, yaws.Length);
+                Assert.AreEqual(0f, yaws[0], 1e-4f);
+                for (int i = 0; i < yaws.Length; i++)
+                    for (int j = i + 1; j < yaws.Length; j++)
+                        Assert.GreaterOrEqual(UnityEngine.Mathf.Abs(UnityEngine.Mathf.DeltaAngle(yaws[i], yaws[j])), UraniumMath.FragmentMinSepDeg - 1e-3f);
+            }
+        }
+
+        [Test]
+        public void FragmentsFallBackToAnEvenSpread()
+        {
+            float[] yaws = UraniumMath.FragmentYaws(() => 0.5f); // every draw lands on the ore's own bearing
+            Assert.AreEqual(0f, yaws[0], 1e-4f);
+            Assert.AreEqual(120f, yaws[1], 1e-4f);
+            Assert.AreEqual(240f, yaws[2], 1e-4f);
+        }
+
+        [Test]
+        public void NearestSkipsTakenFragments()
+        {
+            float[] angles = { 10f, 90f, 40f };
+            Assert.AreEqual(0, UraniumMath.Nearest(angles, new[] { false, false, false }));
+            Assert.AreEqual(2, UraniumMath.Nearest(angles, new[] { true, false, false }));
+            Assert.AreEqual(-1, UraniumMath.Nearest(angles, new[] { true, true, true }));
+        }
+
+        [Test]
+        public void GripFillsInOneSecondWhileHeldAimedAndSteady()
+        {
+            float g = 0f;
+            for (int i = 0; i < 10; i++) g = UraniumMath.StepGrip(g, true, 5f, 0f, 0.1f);
+            Assert.AreEqual(1f, g, 1e-4f);
+            Assert.AreEqual(1f, UraniumMath.StepGrip(1f, true, 5f, 0f, 0.1f), 1e-4f);
+        }
+
+        [Test]
+        public void GripLetsGoOnReleaseMissOrShake()
+        {
+            Assert.AreEqual(0f, UraniumMath.StepGrip(0.7f, false, 5f, 0f, 0.1f), 1e-4f);
+            Assert.AreEqual(0f, UraniumMath.StepGrip(0.7f, true, UraniumMath.GripAngleDeg + 1f, 0f, 0.1f), 1e-4f);
+            Assert.AreEqual(0f, UraniumMath.StepGrip(0.7f, true, 5f, UraniumMath.GripShakeMax, 0.1f), 1e-4f);
+            Assert.Greater(UraniumMath.StepGrip(0.7f, true, 5f, UraniumMath.GripShakeMax - 0.05f, 0.1f), 0.7f);
+        }
+
+        [Test]
+        public void DoseFillsInFortySecondsWithEverythingOut()
+        {
+            Assert.AreEqual(1f / 40f, UraniumMath.StepDose(0f, 3, 1f), 1e-5f);
+            float d = 0f;
+            for (int i = 0; i < 400; i++) d = UraniumMath.StepDose(d, 3, 0.1f);
+            Assert.AreEqual(1f, d, 1e-4f);
+        }
+
+        [Test]
+        public void EachShieldedFragmentSlowsTheDoseButNeverStopsIt()
+        {
+            float d3 = UraniumMath.StepDose(0f, 3, 1f), d2 = UraniumMath.StepDose(0f, 2, 1f);
+            float d1 = UraniumMath.StepDose(0f, 1, 1f), d0 = UraniumMath.StepDose(0f, 0, 1f);
+            Assert.Greater(d3, d2);
+            Assert.Greater(d2, d1);
+            Assert.Greater(d1, d0);
+            Assert.AreEqual(0.25f / 40f, d0, 1e-5f);
+        }
+
+        [Test]
+        public void CaptureBeatsOverdoseOnTheSameFrame()
+        {
+            Assert.AreEqual(UraniumMath.Outcome.Captured, UraniumMath.Check(1f, 3));
+            Assert.AreEqual(UraniumMath.Outcome.Overdose, UraniumMath.Check(1f, 2));
+            Assert.AreEqual(UraniumMath.Outcome.None, UraniumMath.Check(0.9f, 2));
         }
 
         [Test]
