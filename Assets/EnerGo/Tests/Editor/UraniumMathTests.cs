@@ -1,30 +1,22 @@
 using NUnit.Framework;
-using UnityEngine;
 
 namespace EnerGo.Tests
 {
     public class UraniumMathTests
     {
         [Test]
-        public void GeigerClicksFasterTheCloserTheAim()
+        public void GeigerTicksFasterTheCloserTheAim()
         {
-            Assert.AreEqual(25f, UraniumMath.GeigerRate(0f), 0.01f);
-            Assert.AreEqual(1f, UraniumMath.GeigerRate(150f), 0.01f);
-            Assert.AreEqual(1f, UraniumMath.GeigerRate(180f), 0.01f);
-            float prev = float.MaxValue;
+            Assert.AreEqual(1f / 20f, UraniumMath.GeigerInterval(0f), 1e-4f);
+            Assert.AreEqual(1f / 2f, UraniumMath.GeigerInterval(150f), 1e-4f);
+            Assert.AreEqual(1f / 2f, UraniumMath.GeigerInterval(180f), 1e-4f);
+            float prev = 0f;
             for (float a = 0f; a <= 180f; a += 10f)
             {
-                float rate = UraniumMath.GeigerRate(a);
-                Assert.LessOrEqual(rate, prev);
-                prev = rate;
+                float gap = UraniumMath.GeigerInterval(a);
+                Assert.GreaterOrEqual(gap, prev);
+                prev = gap;
             }
-        }
-
-        [Test]
-        public void ClickDelayIsExponentialAndNeverInfinite()
-        {
-            Assert.AreEqual(0.1f, UraniumMath.NextClickDelay(10f, Mathf.Exp(-1f)), 0.001f);
-            Assert.IsFalse(float.IsInfinity(UraniumMath.NextClickDelay(10f, 0f)));
         }
 
         [Test]
@@ -36,19 +28,22 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void TiltIsZeroUprightAndNinetyFlat()
+        public void TrendNeedsThreePoints()
         {
-            Assert.AreEqual(0f, UraniumMath.TiltDeg(new Vector3(0f, -1f, 0f)), 0.1f);
-            Assert.AreEqual(90f, UraniumMath.TiltDeg(new Vector3(0f, 0f, -1f)), 0.1f);
+            Assert.AreEqual(1, UraniumMath.Trend(40, 43));
+            Assert.AreEqual(-1, UraniumMath.Trend(43, 40));
+            Assert.AreEqual(0, UraniumMath.Trend(40, 42));
+            Assert.AreEqual(0, UraniumMath.Trend(42, 40));
         }
 
         [Test]
-        public void RodStartsHalfwayAndTiltingForwardPushesItIn()
+        public void SliderTopPullsTheRodOutBottomPushesItIn()
         {
-            Assert.AreEqual(0.5f, UraniumMath.RodFromTilt(20f, 20f), 1e-4f);
-            Assert.Greater(UraniumMath.RodFromTilt(30f, 20f), 0.5f);
-            Assert.AreEqual(1f, UraniumMath.RodFromTilt(200f, 20f), 1e-4f);
-            Assert.AreEqual(0f, UraniumMath.RodFromTilt(-200f, 20f), 1e-4f);
+            Assert.AreEqual(0f, UraniumMath.RodFromSlider(0f), 1e-4f);
+            Assert.AreEqual(1f, UraniumMath.RodFromSlider(1f), 1e-4f);
+            Assert.AreEqual(0.25f, UraniumMath.RodFromSlider(0.25f), 1e-4f);
+            Assert.AreEqual(0f, UraniumMath.RodFromSlider(-0.3f), 1e-4f);
+            Assert.AreEqual(1f, UraniumMath.RodFromSlider(1.4f), 1e-4f);
         }
 
         [Test]
@@ -60,16 +55,19 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void FullRodCoolsAndPulledRodHeatsUp()
+        public void FullRodCoolsWithinHalfASecond()
         {
-            float cool = 0.8f, hot = 0.5f;
-            for (int i = 0; i < 20; i++)
-            {
-                cool = UraniumMath.StepReactivity(cool, 1f, 0f, 0f, 0f, 0.1f);
-                hot = UraniumMath.StepReactivity(hot, 0f, 0f, 0f, 0f, 0.1f);
-            }
-            Assert.Less(cool, 0.5f);
-            Assert.Greater(hot, 0.7f);
+            float r = 0.8f;
+            for (int i = 0; i < 5; i++) r = UraniumMath.StepReactivity(r, 1f, 0f, 0f, 0f, 0.1f);
+            Assert.Less(r, UraniumMath.GreenMin, "rod response must be visible in under a second");
+        }
+
+        [Test]
+        public void PulledRodHeatsUp()
+        {
+            float r = 0.5f;
+            for (int i = 0; i < 10; i++) r = UraniumMath.StepReactivity(r, 0f, 0f, 0f, 0f, 0.1f);
+            Assert.Greater(r, UraniumMath.HotAbove);
         }
 
         [Test]
@@ -90,20 +88,20 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void ProgressFillsOnlyInTheGreenZone()
+        public void WiderGreenZoneAndFasterProgress()
         {
-            Assert.AreEqual(1f / 8f, UraniumMath.StepProgress(0f, 0.5f, 1f), 1e-4f);
-            Assert.AreEqual(0.5f - 1f / 16f, UraniumMath.StepProgress(0.5f, 0.9f, 1f), 1e-4f);
-            Assert.AreEqual(0f, UraniumMath.StepProgress(0f, 0f, 1f), 1e-4f);
+            Assert.IsTrue(UraniumMath.InGreen(0.35f));
+            Assert.IsTrue(UraniumMath.InGreen(0.65f));
+            Assert.IsFalse(UraniumMath.InGreen(0.34f));
+            Assert.AreEqual(1f / 6f, UraniumMath.StepProgress(0f, 0.5f, 1f), 1e-4f);
+            Assert.AreEqual(0.5f - 1f / 12f, UraniumMath.StepProgress(0.5f, 0.9f, 1f), 1e-4f);
         }
 
         [Test]
-        public void DoseRisesTwiceAsFastWhenHot()
+        public void DoseBudgetIsFortyFiveSecondsDoubledWhenHot()
         {
-            float normal = UraniumMath.StepDose(0f, 0.5f, 1f);
-            float hot = UraniumMath.StepDose(0f, 0.9f, 1f);
-            Assert.AreEqual(1f / 35f, normal, 1e-4f);
-            Assert.AreEqual(2f * normal, hot, 1e-4f);
+            Assert.AreEqual(1f / 45f, UraniumMath.StepDose(0f, 0.5f, 1f), 1e-4f);
+            Assert.AreEqual(2f / 45f, UraniumMath.StepDose(0f, 0.9f, 1f), 1e-4f);
         }
 
         [Test]
@@ -116,10 +114,18 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void SpikesComeEveryThreeToSixSeconds()
+        public void SpikesComeEveryFourToSevenSecondsWithLongerWarning()
         {
-            Assert.AreEqual(3f, UraniumMath.NextSpikeDelay(0f), 1e-4f);
-            Assert.AreEqual(6f, UraniumMath.NextSpikeDelay(1f), 1e-4f);
+            Assert.AreEqual(4f, UraniumMath.NextSpikeDelay(0f), 1e-4f);
+            Assert.AreEqual(7f, UraniumMath.NextSpikeDelay(1f), 1e-4f);
+            Assert.AreEqual(0.8f, UraniumMath.SpikeWarnSec, 1e-4f);
+        }
+
+        [Test]
+        public void RevealIsMoreForgiving()
+        {
+            Assert.AreEqual(20f, UraniumMath.RevealAngleDeg, 1e-4f);
+            Assert.AreEqual(0.8f, UraniumMath.RevealHoldSec, 1e-4f);
         }
 
         [Test]

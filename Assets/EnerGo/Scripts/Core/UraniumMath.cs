@@ -2,51 +2,45 @@ using UnityEngine;
 
 namespace EnerGo
 {
-    // Pure rules of the uranium "Pemburu Geiger" mini-game. r = reactivity 0..1, rod = control rod 0 (out) .. 1 (fully in).
+    // Pure rules of the uranium "Pemburu Geiger" mini-game (v2). r = reactivity 0..1, rod = control rod 0 (out) .. 1 (fully in).
     public static class UraniumMath
     {
-        // Where the ore hides, relative to the camera's starting direction.
-        public const float HideMinYawDeg = 60f, HideMaxYawDeg = 150f;
-        public const float HideMinPitchDeg = -10f, HideMaxPitchDeg = 15f;
-        // Search: aim within this cone for this long to reveal the ore.
-        public const float RevealAngleDeg = 10f, RevealHoldSec = 1.5f;
-        public const float MinClicksPerSec = 1f, MaxClicksPerSec = 25f;
+        // Search: the ore sits at the radar bearing, a little above or below eye level.
+        public const float HideMinPitchDeg = -5f, HideMaxPitchDeg = 15f;
+        public const float RevealAngleDeg = 20f, RevealHoldSec = 0.8f;
+        public const float FarClicksPerSec = 2f, NearClicksPerSec = 20f; // regular ticks so the change is easy to hear
         public const float MaxPulsesPerSec = 12f;   // vibration pulses blur together faster than this
+        public const int TrendThreshold = 3;        // RAD points per window that count as "menguat"/"melemah"
+        public const float TrendWindowSec = 0.3f;
         // Secure: reactivity.
-        public const float GreenMin = 0.40f, GreenMax = 0.60f, HotAbove = 0.80f;
+        public const float GreenMin = 0.35f, GreenMax = 0.65f, HotAbove = 0.80f;
         public const float Growth = 0.05f;          // per second: an unchecked chain reaction creeps up
-        public const float RodPull = 0.9f;          // per second: r is pulled toward (1 - rod)
+        public const float RodPull = 3.0f;          // per second: r is pulled toward (1 - rod) — fast, so the slider feels direct
         public const float NoiseGain = 0.25f;       // per second, Perlin noise in [-1, 1] times this
         public const float JoltDeadzone = 0.08f;    // accelerometer jitter below this is not a shake
         public const float JoltGain = 2.0f;         // per second per unit of jolt above the deadzone
         public const float SpikeSize = 0.20f;       // neutron spike, added at once
-        public const float SpikeMinSec = 3f, SpikeMaxSec = 6f, SpikeWarnSec = 0.5f;
-        public const float RodRangeDeg = 40f;       // tilting this far from the start moves the rod from 0 to 1
-        public const float FillPerSec = 1f / 8f, DrainPerSec = 1f / 16f;
-        public const float DosePerSec = 1f / 35f, HotDoseMul = 2f;
+        public const float SpikeMinSec = 4f, SpikeMaxSec = 7f, SpikeWarnSec = 0.8f;
+        public const float FillPerSec = 1f / 6f, DrainPerSec = 1f / 12f;
+        public const float DosePerSec = 1f / 45f, HotDoseMul = 2f;
         public const float ParSec = 18f;            // a good secure phase, for the speed score
         public const float FailShowSec = 1.5f;
 
-        public static float GeigerRate(float angleDeg)
-        {
-            float t = Mathf.Clamp01(angleDeg / 150f);
-            return MinClicksPerSec * Mathf.Pow(MaxClicksPerSec / MinClicksPerSec, 1f - t);
-        }
+        // Seconds between Geiger clicks: 1/20 s straight at the ore, 1/2 s at 150° or more away.
+        public static float GeigerInterval(float angleDeg) =>
+            1f / Mathf.Lerp(NearClicksPerSec, FarClicksPerSec, Mathf.Clamp01(angleDeg / 150f));
 
         // While securing, the counter follows the reactivity instead of the aim.
-        public static float SecureClickRate(float r) => Mathf.Lerp(4f, MaxClicksPerSec, Mathf.Clamp01(r));
-
-        // Radioactive decay is random: exponential gaps between clicks, mean 1 / rate.
-        public static float NextClickDelay(float rate, float u01) => -Mathf.Log(Mathf.Max(u01, 1e-4f)) / Mathf.Max(rate, 0.01f);
+        public static float SecureClickRate(float r) => Mathf.Lerp(4f, NearClicksPerSec, Mathf.Clamp01(r));
 
         public static int Meter(float angleDeg) => Mathf.RoundToInt(100f * (1f - Mathf.Clamp(angleDeg, 0f, 180f) / 180f));
 
-        // Forward tilt from the accelerometer: 0 = phone upright, 90 = lying flat screen up.
-        public static float TiltDeg(Vector3 gravity) =>
-            Mathf.Asin(Mathf.Clamp(-gravity.normalized.z, -1f, 1f)) * Mathf.Rad2Deg;
+        // +1 = signal getting stronger, -1 = weaker, 0 = about the same.
+        public static int Trend(int prevMeter, int meter) =>
+            meter - prevMeter >= TrendThreshold ? 1 : prevMeter - meter >= TrendThreshold ? -1 : 0;
 
-        public static float RodFromTilt(float tiltDeg, float baselineDeg) =>
-            Mathf.Clamp01(0.5f + (tiltDeg - baselineDeg) / RodRangeDeg);
+        // Finger position on the slider track, 0 = top (rod out) .. 1 = bottom (rod fully in).
+        public static float RodFromSlider(float pointerY01) => Mathf.Clamp01(pointerY01);
 
         public static float StepReactivity(float r, float rod, float jolt, float spike, float noise, float dt)
         {

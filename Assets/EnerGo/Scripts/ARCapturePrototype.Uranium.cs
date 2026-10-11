@@ -55,7 +55,7 @@ namespace EnerGo
             Vector3 fwd = arCamera.transform.forward;
             fwd.y = 0f;
             if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
-            float yaw = Random.Range(UraniumMath.HideMinYawDeg, UraniumMath.HideMaxYawDeg) * (Random.value < 0.5f ? -1f : 1f);
+            float yaw = Random.Range(60f, 150f) * (Random.value < 0.5f ? -1f : 1f);
             float pitch = Random.Range(UraniumMath.HideMinPitchDeg, UraniumMath.HideMaxPitchDeg);
             Vector3 dir = Quaternion.LookRotation(fwd.normalized) * Quaternion.Euler(-pitch, yaw, 0f) * Vector3.forward;
             target.transform.position = arCamera.transform.position + dir * UraniumOreDistance;
@@ -83,7 +83,7 @@ namespace EnerGo
             {
                 case UraniumPhase.Search:
                     uraniumAngle = Vector3.Angle(arCamera.transform.forward, target.transform.position - arCamera.transform.position);
-                    TickGeiger(UraniumMath.GeigerRate(uraniumAngle));
+                    TickGeiger(1f / UraniumMath.GeigerInterval(uraniumAngle));
                     uraniumLockHold = uraniumAngle <= UraniumMath.RevealAngleDeg ? uraniumLockHold + dt : 0f;
                     if (uraniumLockHold >= UraniumMath.RevealHoldSec) BeginUraniumSecure();
                     break;
@@ -113,7 +113,7 @@ namespace EnerGo
                 Haptics.Pulse(12);
                 uraniumLastPulseAt = Time.time;
             }
-            uraniumNextClickAt = Time.time + UraniumMath.NextClickDelay(rate, Random.value);
+            uraniumNextClickAt = Time.time + 1f / Mathf.Max(rate, 0.01f);
         }
 
         private void BeginUraniumSecure()
@@ -169,9 +169,7 @@ namespace EnerGo
             {
                 if (uraniumGravity <= 0f) uraniumGravity = a.magnitude;
                 jolt = Mathf.Abs(a.magnitude / uraniumGravity - 1f);
-                float tilt = UraniumMath.TiltDeg(a);
-                if (float.IsNaN(uraniumTiltBase)) uraniumTiltBase = tilt;
-                uraniumRod = Mathf.Lerp(uraniumRod, UraniumMath.RodFromTilt(tilt, uraniumTiltBase), 1f - Mathf.Exp(-10f * dt));
+                uraniumRod = Mathf.Clamp01(uraniumRod);
                 return;
             }
             if (Keyboard.current == null) return;
