@@ -63,7 +63,7 @@ Pengguna juga ingin mini-game Matahari diberi batas waktu acak.
   - Offset target = heading kompas − yaw kamera di dunia Unity (`atan2(fwd.x, fwd.z)`).
   - Offset dihaluskan dengan `GeoSpawner.SmoothHeading`, yang sudah menangani perputaran 359°→0°.
   - Offset **hanya diperbarui** kalau pitch kamera di antara −60° dan +60°, karena saat HP lurus ke atas atau bawah kompas tidak akurat.
-- **Yaw `North`** = offset. Dengan begitu, arah lokal +Z milik `North` selalu menunjuk ke utara asli. Kalibrasi yang terus diperhalus otomatis menggeser semua objek dengan mulus.
+- **Yaw `North`** = −offset (yaw dunia untuk bearing b = b − offset). Dengan begitu, arah lokal +Z milik `North` selalu menunjuk ke utara asli. Kalibrasi yang terus diperhalus otomatis menggeser semua objek dengan mulus. Kalibrasi pertama langsung dipakai tanpa penghalusan, dan spawn SDA menunggu kalibrasi pertama (maksimal 1,5 detik) supaya objek tidak melompat.
 - **Kalau tidak ada data kompas selama > 2 detik** (di editor, atau sensor diam), `HasCompass` bernilai false, offset tetap di nilai terakhirnya (awalnya 0), dan pita kompas menampilkan "KOMPAS TIDAK TERSEDIA".
 
 ### Bearing SDA
