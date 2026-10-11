@@ -272,7 +272,9 @@ namespace EnerGo
             {
                 float t = Mathf.Clamp01((Time.time - oilLastStrokeAt) / beat);
                 float r = Mathf.Lerp(r0 * 2.6f, r0, t);
-                EnerGoUI.DrawPanel(Circle(r), Color.clear, EnerGoUI.Alpha(EnerGoUI.Ink, 0.85f), r, 3f);
+                // Light ring with a dark rim: readable over both bright and dark camera feeds.
+                EnerGoUI.DrawPanel(Circle(r + 1.5f), Color.clear, EnerGoUI.Alpha(EnerGoUI.Ink, 0.7f), r + 1.5f, 6f);
+                EnerGoUI.DrawPanel(Circle(r), Color.clear, EnerGoUI.Paper, r, 3f);
             }
             DrawHudTag(c.x, c.y - 11f, 80f, "POMPA", sw);
 
