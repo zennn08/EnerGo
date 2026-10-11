@@ -14,6 +14,7 @@ namespace EnerGo
         public Transform North { get; private set; }
         public float OffsetDeg { get; private set; }  // compass heading - camera yaw
         public bool HasCompass { get; private set; }
+        public bool TargetPlaced;                     // set by the mini-game: hold the offset still while an SDA is out
         public bool ReadyToPlace => calibrated || Time.time - startedAt >= CompassMath.FirstFixTimeoutSec;
         public float HeadingDeg => cam == null ? 0f : CompassMath.CameraHeading(Yaw(cam.transform.forward), OffsetDeg);
 
@@ -57,7 +58,7 @@ namespace EnerGo
                 lastSensorStamp = rotationSensor.lastUpdateTime;
                 Vector3 f = cam.transform.forward;
                 float pitch = Mathf.Asin(Mathf.Clamp(f.y, -1f, 1f)) * Mathf.Rad2Deg;
-                if (CompassMath.CanCalibrate(pitch))
+                if (CompassMath.ShouldCalibrate(pitch, calibrated, TargetPlaced))
                 {
                     float heading = CompassMath.BackCameraHeading(rotationSensor.attitude.ReadValue());
                     float target = CompassMath.OffsetTarget(heading, Yaw(f));

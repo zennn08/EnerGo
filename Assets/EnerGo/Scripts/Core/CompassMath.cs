@@ -28,6 +28,11 @@ namespace EnerGo
 
         public static bool CanCalibrate(float cameraPitchDeg) => Mathf.Abs(cameraPitchDeg) <= MaxCalibratePitchDeg;
 
+        // Once an SDA is placed (and the first fix has landed) the offset is frozen: the phone compass wobbles
+        // by tens of degrees indoors and as the phone turns, and every object parented to North would swim with it.
+        public static bool ShouldCalibrate(float cameraPitchDeg, bool calibrated, bool targetPlaced) =>
+            CanCalibrate(cameraPitchDeg) && (!calibrated || !targetPlaced);
+
         public static float SmoothOffset(float current, float target, float dt) =>
             Mathf.Repeat(Mathf.LerpAngle(current, target, 1f - Mathf.Exp(-OffsetSmoothing * dt)), 360f);
 

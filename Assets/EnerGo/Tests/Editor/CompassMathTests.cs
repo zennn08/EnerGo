@@ -87,5 +87,15 @@ namespace EnerGo.Tests
             string[] expect = { "U", "TL", "T", "TG", "S", "BD", "B", "BL", "U" };
             for (int i = 0; i < expect.Length; i++) Assert.AreEqual(expect[i], CompassMath.DirectionLabel(i * 45));
         }
+
+        [Test]
+        public void CompassHoldsStillWhileATargetIsPlaced()
+        {
+            Assert.IsTrue(CompassMath.ShouldCalibrate(0f, calibrated: false, targetPlaced: false));
+            Assert.IsTrue(CompassMath.ShouldCalibrate(0f, calibrated: true, targetPlaced: false));
+            Assert.IsFalse(CompassMath.ShouldCalibrate(0f, calibrated: true, targetPlaced: true), "a placed SDA must not swim with compass noise");
+            Assert.IsTrue(CompassMath.ShouldCalibrate(0f, calibrated: false, targetPlaced: true), "the first fix still lands, once");
+            Assert.IsFalse(CompassMath.ShouldCalibrate(80f, calibrated: false, targetPlaced: false));
+        }
     }
 }

@@ -472,6 +472,8 @@ namespace EnerGo
                 SpawnGold(isRandomAngle: goldRespawnFar);
             }
 
+            compass.TargetPlaced = target != null; // CompassAnchor runs in LateUpdate, after this
+
             // 4. Idle Target Animation
             if (target != null)
             {
