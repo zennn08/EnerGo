@@ -23,7 +23,8 @@ namespace EnerGo
         private string selectedId;
         private bool safetySeen;
         private readonly Dictionary<string, Texture2D> crystals = new Dictionary<string, Texture2D>();
-        private GUIStyle sTitle, sBody, sMuted, sSmall, sDanger, sPrimary, sSecondary, sCardTitle, sCount, sNorth;
+        private GUIStyle sTitle, sBody, sMuted, sSmall, sSmallCentered, sDanger, sPrimary, sSecondary, sCardTitle, sCount, sNorth;
+        private Texture2D beam;
 
         private float HudScale => Mathf.Max(1f, Mathf.Min(Screen.width / 480f, Screen.height / 800f));
         private float Heading => feed.HasCompass ? feed.HeadingDeg : 0f;
@@ -61,6 +62,7 @@ namespace EnerGo
             sBody = Text(14, false, Ink, TextAnchor.MiddleCenter, true);
             sMuted = Text(13, false, Muted, TextAnchor.MiddleLeft);
             sSmall = Text(11, true, Muted, TextAnchor.MiddleLeft);
+            sSmallCentered = Text(12, true, Muted);
             sDanger = Text(11, true, Danger, TextAnchor.MiddleLeft);
             sPrimary = Text(17, true, Paper);
             sSecondary = Text(14, true, Muted);
@@ -113,11 +115,12 @@ namespace EnerGo
                 DrawRadar(c, R, scale, interactive);
 
                 float infoY = card.y - 34f;
+                GUI.Label(new Rect(x, infoY - 18f, w, 18f), feed.HasCompass
+                    ? "Kompas: " + feed.HeadingSource + " · " + Mathf.RoundToInt(feed.HeadingDeg) + "°"
+                    : "Kompas tidak tersedia, utara di atas", feed.HasCompass ? sSmall : sDanger);
                 GUI.Label(new Rect(x, infoY, w, 18f), "GPS ±" + Mathf.RoundToInt(feed.AccuracyM) + " m", sSmall);
                 if (feed.AccuracyM > WeakGpsM)
                     GUI.Label(new Rect(x + 80f, infoY, w - 80f, 18f), "Sinyal GPS lemah, coba ke tempat terbuka", sDanger);
-                else if (!feed.HasCompass)
-                    GUI.Label(new Rect(x + 80f, infoY, w - 80f, 18f), "Kompas tidak tersedia, utara di atas", sSmall);
 
                 DrawSelected(card, scale, interactive);
             }
@@ -136,6 +139,26 @@ namespace EnerGo
         }
 
         private static Rect Circle(Vector2 p, float r) => new Rect(p.x - r, p.y - r, r * 2f, r * 2f);
+
+        // White fan (apex at the bottom centre, ±35° wide, fading outward), tinted orange when drawn.
+        private Texture2D Beam()
+        {
+            if (beam != null) return beam;
+            const int W = 88, H = 76;
+            beam = new Texture2D(W, H, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
+            for (int y = 0; y < H; y++)
+            for (int x = 0; x < W; x++)
+            {
+                float dx = x + 0.5f - W * 0.5f, dy = y + 0.5f; // y = 0 is the bottom row (apex)
+                float ang = Mathf.Abs(Mathf.Atan2(dx, dy) * Mathf.Rad2Deg), r = Mathf.Sqrt(dx * dx + dy * dy) / H;
+                float a = Mathf.Clamp01((35f - ang) / 6f) * Mathf.Clamp01(1f - r) * Mathf.Clamp01(r * 4f);
+                beam.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+            }
+            beam.Apply();
+            return beam;
+        }
+
+        private void OnDestroy() { if (beam != null) Destroy(beam); }
 
         // RotateAroundPivot takes the pivot in screen pixels, but this GUI is drawn under a HudScale matrix.
         private void RotateAround(float angle, Vector2 pivot) => GUIUtility.RotateAroundPivot(angle, pivot * HudScale);
@@ -157,10 +180,14 @@ namespace EnerGo
             DrawPanel(new Rect(c.x - 1f, c.y - R + 4f, 2f, R - 4f), Alpha(Orange, 0.35f), Color.clear, 1f);
             GUI.matrix = m;
 
-            // North marker ("U") rides the rim.
-            Vector2 n = OnRadar(c, R, 0, RangeM);
-            n = c + (n - c).normalized * (R - 12f);
-            GUI.Label(new Rect(n.x - 10f, n.y - 10f, 20f, 20f), "U", sNorth);
+            // Compass letters ride the rim and turn with the world (U = utara/north in orange).
+            string[] letters = { "U", "T", "S", "B" };
+            for (int k = 0; k < 4; k++)
+            {
+                Vector2 n = OnRadar(c, R, k * 90.0, RangeM);
+                n = c + (n - c).normalized * (R - 12f);
+                GUI.Label(new Rect(n.x - 10f, n.y - 10f, 20f, 20f), letters[k], k == 0 ? sNorth : sSmallCentered);
+            }
 
             foreach (var s in nearby)
             {
@@ -182,15 +209,14 @@ namespace EnerGo
                 if (interactive && TapHit(Circle(p, 22f), scale)) selectedId = s.Id;
             }
 
-            // The player: the brand crystal pointing up (= the way the phone faces).
-            var me = Crystal("random");
-            if (me != null)
-            {
-                var mm = GUI.matrix;
-                RotateAround(-90f, c);
-                GUI.DrawTexture(new Rect(c.x - 16f, c.y - 10f, 32f, 20f), me, ScaleMode.StretchToFill); // stretched along the tip so it reads as an arrow
-                GUI.matrix = mm;
-            }
+            // The player: an orange dot with a soft beam pointing up. The radar is heading-up, so "up" is always
+            // the way the phone faces and the world turns around the player.
+            GUI.color = Alpha(Orange, 0.55f);
+            GUI.DrawTexture(new Rect(c.x - 44f, c.y - 76f, 88f, 76f), Beam(), ScaleMode.StretchToFill);
+            GUI.color = Color.white;
+            DrawPanel(Circle(c + new Vector2(0f, 2f), 13f), Alpha(Ink, 0.15f), Color.clear, 13f);
+            DrawPanel(Circle(c, 12f), Paper, Color.clear, 12f);
+            DrawPanel(Circle(c, 8.5f), Orange, Color.clear, 8.5f);
         }
 
         private void DrawSelected(Rect card, float scale, bool interactive)

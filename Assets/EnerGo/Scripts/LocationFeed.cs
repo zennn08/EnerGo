@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #if UNITY_ANDROID && !UNITY_EDITOR
 using UnityEngine.Android;
+using UnityEngine.InputSystem.Android;
 #endif
 
 namespace EnerGo
@@ -26,6 +27,13 @@ namespace EnerGo
         public float AccuracyM { get; private set; }
         public float HeadingDeg { get; private set; }
         public bool HasCompass { get; private set; }
+        public string HeadingSource { get; private set; } = "-"; // shown on the radar for device diagnosis
+
+        // This project runs the new Input System only, where the legacy Input.compass stays silent on the phone,
+        // so the heading comes from the Android rotation-vector sensor (compass + gyro + accelerometer fused).
+        private AttitudeSensor rotationSensor;
+        private double lastCompassStamp;
+        private float lastHeadingAt = -10f;
 
         private float startedAt;
         private double lastSeenFixTime = -1;
@@ -40,6 +48,7 @@ namespace EnerGo
 #if !UNITY_EDITOR
             Input.location.Stop();
             Input.compass.enabled = false;
+            if (rotationSensor != null && rotationSensor.enabled) InputSystem.DisableDevice(rotationSensor);
 #endif
         }
 
@@ -69,13 +78,18 @@ namespace EnerGo
         // Editor/test helper: jump to a place and facing.
         public void SimulateAt(double lat, double lon, float headingDeg)
         {
-            Lat = lat; Lon = lon; HeadingDeg = headingDeg; AccuracyM = 5f; HasCompass = true; Status = FeedStatus.Running;
+            Lat = lat; Lon = lon; HeadingDeg = headingDeg; AccuracyM = 5f; HasCompass = true; HeadingSource = "simulasi";
+            Status = FeedStatus.Running;
         }
 
         private void StartDevice()
         {
             if (!Input.location.isEnabledByUser) { Status = FeedStatus.Disabled; return; }
             Input.compass.enabled = true;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            rotationSensor = InputSystem.GetDevice<AndroidRotationVector>();
+#endif
+            if (rotationSensor != null && !rotationSensor.enabled) InputSystem.EnableDevice(rotationSensor);
             Input.location.Start(5f, 2f);
             startedAt = Time.unscaledTime;
             lastSeenFixTime = -1;
@@ -96,6 +110,7 @@ namespace EnerGo
         {
             if (permissionGranted) { permissionGranted = false; waitingForPermission = false; StartDevice(); }
             if (waitingForPermission || Status == FeedStatus.Denied || Status == FeedStatus.Disabled || Status == FeedStatus.Failed) return;
+            UpdateHeading(Time.unscaledDeltaTime);
             var service = Input.location.status;
             if (service == LocationServiceStatus.Failed) { Status = FeedStatus.Failed; return; }
             if (service != LocationServiceStatus.Running)
@@ -116,9 +131,30 @@ namespace EnerGo
                     Status = FeedStatus.Running; // only once there is a real position to show
                 }
             }
+        }
 
-            HasCompass = Input.compass.enabled && Input.compass.timestamp > 0;
-            if (HasCompass) HeadingDeg = GeoSpawner.SmoothHeading(HeadingDeg, Input.compass.trueHeading, Time.unscaledDeltaTime);
+        // Rotation-vector sensor first; the legacy compass only if it actually delivers new readings.
+        private void UpdateHeading(float dt)
+        {
+            float? raw = null;
+            if (rotationSensor != null && rotationSensor.enabled && rotationSensor.lastUpdateTime > 0)
+            {
+                raw = GeoSpawner.HeadingFromRotation(rotationSensor.attitude.ReadValue());
+                HeadingSource = "sensor rotasi";
+            }
+            else if (Input.compass.enabled && Input.compass.timestamp > lastCompassStamp)
+            {
+                lastCompassStamp = Input.compass.timestamp;
+                raw = Input.compass.trueHeading;
+                HeadingSource = "kompas";
+            }
+            if (raw != null)
+            {
+                HeadingDeg = GeoSpawner.SmoothHeading(HeadingDeg, raw.Value, dt);
+                lastHeadingAt = Time.unscaledTime;
+            }
+            HasCompass = Time.unscaledTime - lastHeadingAt < 2f; // no fresh reading for 2 s = treat as no compass
+            if (!HasCompass) HeadingSource = "tidak ada";
         }
 
         private void UpdateSimulation(float dt)
