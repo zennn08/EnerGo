@@ -152,12 +152,6 @@ namespace EnerGo
                     GUI.Label(Box(c.x, c.y - 22f, 160f, 30f), "RAD 87", Text(24, true, Ink));
                     DrawBar(Box(c.x, c.y + 16f, r.width - 80f, 12f), 0.87f, new Color(0.22f, 1f, 0.08f));
                     break;
-                case GuideBook.Art.Slider:
-                    DrawPanel(Box(c.x - 30f, c.y, 22f, r.height - 30f), Paper, Line, 6f, 1.5f);
-                    DrawPanel(Box(c.x - 30f, c.y, 14f, (r.height - 30f) * 0.3f), Alpha(Success, 0.5f), Color.clear, 4f);
-                    DrawPanel(Box(c.x + 30f, c.y, 40f, r.height - 30f), Paper, Line, 10f, 1.5f);
-                    DrawPanel(Box(c.x + 30f, c.y + 8f, 48f, 22f), Orange, Ink, 8f, 2f);
-                    break;
                 case GuideBook.Art.Shake:
                     DrawPanel(Box(c.x, c.y, 34f, 60f), Ink, Color.clear, 7f);
                     DrawPanel(Box(c.x - 34f, c.y, 4f, 30f), Danger, Color.clear, 2f);

@@ -62,6 +62,7 @@ namespace EnerGo
         private const string WhatIsUranium = "https://world-nuclear.org/information-library/nuclear-fuel-cycle/introduction/what-is-uranium-how-does-it-work";
         private const string Reactors = "https://world-nuclear.org/information-library/nuclear-fuel-cycle/nuclear-power-reactors/nuclear-power-reactors";
         private const string RadiationLife = "https://world-nuclear.org/information-library/safety-and-security/radiation-and-health/radiation-and-life";
+        private const string Alara = "https://www.cdc.gov/radiation-health/safety/alara.html";
         private const string UraniumMining = "https://world-nuclear.org/information-library/nuclear-fuel-cycle/mining-of-uranium/world-uranium-mining-production";
         private const string NuclearIndonesia = "https://world-nuclear.org/information-library/country-profiles/countries-g-n/indonesia";
 
@@ -245,6 +246,7 @@ namespace EnerGo
             Q("uranium-28", ResourceIds.Uranium, "Banyak reaktor nuklir memakai air sebagai pendingin.", true, "Air mengambil panas dari inti reaktor dan sekaligus dipakai untuk membuat uap.", Reactors),
             Q("uranium-29", ResourceIds.Uranium, "Uranium hanya ditemukan di luar angkasa, tidak di Bumi.", false, "Uranium ditambang dari batuan di Bumi, misalnya di Kazakhstan, Kanada, dan Australia.", WhatIsUranium),
             Q("uranium-30", ResourceIds.Uranium, "Kazakhstan termasuk produsen uranium terbesar di dunia.", true, "Kazakhstan menambang uranium lebih banyak daripada negara lain mana pun.", UraniumMining)
+            Q("uranium-31", ResourceIds.Uranium, "Tiga cara melindungi diri dari radiasi adalah membatasi waktu, menjaga jarak, dan memakai perisai.", true, "Prinsip ALARA: sesingkat mungkin di dekat sumber, sejauh mungkin darinya, dan pasang penghalang seperti timbal.", Alara),
         };
 
         public static QuestionDefinition[] ForResource(string id)

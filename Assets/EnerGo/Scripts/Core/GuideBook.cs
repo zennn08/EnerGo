@@ -3,7 +3,7 @@ namespace EnerGo
     // Step-by-step guide cards shown before each SDA mini-game and from the lobby's PANDUAN sheet.
     public static class GuideBook
     {
-        public enum Art { Reticle, Compass, Tap, PhoneFlat, PhoneSwirl, Hold, Layers, PumpRing, RadMeter, Slider, Shake }
+        public enum Art { Reticle, Compass, Tap, PhoneFlat, PhoneSwirl, Hold, Layers, PumpRing, RadMeter, Shake }
 
         public readonly struct Card
         {
@@ -45,8 +45,8 @@ namespace EnerGo
                 case ResourceIds.Uranium: return new[]
                 {
                     new Card("Ikuti sinyal RAD", "Hadap ke sektor hijau di kompas, lalu putar pelan sampai angka RAD paling tinggi.", Art.RadMeter),
-                    new Card("Geser batang kendali", "Geser batang di kanan layar untuk menjaga jarum reaktor di zona hijau. Reaksinya agak telat dan titik amannya terus bergeser, jadi terus sesuaikan.", Art.Slider),
-                    new Card("Pegang HP stabil", "Guncangan menaikkan reaksi. Waspadai lonjakan neutron, dosis terus naik.", Art.Shake)
+                    new Card("Jepit serpihan", "Bijih pecah jadi 3 serpihan di sekelilingmu. Arahkan lingkaran ke serpihan, lalu tahan JEPIT. Penjepit menjaga jarak tanganmu dari radiasi.", Art.Hold),
+                    new Card("Cepat & stabil", "Dosis terus naik, tiap serpihan di wadah timbal memperlambatnya. HP terguncang, jepitan lepas.", Art.Shake)
                 };
                 default: return new Card[0];
             }
