@@ -62,6 +62,8 @@ namespace EnerGo
         private float sunBaseYaw;
         private float sunSeed;
         private float sunSpawnTime;
+        private float sunTimeLimit = SunMath.MaxSec; // random per sun, SunMath.MinSec..MaxSec
+        private bool sunDone;                        // time is up or the bar is full: stop updating, the quiz is opening
 
         // Coal "Pemicu" mini-game: 3-5 lumps in an arc in front; each needs 2-5 hits (bigger = more)
         // and steps through the four break-stage models (Resources/Coal/bara_1..4) before shattering.
@@ -71,7 +73,6 @@ namespace EnerGo
         private const float CoalMinGapDeg = 20f;        // ...but at least this far apart so they never overlap
         private const float QuizSecondsPerQuestion = 15f; // running out counts as a wrong answer
         // Mini-game score (0..1, turned into bonus units): at or under par = 1, 2.5x par or slower = 0.
-        private const float SunParSec = 10f;            // 8 s minimum fill + a little slack
         private const float CoalParPerHit = 0.45f, CoalParPerLump = 1.5f;
         private float capturePerformance;
         private float coalStartedAt;
@@ -713,6 +714,7 @@ namespace EnerGo
         private void UpdateSun()
         {
             if (arCamera == null) return;
+            if (sunDone) return;
             float t = (Time.time - sunSpawnTime) * SunDriftSpeed;
             float ramp = Mathf.Clamp01((Time.time - sunSpawnTime) / 1.5f); // start centred, then begin to wander
             float yaw = Noise(sunSeed, t) * SunDriftYawDeg * ramp;
@@ -742,12 +744,25 @@ namespace EnerGo
                 SFXManager.Instance.SetMatahariMix(sunInside ? 0.3f : 0.9f, pan);
             }
 
-            if (sunProgress >= 1f)
+            switch (SunMath.SunOutcome(sunProgress, SunTimeLeft()))
             {
-                capturePerformance = SpeedScore(Time.time - sunSpawnTime, SunParSec);
-                if (!CompleteCapture()) sunProgress = 0.95f;
+                case SunMath.Outcome.Captured:
+                    // Full bar = Hebat; at time-out the share above 50 % decides the bonus. finishAt opens the quiz once (and retries on a save error).
+                    capturePerformance = sunProgress >= 1f ? 1f : SunMath.SunPerformance(sunProgress);
+                    sunDone = true;
+                    finishAt = Time.time;
+                    break;
+                case SunMath.Outcome.TooLittle:
+                    if (SFXManager.Instance != null) { SFXManager.Instance.StopMatahari(); SFXManager.Instance.StopEkstrakMatahari(); }
+                    Destroy(target);
+                    target = null;
+                    nextSpawnTime = Time.time + SunMath.FailShowSec; // HUD shows `feedback` while there is no target
+                    feedback = "CAHAYA TERLALU SEDIKIT";
+                    break;
             }
         }
+
+        private float SunTimeLeft() => sunTimeLimit - (Time.time - sunSpawnTime);
 
         private static float SpeedScore(float elapsed, float par) => Mathf.InverseLerp(par * 2.5f, par, elapsed);
 
@@ -1397,6 +1412,8 @@ namespace EnerGo
                 sunSeed = Random.Range(0f, 100f);
                 sunSpawnTime = Time.time;
                 sunProgress = 0f;
+                sunTimeLimit = SunMath.SunTimeLimit(Random.value);
+                sunDone = false;
                 UpdateSun();
             }
             if (resourceId != ResourceIds.Sun) target.transform.SetParent(compass.North, true);
@@ -1914,9 +1931,11 @@ namespace EnerGo
                 }
                 else if (resourceId == ResourceIds.Sun)
                 {
-                    line1 = sunInside ? "CAHAYA TERKUNCI · TAHAN POSISI HP" : "ARAHKAN LINGKARAN KE CAHAYA";
-                    style1 = sunInside ? styleRadarLocked : styleRadarAlert;
-                    accent = sunInside ? HudOk : HudWarn;
+                    int left = Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft()));
+                    line1 = (sunInside ? "CAHAYA TERKUNCI" : "ARAHKAN KE CAHAYA") + " · SISA " + left + " DTK";
+                    bool hurry = left <= 5 || !sunInside;
+                    style1 = hurry ? styleRadarAlert : styleRadarLocked;
+                    accent = hurry ? HudWarn : HudOk;
                     locked = true;
                 }
                 else if (resourceId == ResourceIds.Coal)
