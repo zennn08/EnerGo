@@ -241,6 +241,17 @@ namespace EnerGo
             DrawHudBar(x + 20f, y + 36f, w - 40f, bar, warn ? HudWarn : HudOk, label);
         }
 
+        // Small light pill with centred Ink text, kept 8 px inside the screen edges; readable over the camera feed.
+        private void DrawHudTag(float cx, float y, float w, string text, float sw)
+        {
+            if (hudTagStyle == null)
+                hudTagStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
+            var r = new Rect(Mathf.Clamp(cx - w * 0.5f, 8f, sw - 8f - w), y, w, 22f);
+            EnerGoUI.DrawPanel(r, HudFill, HudOutline, 11f, 1.5f);
+            GUI.Label(r, text, hudTagStyle);
+        }
+        private GUIStyle hudTagStyle;
+
         // Secure phase: reactor gauge (right), control rod (left), dose bar (bottom).
         private void DrawUraniumOverlay(float sw, float sh)
         {
@@ -257,12 +268,12 @@ namespace EnerGo
                 EnerGoUI.Alpha(EnerGoUI.Danger, 0.3f), Color.clear, 4f);
             float my = Y(uraniumR);
             EnerGoUI.DrawPanel(new Rect(g.x - 4f, my - 3f, gw + 8f, 6f), UraniumMath.InGreen(uraniumR) ? EnerGoUI.Success : EnerGoUI.Orange, Color.clear, 3f);
-            GUI.Label(new Rect(g.x - 40f, g.yMax + 4f, gw + 48f, 18f), "REAKTOR", styleTapsCounter);
+            DrawHudTag(g.center.x, g.yMax + 4f, 80f, "REAKTOR", sw);
 
             var rod = new Rect(16f, gy, gw, gh);
             EnerGoUI.DrawPanel(rod, HudFill, HudOutline, 8f, 2f);
             EnerGoUI.DrawPanel(new Rect(rod.x + 8f, rod.y + 4f, gw - 16f, (gh - 8f) * uraniumRod), EnerGoUI.Ink, Color.clear, 4f);
-            GUI.Label(new Rect(rod.x - 8f, rod.yMax + 4f, gw + 48f, 18f), "BATANG", styleTapsCounter);
+            DrawHudTag(rod.center.x, rod.yMax + 4f, 80f, "BATANG", sw);
 
             float dw = Mathf.Min(sw - 64f, 320f);
             var dose = new Rect((sw - dw) * 0.5f, sh - 104f, dw, 34f);

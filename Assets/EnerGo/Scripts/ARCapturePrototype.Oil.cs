@@ -56,7 +56,7 @@ namespace EnerGo
             fwd.y = 0f;
             if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
             fwd.Normalize();
-            target.transform.position = arCamera.transform.position + fwd * 1.4f + Vector3.down * 0.25f;
+            target.transform.position = arCamera.transform.position + fwd * 1.4f + Vector3.up * 0.05f;
             target.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up); // beam runs left-right, seen side-on
 
             oilLayers = OilMath.Layers(Random.Range(int.MinValue, int.MaxValue));
@@ -147,6 +147,13 @@ namespace EnerGo
 
         private void OilStroke()
         {
+            if (float.IsNegativeInfinity(oilLastStrokeAt)) // first press only starts the rhythm
+            {
+                oilLastStrokeAt = Time.time;
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayPumpBeat();
+                Haptics.Pulse(15);
+                return;
+            }
             var judge = OilMath.JudgeStroke(Time.time - oilLastStrokeAt, OilMath.BeatFor(oilDrum));
             OilMath.ApplyStroke(judge, ref oilDrum, ref oilPumpPressure);
             oilStrokes++;
@@ -255,19 +262,19 @@ namespace EnerGo
         private void DrawOilPump(float sw, float sh)
         {
             float beat = OilMath.BeatFor(oilDrum);
-            var c = new Vector2(sw * 0.5f, sh * 0.6f);
+            var c = new Vector2(sw * 0.5f, sh * 0.7f);
             const float r0 = 44f;
             Rect Circle(float r) => new Rect(c.x - r, c.y - r, r * 2f, r * 2f);
             EnerGoUI.DrawPanel(Circle(r0), EnerGoUI.Alpha(EnerGoUI.Orange, 0.18f), EnerGoUI.Orange, r0, 3f);
             if (float.IsNegativeInfinity(oilLastStrokeAt))
-                GUI.Label(new Rect(c.x - 120f, c.y + r0 + 10f, 240f, 20f), "TEKAN UNTUK MULAI MEMOMPA", styleTapsCounter);
+                DrawHudTag(c.x, c.y + r0 + 10f, 240f, "TEKAN UNTUK MULAI MEMOMPA", sw);
             else
             {
                 float t = Mathf.Clamp01((Time.time - oilLastStrokeAt) / beat);
                 float r = Mathf.Lerp(r0 * 2.6f, r0, t);
                 EnerGoUI.DrawPanel(Circle(r), Color.clear, EnerGoUI.Alpha(EnerGoUI.Ink, 0.85f), r, 3f);
             }
-            GUI.Label(new Rect(c.x - 40f, c.y - 10f, 80f, 20f), "POMPA", styleTapsCounter);
+            DrawHudTag(c.x, c.y - 11f, 80f, "POMPA", sw);
 
             float dw = Mathf.Min(sw - 64f, 320f);
             var pr = new Rect((sw - dw) * 0.5f, sh - 104f, dw, 34f);
