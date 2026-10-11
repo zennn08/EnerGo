@@ -55,11 +55,11 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void FullRodCoolsWithinHalfASecond()
+        public void FullRodCoolsWithinASecond()
         {
             float r = 0.8f;
-            for (int i = 0; i < 5; i++) r = UraniumMath.StepReactivity(r, 1f, 0f, 0f, 0f, 0.1f);
-            Assert.Less(r, UraniumMath.GreenMin, "rod response must be visible in under a second");
+            for (int i = 0; i < 10; i++) r = UraniumMath.StepReactivity(r, 1f, 0f, 0f, 0f, 0.1f);
+            Assert.Less(r, UraniumMath.GreenMin, "rod response must be visible within a second");
         }
 
         [Test]
@@ -88,13 +88,35 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void WiderGreenZoneAndFasterProgress()
+        public void GreenZoneAndProgress()
         {
-            Assert.IsTrue(UraniumMath.InGreen(0.35f));
-            Assert.IsTrue(UraniumMath.InGreen(0.65f));
-            Assert.IsFalse(UraniumMath.InGreen(0.34f));
-            Assert.AreEqual(1f / 6f, UraniumMath.StepProgress(0f, 0.5f, 1f), 1e-4f);
-            Assert.AreEqual(0.5f - 1f / 12f, UraniumMath.StepProgress(0.5f, 0.9f, 1f), 1e-4f);
+            Assert.IsTrue(UraniumMath.InGreen(0.40f));
+            Assert.IsTrue(UraniumMath.InGreen(0.60f));
+            Assert.IsFalse(UraniumMath.InGreen(0.39f));
+            Assert.IsFalse(UraniumMath.InGreen(0.61f));
+            Assert.AreEqual(1f / 8f, UraniumMath.StepProgress(0f, 0.5f, 1f), 1e-4f);
+            Assert.AreEqual(0.5f - 1f / 8f, UraniumMath.StepProgress(0.5f, 0.9f, 1f), 1e-4f);
+        }
+
+        [Test]
+        public void DriftMakesTheMiddleRodUnsafeSoTheRodMustFollowIt()
+        {
+            float drift = UraniumMath.Drift(0.8f); // fuel pulling hot
+            float idle = 0.5f, chased = 0.5f;
+            for (int i = 0; i < 100; i++)
+            {
+                idle = UraniumMath.StepReactivity(idle, 0.5f, 0f, 0f, 0f, 0.1f, drift);
+                chased = UraniumMath.StepReactivity(chased, 0.5f + drift, 0f, 0f, 0f, 0.1f, drift);
+            }
+            Assert.IsFalse(UraniumMath.InGreen(idle), "parking the rod in the middle must not win: r = " + idle);
+            Assert.IsTrue(UraniumMath.InGreen(chased), "moving the rod with the drift holds green: r = " + chased);
+        }
+
+        [Test]
+        public void RodHasLagSoItMustBeLed()
+        {
+            float r = UraniumMath.StepReactivity(0.8f, 1f, 0f, 0f, 0f, 0.1f);
+            Assert.Greater(r, UraniumMath.GreenMax, "one tenth of a second of full rod is not an instant fix");
         }
 
         [Test]

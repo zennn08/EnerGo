@@ -13,17 +13,18 @@ namespace EnerGo
         public const int TrendThreshold = 3;        // RAD points per window that count as "menguat"/"melemah"
         public const float TrendWindowSec = 0.3f;
         // Secure: reactivity.
-        public const float GreenMin = 0.35f, GreenMax = 0.65f, HotAbove = 0.80f;
+        public const float GreenMin = 0.40f, GreenMax = 0.60f, HotAbove = 0.80f;
         public const float Growth = 0.05f;          // per second: an unchecked chain reaction creeps up
-        public const float RodPull = 3.0f;          // per second: r is pulled toward (1 - rod) — fast, so the slider feels direct
-        public const float NoiseGain = 0.25f;       // per second, Perlin noise in [-1, 1] times this
+        public const float RodPull = 1.2f;          // per second: r is pulled toward (1 - rod + drift) — with lag, so you have to lead it
+        public const float NoiseGain = 0.15f;       // per second, Perlin noise in [-1, 1] times this
+        public const float DriftAmp = 0.45f, DriftSpeed = 0.12f; // the fuel's own pull: moves the rod's sweet spot, so no position stays safe for long
         public const float JoltDeadzone = 0.08f;    // accelerometer jitter below this is not a shake
         public const float JoltGain = 2.0f;         // per second per unit of jolt above the deadzone
-        public const float SpikeSize = 0.20f;       // neutron spike, added at once
+        public const float SpikeSize = 0.25f;       // neutron spike, added at once
         public const float SpikeMinSec = 4f, SpikeMaxSec = 7f, SpikeWarnSec = 0.8f;
-        public const float FillPerSec = 1f / 6f, DrainPerSec = 1f / 12f;
+        public const float FillPerSec = 1f / 8f, DrainPerSec = 1f / 8f;
         public const float DosePerSec = 1f / 45f, HotDoseMul = 2f;
-        public const float ParSec = 18f;            // a good secure phase, for the speed score
+        public const float ParSec = 24f;            // a good secure phase, for the speed score
         public const float FailShowSec = 1.5f;
 
         // Seconds between Geiger clicks: 1/20 s straight at the ore, 1/2 s at 150° or more away.
@@ -42,10 +43,13 @@ namespace EnerGo
         // Finger position on the slider track, 0 = top (rod out) .. 1 = bottom (rod fully in).
         public static float RodFromSlider(float pointerY01) => Mathf.Clamp01(pointerY01);
 
-        public static float StepReactivity(float r, float rod, float jolt, float spike, float noise, float dt)
+        // Drift in about [-DriftAmp, DriftAmp] * 0.6 from a Perlin sample p01 in [0, 1]: the rod has to move this much off the middle to stay green.
+        public static float Drift(float p01) => (Mathf.Clamp01(p01) - 0.5f) * 2f * DriftAmp;
+
+        public static float StepReactivity(float r, float rod, float jolt, float spike, float noise, float dt, float drift = 0f)
         {
             float shake = Mathf.Max(0f, jolt - JoltDeadzone) * JoltGain;
-            r += (Growth + ((1f - Mathf.Clamp01(rod)) - r) * RodPull + shake + noise) * dt + spike;
+            r += (Growth + ((1f - Mathf.Clamp01(rod)) + drift - r) * RodPull + shake + noise) * dt + spike;
             return Mathf.Clamp01(r);
         }
 

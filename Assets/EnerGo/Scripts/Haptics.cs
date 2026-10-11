@@ -11,8 +11,22 @@ namespace EnerGo
         private static bool triedVibrator;
         private static float lastFallbackAt = -10f;
 
+        public const string PrefEnabled = "EnerGo.Vibration";
+        public static bool Enabled = true; // Pengaturan → Getaran
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Load() => Enabled = PlayerPrefs.GetInt(PrefEnabled, 1) == 1;
+
+        public static void SetEnabled(bool on)
+        {
+            Enabled = on;
+            PlayerPrefs.SetInt(PrefEnabled, on ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
         public static void Pulse(long ms)
         {
+            if (!Enabled) return;
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (!triedVibrator)
             {

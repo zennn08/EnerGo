@@ -147,7 +147,8 @@ namespace EnerGo
                 Haptics.Pulse(60);
             }
             float noise = (Mathf.PerlinNoise(uraniumNoiseSeed, Time.time * 0.7f) - 0.5f) * 2f * UraniumMath.NoiseGain;
-            uraniumR = UraniumMath.StepReactivity(uraniumR, uraniumRod, jolt, spike, noise, dt);
+            float drift = UraniumMath.Drift(Mathf.PerlinNoise(uraniumNoiseSeed + 37f, (Time.time - uraniumRevealAt) * UraniumMath.DriftSpeed));
+            uraniumR = UraniumMath.StepReactivity(uraniumR, uraniumRod, jolt, spike, noise, dt, drift);
             uraniumProgress = UraniumMath.StepProgress(uraniumProgress, uraniumR, dt);
             uraniumDose = UraniumMath.StepDose(uraniumDose, uraniumR, dt);
             TickGeiger(1f / UraniumMath.SecureClickRate(uraniumR));

@@ -44,6 +44,7 @@ namespace EnerGo
         private const float TransitionDuration = 0.45f;
 
         private float inputCooldownTimer = 0.2f;
+        private bool volumeDragging;
 
         private GuideViewer lobbyGuide;   // card viewer opened from the PANDUAN sheet
         private float guidesResetAt = -10f;
@@ -402,7 +403,7 @@ namespace EnerGo
             GUI.color = Color.white;
         }
 
-        // Bottom sheet: AR mode switch and progress reset. Tap outside (or SELESAI) to close.
+        // Bottom sheet: AR mode, volume, vibration, practice and progress reset. Tap outside (or SELESAI) to close.
         private void DrawSettings(float sw, float sh)
         {
             float scale = HudScale;
@@ -410,7 +411,7 @@ namespace EnerGo
             GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float sheetH = 398f + SafeBottom(scale);
+            float sheetH = 562f + SafeBottom(scale);
             var sheet = new Rect(0, sh - sheetH, sw, sheetH + 30f); // extra height hides the bottom corners
             bool ready = inputCooldownTimer <= 0f;
 
@@ -430,21 +431,46 @@ namespace EnerGo
             y += 46f;
 
             // AR mode switch (on = ARCore scene, off = Sensor 360), remembered across sessions
-            var row = new Rect(x, y, w, 68f);
-            DrawCard(row);
-            GUI.Label(new Rect(row.x + 16f, row.y + 14f, row.width - 100f, 20f), "Mode AR (ARCore)", sCardTitle);
-            GUI.Label(new Rect(row.x + 16f, row.y + 36f, row.width - 100f, 18f),
-                useARCore ? "Butuh Google Play Services for AR" : "Mati: pakai Sensor 360 (giroskop)", sCardSub);
-            var track = new Rect(row.xMax - 16f - 52f, row.center.y - 15f, 52f, 30f);
-            DrawPanel(track, useARCore ? Orange : Line, Color.clear, 15f);
-            DrawPanel(new Rect(useARCore ? track.xMax - 27f : track.x + 3f, track.y + 3f, 24f, 24f), Paper, Color.clear, 12f);
-            if (ready && ButtonHit(row))
+            if (DrawToggleRow(new Rect(x, y, w, 68f), "Mode AR (ARCore)",
+                    useARCore ? "Butuh Google Play Services for AR" : "Mati: pakai Sensor 360 (giroskop)", useARCore, ready))
             {
-                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 useARCore = !useARCore;
                 PlayerPrefs.SetInt(PrefUseARCore, useARCore ? 1 : 0);
                 PlayerPrefs.Save();
-                inputCooldownTimer = 0.15f;
+            }
+            y += 68f + 14f;
+
+            // Master volume: drag along the bar; saved and previewed on release
+            var vol = new Rect(x, y, w, 68f);
+            DrawCard(vol);
+            GUI.Label(new Rect(vol.x + 16f, vol.y + 12f, vol.width - 100f, 20f), "Volume", sCardTitle);
+            GUI.Label(new Rect(vol.xMax - 76f, vol.y + 12f, 60f, 20f), Mathf.RoundToInt(AudioListener.volume * 100f) + "%",
+                new GUIStyle(sCardSub) { alignment = TextAnchor.MiddleRight });
+            var bar = new Rect(vol.x + 16f, vol.y + 44f, vol.width - 32f, 10f);
+            DrawPanel(bar, Line, Color.clear, 5f);
+            DrawPanel(new Rect(bar.x, bar.y, bar.width * AudioListener.volume, bar.height), Orange, Color.clear, 5f);
+            DrawPanel(new Rect(bar.x + bar.width * AudioListener.volume - 11f, bar.center.y - 11f, 22f, 22f), Paper, Ink, 11f, 2f);
+            if (Event.current.type == EventType.Repaint)
+            {
+                Vector2? p = HeldPointer(scale);
+                if (ready && p != null && (volumeDragging || vol.Contains(p.Value)))
+                {
+                    volumeDragging = true;
+                    AudioListener.volume = Mathf.Clamp01((p.Value.x - bar.x) / bar.width);
+                }
+                else if (volumeDragging && p == null)
+                {
+                    volumeDragging = false;
+                    SFXManager.SetVolume(AudioListener.volume);
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+                }
+            }
+            y += 68f + 14f;
+
+            if (DrawToggleRow(new Rect(x, y, w, 68f), "Getaran", Haptics.Enabled ? "HP bergetar saat main" : "Mati: tanpa getaran", Haptics.Enabled, ready))
+            {
+                Haptics.SetEnabled(!Haptics.Enabled);
+                Haptics.Pulse(60); // feel it when switching on
             }
             y += 68f + 14f;
 
@@ -588,6 +614,30 @@ namespace EnerGo
             }
             if (Time.time - guidesResetAt < 2f)
                 GUI.Label(new Rect(x, reset.yMax + 4f, w, 22f), "Panduan akan muncul lagi", new GUIStyle(sMuted) { alignment = TextAnchor.MiddleCenter });
+        }
+
+        // Card with a title, a subtitle and an on/off switch; true when tapped.
+        private bool DrawToggleRow(Rect row, string title, string sub, bool on, bool ready)
+        {
+            DrawCard(row);
+            GUI.Label(new Rect(row.x + 16f, row.y + 14f, row.width - 100f, 20f), title, sCardTitle);
+            GUI.Label(new Rect(row.x + 16f, row.y + 36f, row.width - 100f, 18f), sub, sCardSub);
+            var track = new Rect(row.xMax - 16f - 52f, row.center.y - 15f, 52f, 30f);
+            DrawPanel(track, on ? Orange : Line, Color.clear, 15f);
+            DrawPanel(new Rect(on ? track.xMax - 27f : track.x + 3f, track.y + 3f, 24f, 24f), Paper, Color.clear, 12f);
+            if (!ready || !ButtonHit(row)) return false;
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+            inputCooldownTimer = 0.15f;
+            return true;
+        }
+
+        // GUI-space position of a held finger or mouse button, or null.
+        private static Vector2? HeldPointer(float scale)
+        {
+            foreach (var t in EnhancedTouch.activeTouches)
+                return new Vector2(t.screenPosition.x / scale, (Screen.height - t.screenPosition.y) / scale);
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            return mouse != null && mouse.leftButton.isPressed ? Event.current.mousePosition : (Vector2?)null;
         }
 
         // A tap or click that started outside `rect`.

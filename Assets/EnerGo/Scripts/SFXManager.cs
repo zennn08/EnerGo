@@ -12,6 +12,19 @@ namespace EnerGo
     {
         public static SFXManager Instance { get; private set; }
 
+        // Master volume (Pengaturan → Volume) via AudioListener, so it covers every source in every scene.
+        public const string PrefVolume = "EnerGo.Volume";
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void LoadVolume() => AudioListener.volume = PlayerPrefs.GetFloat(PrefVolume, 1f);
+
+        public static void SetVolume(float v)
+        {
+            AudioListener.volume = Mathf.Clamp01(v);
+            PlayerPrefs.SetFloat(PrefVolume, AudioListener.volume);
+            PlayerPrefs.Save();
+        }
+
         [Header("Audio Clips — loaded from Resources at runtime")]
         public AudioClip clipSplash;
         public AudioClip clipButtonClick;

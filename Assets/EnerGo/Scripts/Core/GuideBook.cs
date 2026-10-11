@@ -45,7 +45,7 @@ namespace EnerGo
                 case ResourceIds.Uranium: return new[]
                 {
                     new Card("Ikuti sinyal RAD", "Hadap ke sektor hijau di kompas, lalu putar pelan sampai angka RAD paling tinggi.", Art.RadMeter),
-                    new Card("Geser batang kendali", "Geser batang di kanan layar untuk menjaga jarum reaktor di zona hijau.", Art.Slider),
+                    new Card("Geser batang kendali", "Geser batang di kanan layar untuk menjaga jarum reaktor di zona hijau. Reaksinya agak telat dan titik amannya terus bergeser, jadi terus sesuaikan.", Art.Slider),
                     new Card("Pegang HP stabil", "Guncangan menaikkan reaksi. Waspadai lonjakan neutron, dosis terus naik.", Art.Shake)
                 };
                 default: return new Card[0];
