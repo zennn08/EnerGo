@@ -1576,6 +1576,7 @@ namespace EnerGo
                 ApplyTrackingModeState(!isUsingGyro);
                 if (target != null) Destroy(target);
                 target = null;
+                uraniumPhase = UraniumPhase.None;
                 nextSpawnTime = Time.time + 0.3f;
                 feedback = isUsingGyro ? "BERALIH KE SENSOR 360" : "BERALIH KE ARCORE";
             }
@@ -1603,6 +1604,7 @@ namespace EnerGo
             {
                 if (target != null) Destroy(target);
                 target = null;
+                uraniumPhase = UraniumPhase.None;
                 lookPitch = 0f;
                 lookYaw = 0f;
                 if (arCamera != null) arCamera.transform.localRotation = Quaternion.identity;
