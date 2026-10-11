@@ -124,6 +124,33 @@ namespace EnerGo
 
         public void PlayBaraHancur() => PlayOneShot(clipBaraHancur, 1f);
 
+        private AudioClip geigerClick;
+        private AudioSource pumpSource;
+
+        // Geiger counter tick, made in code: 5 ms of fading noise.
+        public void PlayGeigerClick()
+        {
+            if (geigerClick == null)
+            {
+                const int rate = 44100;
+                int n = rate / 200;
+                var data = new float[n];
+                var rng = new System.Random(7);
+                for (int i = 0; i < n; i++) data[i] = (float)(rng.NextDouble() * 2.0 - 1.0) * (1f - i / (float)n);
+                geigerClick = AudioClip.Create("geiger_click", n, 1, rate, false);
+                geigerClick.SetData(data, 0);
+            }
+            PlayOneShot(geigerClick, 0.8f);
+        }
+
+        // Pump-jack thud: the falling-rock clip played low (placeholder until a real pump sound exists).
+        public void PlayPumpBeat()
+        {
+            if (clipBatuJatuh == null) return;
+            if (pumpSource == null) { pumpSource = gameObject.AddComponent<AudioSource>(); pumpSource.playOnAwake = false; pumpSource.pitch = 0.6f; }
+            pumpSource.PlayOneShot(clipBatuJatuh, 0.7f);
+        }
+
         /// <summary>Start looping the water flow ambient sound.</summary>
         public void PlayAliranAir()
         {
