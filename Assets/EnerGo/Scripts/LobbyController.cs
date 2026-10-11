@@ -304,7 +304,7 @@ namespace EnerGo
             }
         }
 
-        // Lobby collection tile: crystal, name, unit count; oil/uranium show a lock until their mini-games exist.
+        // Lobby collection tile: crystal, name, unit count; resources without a mini-game show a lock.
         private void DrawCollectionCard(Rect r, string id)
         {
             bool playable = ResourceIds.IsPlayable(id);

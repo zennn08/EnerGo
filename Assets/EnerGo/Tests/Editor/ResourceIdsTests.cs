@@ -19,7 +19,7 @@ namespace EnerGo.Tests
             Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Coal));
             Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Gold));
             Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Uranium));
-            Assert.IsFalse(ResourceIds.IsPlayable(ResourceIds.Oil));
+            Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Oil));
             Assert.IsFalse(ResourceIds.IsPlayable("random"));
         }
     }
