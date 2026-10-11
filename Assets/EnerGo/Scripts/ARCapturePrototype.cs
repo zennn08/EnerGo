@@ -8,7 +8,7 @@ using EnhancedTouch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
 namespace EnerGo
 {
-    public class ARCapturePrototype : MonoBehaviour
+    public partial class ARCapturePrototype : MonoBehaviour
     {
         public enum TrackingMode
         {
@@ -233,7 +233,7 @@ namespace EnerGo
             Application.targetFrameRate = 60;
             var save = EnerGoProgress.Current;
             resourceId = save.pendingCapture != null ? save.pendingCapture.resourceId : ResourceIds.Selected;
-            if (resourceId != ResourceIds.Sun && resourceId != ResourceIds.Coal && resourceId != ResourceIds.Gold) resourceId = ResourceIds.Gold;
+            if (!ResourceIds.IsPlayable(resourceId)) resourceId = ResourceIds.Gold;
             if (save.pendingCapture != null && save.pendingCapture.state != "awaiting-analysis") resultShownAt = Time.time;
 
             LoadTextures();
@@ -468,6 +468,7 @@ namespace EnerGo
                 if (resourceId == ResourceIds.Gold) target.transform.Rotate(0f, 28f * Time.deltaTime, 0f, Space.Self);
                 if (resourceId == ResourceIds.Sun && EnerGoProgress.Current.pendingCapture == null) UpdateSun();
                 if (resourceId == ResourceIds.Coal) UpdateCoal();
+                if (resourceId == ResourceIds.Uranium && EnerGoProgress.Current.pendingCapture == null) UpdateUranium();
                 if (goldPanning && EnerGoProgress.Current.pendingCapture == null) UpdateGoldPan();
             }
 
@@ -756,6 +757,7 @@ namespace EnerGo
                 ExploreSession.PendingSpawnId = null;
                 if (SFXManager.Instance != null) { SFXManager.Instance.StopMatahari(); SFXManager.Instance.StopEkstrakMatahari(); SFXManager.Instance.StopAliranAir(); }
                 goldPhase = GoldPhase.None;
+                uraniumPhase = UraniumPhase.None;
                 Destroy(target);
                 target = null;
                 feedback = "ANALISIS SIAP";
@@ -768,6 +770,7 @@ namespace EnerGo
         private bool CheckTapOnTarget(Vector2 screenPosition)
         {
             if (EnerGoProgress.Current.pendingCapture != null) return false;
+            if (resourceId == ResourceIds.Uranium) return false; // found by listening, secured by tilting
             if (resourceId == ResourceIds.Sun) return false; // sun is caught by aiming, so touches only drag the view
             if (goldPanning) return false;                    // the pan is controlled by tilting, not tapping
             touches++;
@@ -1313,6 +1316,7 @@ namespace EnerGo
 
         private void SpawnGold(bool isRandomAngle)
         {
+            if (resourceId == ResourceIds.Uranium) { SpawnUranium(); return; }
             if (resourceId == ResourceIds.Coal) { SpawnCoalField(); return; }
             if (goldPanning && SFXManager.Instance != null) SFXManager.Instance.StopAliranAir();
             goldPhase = GoldPhase.None;
@@ -1584,6 +1588,7 @@ namespace EnerGo
             if (resourceId == ResourceIds.Sun && target != null && EnerGoProgress.Current.pendingCapture == null) DrawSunReticle(sw, sh);
             if (resourceId == ResourceIds.Coal && target != null && EnerGoProgress.Current.pendingCapture == null) DrawCoalPips(scale);
             if (goldPanning && EnerGoProgress.Current.pendingCapture == null) DrawGoldPan(sw, sh);
+            if (uraniumPhase != UraniumPhase.None && EnerGoProgress.Current.pendingCapture == null) DrawUraniumOverlay(sw, sh);
 
             // --- 2. RADAR & TARGET DIRECTION HUD ---
             DrawRadarHUD(sw, safeTop + pillH + 10f);
@@ -1873,6 +1878,7 @@ namespace EnerGo
             string line1 = null, line2 = null;
             GUIStyle style1 = styleStatusSub;
             bool locked = false;
+            if (uraniumPhase != UraniumPhase.None) { DrawUraniumHud(hudX, hudY, hudW); return; }
 
             if (goldPanning)
             {
@@ -2022,7 +2028,7 @@ namespace EnerGo
         }
 
         private static string MiniGameName(string id) =>
-            id == ResourceIds.Sun ? "Ekstraksi" : id == ResourceIds.Coal ? "Tambang" : "Dulang";
+            id == ResourceIds.Sun ? "Ekstraksi" : id == ResourceIds.Coal ? "Tambang" : id == ResourceIds.Uranium ? "Pemburu Geiger" : "Dulang";
 
         private GUIStyle stylePrimaryText;
 

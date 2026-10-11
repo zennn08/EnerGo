@@ -13,13 +13,13 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void OnlySunCoalGoldArePlayable()
+        public void PlayableResources()
         {
             Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Sun));
             Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Coal));
             Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Gold));
+            Assert.IsTrue(ResourceIds.IsPlayable(ResourceIds.Uranium));
             Assert.IsFalse(ResourceIds.IsPlayable(ResourceIds.Oil));
-            Assert.IsFalse(ResourceIds.IsPlayable(ResourceIds.Uranium));
             Assert.IsFalse(ResourceIds.IsPlayable("random"));
         }
     }
