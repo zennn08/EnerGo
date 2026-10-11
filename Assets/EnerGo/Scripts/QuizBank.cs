@@ -48,6 +48,23 @@ namespace EnerGo
         private const string GoldAsia = "https://www.usgs.gov/centers/national-minerals-information-center/asia-and-pacific";
         private const string Mercury = "https://www.who.int/news-room/fact-sheets/detail/mercury-and-health";
 
+        private const string OilBasics = "https://www.eia.gov/energyexplained/oil-and-petroleum-products/";
+        private const string OilWhere = "https://www.eia.gov/energyexplained/oil-and-petroleum-products/where-our-oil-comes-from.php";
+        private const string OilRefining = "https://www.eia.gov/energyexplained/oil-and-petroleum-products/refining-crude-oil.php";
+        private const string OilUse = "https://www.eia.gov/energyexplained/oil-and-petroleum-products/use-of-oil.php";
+        private const string OilEnvironment = "https://www.eia.gov/energyexplained/oil-and-petroleum-products/oil-and-the-environment.php";
+        private const string IndonesiaEnergy = "https://www.eia.gov/international/analysis/country/IDN";
+
+        private const string Nuclear = "https://www.eia.gov/energyexplained/nuclear/";
+        private const string NuclearPlants = "https://www.eia.gov/energyexplained/nuclear/nuclear-power-plants.php";
+        private const string NuclearFuelCycle = "https://www.eia.gov/energyexplained/nuclear/the-nuclear-fuel-cycle.php";
+        private const string NuclearEnvironment = "https://www.eia.gov/energyexplained/nuclear/nuclear-power-and-the-environment.php";
+        private const string WhatIsUranium = "https://world-nuclear.org/information-library/nuclear-fuel-cycle/introduction/what-is-uranium-how-does-it-work";
+        private const string Reactors = "https://world-nuclear.org/information-library/nuclear-fuel-cycle/nuclear-power-reactors/nuclear-power-reactors";
+        private const string RadiationLife = "https://world-nuclear.org/information-library/safety-and-security/radiation-and-health/radiation-and-life";
+        private const string UraniumMining = "https://world-nuclear.org/information-library/nuclear-fuel-cycle/mining-of-uranium/world-uranium-mining-production";
+        private const string NuclearIndonesia = "https://world-nuclear.org/information-library/country-profiles/countries-g-n/indonesia";
+
         private static QuestionDefinition Q(string id, string resourceId, string statement, bool answer, string explanation, string source) =>
             new QuestionDefinition(id, resourceId, statement, answer, explanation, source);
 
@@ -163,7 +180,71 @@ namespace EnerGo
             Q("gold-32", ResourceIds.Gold, "Pirit yang berwarna kuning adalah emas asli.", false, "Pirit adalah mineral besi sulfida yang hanya mirip emas, sehingga disebut emas palsu.", GoldProspecting),
             Q("gold-33", ResourceIds.Gold, "Emas tidak dapat menghantarkan listrik.", false, "Emas adalah penghantar listrik yang baik, sehingga dipakai di konektor elektronik.", GoldElement),
             Q("gold-34", ResourceIds.Gold, "Saat mendulang, emas lebih mudah terbuang daripada pasir karena lebih ringan.", false, "Emas lebih berat daripada pasir, sehingga mengendap di dasar dan pasir yang terbuang.", GoldProspecting),
-            Q("gold-35", ResourceIds.Gold, "Emas 24 karat adalah emas yang dicampur separuh dengan logam lain.", false, "Emas 24 karat adalah emas murni. Emas campuran memiliki karat lebih rendah.", GoldElement)
+            Q("gold-35", ResourceIds.Gold, "Emas 24 karat adalah emas yang dicampur separuh dengan logam lain.", false, "Emas 24 karat adalah emas murni. Emas campuran memiliki karat lebih rendah.", GoldElement),
+
+            // ── Minyak Bumi ───────────────────────────────────────────
+            Q("oil-01", ResourceIds.Oil, "Minyak bumi terbentuk dari sisa organisme laut kecil seperti plankton yang tertimbun jutaan tahun.", true, "Sisa tumbuhan dan hewan laut kecil tertimbun lumpur, lalu panas dan tekanan mengubahnya menjadi minyak.", OilBasics),
+            Q("oil-02", ResourceIds.Oil, "Minyak bumi termasuk sumber energi terbarukan.", false, "Minyak bumi adalah bahan bakar fosil yang butuh jutaan tahun untuk terbentuk, jadi tidak terbarukan.", OilBasics),
+            Q("oil-03", ResourceIds.Oil, "Minyak mentah diolah di kilang menjadi bensin, solar, dan avtur.", true, "Kilang memisahkan dan mengolah minyak mentah menjadi berbagai bahan bakar.", OilRefining),
+            Q("oil-04", ResourceIds.Oil, "Minyak bumi sering terperangkap di bawah lapisan batuan kedap yang disebut batuan penutup.", true, "Batuan penutup yang kedap menahan minyak agar tidak naik ke permukaan, sehingga minyak terkumpul di reservoir.", OilWhere),
+            Q("oil-05", ResourceIds.Oil, "Di dalam reservoir, gas alam biasanya berada di atas minyak, dan air di bawahnya.", true, "Gas paling ringan sehingga naik ke atas, minyak di tengah, dan air yang paling berat di bawah.", OilWhere),
+            Q("oil-06", ResourceIds.Oil, "Minyak lebih berat daripada air sehingga langsung tenggelam saat tumpah di laut.", false, "Sebagian besar minyak lebih ringan daripada air, sehingga tumpahan minyak mengapung dan menyebar di permukaan laut.", OilEnvironment),
+            Q("oil-07", ResourceIds.Oil, "Pompa angguk dipakai untuk mengangkat minyak ketika tekanan alami sumur sudah melemah.", true, "Saat tekanan reservoir turun, pompa membantu mengangkat minyak dari dalam sumur ke permukaan.", OilWhere),
+            Q("oil-08", ResourceIds.Oil, "Satu barel minyak setara dengan sekitar 159 liter.", true, "Satu barel berisi 42 galon AS, atau sekitar 159 liter.", OilBasics),
+            Q("oil-09", ResourceIds.Oil, "Pembakaran bensin di kendaraan tidak menghasilkan karbon dioksida.", false, "Membakar bensin dan solar menghasilkan karbon dioksida, gas rumah kaca utama.", OilEnvironment),
+            Q("oil-10", ResourceIds.Oil, "Sektor transportasi adalah pemakai produk minyak bumi terbesar.", true, "Sebagian besar minyak dipakai sebagai bensin, solar, dan avtur untuk kendaraan, kapal, dan pesawat.", OilUse),
+            Q("oil-11", ResourceIds.Oil, "Plastik dapat dibuat dari bahan hasil olahan minyak bumi.", true, "Produk petrokimia dari minyak bumi menjadi bahan baku plastik dan banyak barang lain.", OilUse),
+            Q("oil-12", ResourceIds.Oil, "Kilang memisahkan minyak mentah dengan cara membekukannya.", false, "Kilang memanaskan minyak mentah lalu memisahkannya lewat distilasi, bukan membekukannya.", OilRefining),
+            Q("oil-13", ResourceIds.Oil, "Distilasi di kilang memisahkan minyak mentah berdasarkan perbedaan titik didih.", true, "Tiap bagian minyak menguap pada suhu berbeda, sehingga bisa dipisahkan di menara distilasi.", OilRefining),
+            Q("oil-14", ResourceIds.Oil, "Tumpahan minyak di laut dapat membahayakan burung dan ikan.", true, "Minyak melapisi bulu burung dan meracuni makhluk laut, sehingga tumpahan sangat merusak.", OilEnvironment),
+            Q("oil-15", ResourceIds.Oil, "Pengeboran minyak juga dilakukan di lepas pantai memakai anjungan.", true, "Banyak cadangan minyak berada di bawah dasar laut dan dibor dari anjungan lepas pantai.", OilWhere),
+            Q("oil-16", ResourceIds.Oil, "Minyak bumi selalu ditemukan dekat permukaan tanah, tidak pernah di kedalaman ribuan meter.", false, "Banyak sumur minyak dibor hingga ribuan meter di bawah permukaan.", OilWhere),
+            Q("oil-17", ResourceIds.Oil, "PLTD memakai bahan bakar solar, yang merupakan produk minyak bumi.", true, "Pembangkit Listrik Tenaga Diesel membakar solar hasil olahan minyak bumi.", OilUse),
+            Q("oil-18", ResourceIds.Oil, "Riau termasuk daerah penghasil minyak bumi utama di Indonesia.", true, "Lapangan-lapangan minyak besar seperti di Blok Rokan berada di Riau.", IndonesiaEnergy),
+            Q("oil-19", ResourceIds.Oil, "Indonesia saat ini mengekspor jauh lebih banyak minyak daripada yang diimpornya.", false, "Sejak awal 2000-an konsumsi Indonesia melebihi produksinya, sehingga Indonesia menjadi pengimpor bersih minyak.", IndonesiaEnergy),
+            Q("oil-20", ResourceIds.Oil, "Pertamina adalah perusahaan energi milik negara Indonesia.", true, "Pertamina adalah BUMN yang mengelola minyak dan gas bumi Indonesia.", IndonesiaEnergy),
+            Q("oil-21", ResourceIds.Oil, "Minyak mentah umumnya berwarna hitam atau cokelat gelap.", true, "Minyak mentah biasanya cairan kental berwarna gelap, walau warnanya bisa berbeda tiap lapangan.", OilBasics),
+            Q("oil-22", ResourceIds.Oil, "Minyak bumi terbentuk hanya dalam waktu beberapa tahun.", false, "Pembentukan minyak bumi butuh jutaan tahun di bawah panas dan tekanan.", OilBasics),
+            Q("oil-23", ResourceIds.Oil, "Aspal untuk jalan berasal dari bagian berat hasil pengolahan minyak bumi.", true, "Bagian paling berat dari minyak mentah di kilang dipakai sebagai aspal.", OilRefining),
+            Q("oil-24", ResourceIds.Oil, "Mengebor kantong gas bertekanan tinggi tidak memiliki risiko apa pun.", false, "Gas bertekanan tinggi bisa menyembur liar (blowout) jika pengeboran tidak dikendalikan.", OilEnvironment),
+            Q("oil-25", ResourceIds.Oil, "Sumur minyak modern dilengkapi alat pencegah semburan liar (blowout preventer).", true, "Blowout preventer menutup sumur saat tekanan melonjak untuk mencegah semburan liar.", OilEnvironment),
+            Q("oil-26", ResourceIds.Oil, "Avtur adalah bahan bakar khusus untuk kapal laut.", false, "Avtur adalah bahan bakar pesawat jet, salah satu produk kilang minyak.", OilUse),
+            Q("oil-27", ResourceIds.Oil, "Gas buang kendaraan berbahan bakar minyak dapat menyebabkan polusi udara di kota.", true, "Pembakaran bensin dan solar melepaskan polutan yang menurunkan kualitas udara.", OilEnvironment),
+            Q("oil-28", ResourceIds.Oil, "Minyak yang sudah disedot dari reservoir akan terisi kembali dengan cepat.", false, "Reservoir terisi selama jutaan tahun. Minyak yang sudah diambil tidak cepat tergantikan.", OilBasics),
+            Q("oil-29", ResourceIds.Oil, "Selain bahan bakar, minyak bumi juga dipakai untuk membuat pelumas.", true, "Oli dan pelumas mesin dibuat dari hasil olahan minyak bumi.", OilUse),
+            Q("oil-30", ResourceIds.Oil, "Minyak bumi dan minyak goreng berasal dari sumber yang sama.", false, "Minyak goreng dibuat dari tumbuhan seperti kelapa sawit, sedangkan minyak bumi berasal dari dalam perut bumi.", OilBasics),
+
+            // ── Uranium ───────────────────────────────────────────────
+            Q("uranium-01", ResourceIds.Uranium, "Uranium adalah logam radioaktif yang ditemukan di batuan kerak Bumi.", true, "Uranium terdapat dalam batuan, tanah, bahkan air laut dalam jumlah kecil.", WhatIsUranium),
+            Q("uranium-02", ResourceIds.Uranium, "Uranium termasuk sumber energi terbarukan.", false, "Uranium adalah bahan tambang yang jumlahnya terbatas, jadi tidak terbarukan.", Nuclear),
+            Q("uranium-03", ResourceIds.Uranium, "PLTN memakai panas dari fisi uranium untuk membuat uap penggerak turbin.", true, "Panas dari reaksi fisi mendidihkan air menjadi uap, lalu uap memutar turbin pembangkit.", NuclearPlants),
+            Q("uranium-04", ResourceIds.Uranium, "Fisi adalah proses pembelahan inti atom yang melepaskan energi.", true, "Saat inti uranium terbelah, sejumlah besar energi dilepaskan sebagai panas.", Nuclear),
+            Q("uranium-05", ResourceIds.Uranium, "Matahari menghasilkan energi dengan reaksi fisi uranium.", false, "Matahari memakai fusi, yaitu penggabungan inti hidrogen, bukan fisi uranium.", Nuclear),
+            Q("uranium-06", ResourceIds.Uranium, "Batang kendali di reaktor menyerap neutron untuk mengatur laju reaksi berantai.", true, "Memasukkan batang kendali lebih dalam menyerap lebih banyak neutron, sehingga reaksi melambat.", Reactors),
+            Q("uranium-07", ResourceIds.Uranium, "Uranium-235 lebih mudah mengalami fisi daripada uranium-238.", true, "Uranium-235 adalah isotop yang mudah dibelah dan menjadi bahan bakar utama reaktor.", WhatIsUranium),
+            Q("uranium-08", ResourceIds.Uranium, "Sebagian besar uranium alam berupa uranium-235.", false, "Uranium alam hampir seluruhnya uranium-238. Uranium-235 hanya sekitar 0,7 persen.", WhatIsUranium),
+            Q("uranium-09", ResourceIds.Uranium, "Pengayaan uranium menaikkan kadar uranium-235 dalam bahan bakar.", true, "Pengayaan menaikkan kadar uranium-235 agar reaksi berantai di reaktor dapat berlangsung.", NuclearFuelCycle),
+            Q("uranium-10", ResourceIds.Uranium, "Pencacah Geiger dipakai untuk mendeteksi radiasi.", true, "Pencacah Geiger berbunyi klik setiap kali menangkap partikel radiasi.", RadiationLife),
+            Q("uranium-11", ResourceIds.Uranium, "Radiasi nuklir dapat dilihat dengan mata telanjang sebagai cahaya hijau.", false, "Radiasi pengion tidak terlihat oleh mata, sehingga perlu alat seperti pencacah Geiger.", RadiationLife),
+            Q("uranium-12", ResourceIds.Uranium, "Timbal dan beton tebal dapat menahan radiasi.", true, "Bahan padat seperti timbal dan beton tebal dipakai sebagai pelindung radiasi.", RadiationLife),
+            Q("uranium-13", ResourceIds.Uranium, "PLTN tidak mengeluarkan karbon dioksida saat membangkitkan listrik.", true, "Reaktor nuklir tidak membakar bahan bakar, sehingga tidak melepaskan CO2 saat beroperasi.", NuclearEnvironment),
+            Q("uranium-14", ResourceIds.Uranium, "Bahan bakar bekas dari reaktor tetap radioaktif dan harus disimpan dengan aman.", true, "Bahan bakar bekas sangat radioaktif dan disimpan di kolam atau wadah khusus.", NuclearEnvironment),
+            Q("uranium-15", ResourceIds.Uranium, "Limbah nuklir boleh dibuang ke tempat sampah biasa.", false, "Limbah radioaktif diatur ketat dan disimpan di fasilitas khusus agar tidak mencemari lingkungan.", NuclearEnvironment),
+            Q("uranium-16", ResourceIds.Uranium, "Bahan bakar reaktor dibentuk menjadi pelet kecil yang disusun dalam batang bahan bakar.", true, "Pelet uranium dimasukkan ke dalam tabung logam yang disebut batang bahan bakar.", NuclearFuelCycle),
+            Q("uranium-17", ResourceIds.Uranium, "Uranium menyimpan energi jauh lebih padat daripada batu bara.", true, "Sedikit uranium menghasilkan energi yang setara dengan batu bara dalam jumlah sangat besar.", WhatIsUranium),
+            Q("uranium-18", ResourceIds.Uranium, "Indonesia sudah memiliki banyak PLTN komersial yang beroperasi.", false, "Indonesia belum memiliki PLTN komersial. Saat ini hanya ada reaktor riset.", NuclearIndonesia),
+            Q("uranium-19", ResourceIds.Uranium, "Indonesia memiliki reaktor riset, salah satunya di Serpong.", true, "Reaktor riset di Serpong, Bandung, dan Yogyakarta dipakai untuk penelitian dan produksi radioisotop.", NuclearIndonesia),
+            Q("uranium-20", ResourceIds.Uranium, "Kalimantan Barat memiliki endapan uranium yang sudah diteliti, misalnya di daerah Kalan.", true, "Eksplorasi di Kalan, Kalimantan Barat, menemukan endapan uranium.", NuclearIndonesia),
+            Q("uranium-21", ResourceIds.Uranium, "Uranium yang baru ditambang bisa langsung dimasukkan ke reaktor tanpa diolah.", false, "Bijih uranium harus diolah, dikonversi, diperkaya, lalu dibentuk menjadi bahan bakar.", NuclearFuelCycle),
+            Q("uranium-22", ResourceIds.Uranium, "Yellowcake adalah konsentrat uranium hasil pengolahan bijih.", true, "Bijih uranium digerus dan diolah menjadi bubuk kuning yang disebut yellowcake.", NuclearFuelCycle),
+            Q("uranium-23", ResourceIds.Uranium, "Semakin lama berada dekat sumber radiasi, semakin besar dosis yang diterima tubuh.", true, "Dosis radiasi menumpuk seiring waktu, jadi waktu paparan harus dibatasi.", RadiationLife),
+            Q("uranium-24", ResourceIds.Uranium, "Menjauh dari sumber radiasi mengurangi dosis yang diterima.", true, "Waktu, jarak, dan pelindung adalah tiga cara utama mengurangi dosis radiasi.", RadiationLife),
+            Q("uranium-25", ResourceIds.Uranium, "Kita sama sekali tidak pernah terkena radiasi dalam kehidupan sehari-hari.", false, "Ada radiasi latar alami dari batuan, tanah, dan luar angkasa yang kita terima setiap hari.", RadiationLife),
+            Q("uranium-26", ResourceIds.Uranium, "Reaksi berantai terjadi ketika neutron dari satu fisi memicu fisi inti atom lainnya.", true, "Setiap fisi melepaskan neutron baru yang dapat membelah inti uranium berikutnya.", Reactors),
+            Q("uranium-27", ResourceIds.Uranium, "Meltdown berarti reaktor sedang bekerja paling efisien.", false, "Meltdown adalah kecelakaan saat inti reaktor terlalu panas hingga bahan bakarnya meleleh.", Reactors),
+            Q("uranium-28", ResourceIds.Uranium, "Banyak reaktor nuklir memakai air sebagai pendingin.", true, "Air mengambil panas dari inti reaktor dan sekaligus dipakai untuk membuat uap.", Reactors),
+            Q("uranium-29", ResourceIds.Uranium, "Uranium hanya ditemukan di luar angkasa, tidak di Bumi.", false, "Uranium ditambang dari batuan di Bumi, misalnya di Kazakhstan, Kanada, dan Australia.", WhatIsUranium),
+            Q("uranium-30", ResourceIds.Uranium, "Kazakhstan termasuk produsen uranium terbesar di dunia.", true, "Kazakhstan menambang uranium lebih banyak daripada negara lain mana pun.", UraniumMining)
         };
 
         public static QuestionDefinition[] ForResource(string id)
