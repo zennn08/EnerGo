@@ -52,7 +52,7 @@ namespace EnerGo
         public const string PrefUseARCore = "EnerGo.UseARCore";
         private const string PrefResource = "EnerGo.SelectedResource";
         private const string RandomResource = "random"; // a different SDA picked on every PLAY
-        private static readonly string[] AllResources = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold };
+        private static readonly string[] AllResources = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold, ResourceIds.Oil, ResourceIds.Uranium };
 
         private GUIStyle sTitle, sBody, sMuted, sSection, sCardTitle, sCardSub, sCount, sPrimary, sSecondary, sDanger, sHint;
 
@@ -73,7 +73,7 @@ namespace EnerGo
             // Settings survive going to the capture scene and restarting the app.
             useARCore = PlayerPrefs.GetInt(PrefUseARCore, 0) == 1;
             string savedResource = PlayerPrefs.GetString(PrefResource, ResourceIds.Gold);
-            selectedResource = savedResource == ResourceIds.Sun || savedResource == ResourceIds.Coal || savedResource == RandomResource
+            selectedResource = ResourceIds.IsPlayable(savedResource) || savedResource == RandomResource
                 ? savedResource : ResourceIds.Gold;
 
             if (hasShownSplash) currentState = ScreenState.Lobby;
@@ -466,7 +466,7 @@ namespace EnerGo
             }
         }
 
-        // Practice: the old picker (Matahari / Batu Bara / Emas / Acak) straight into a mini-game, no GPS.
+        // Practice: pick any SDA (or Acak) and go straight into its mini-game, no GPS.
         private void DrawPractice(float sw, float sh)
         {
             float scale = HudScale;
@@ -474,7 +474,7 @@ namespace EnerGo
             GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
             GUI.color = Color.white;
             float gap = 12f, cardH = 76f;
-            float sheetH = 32f + 46f + cardH * 2f + gap + 20f + 66f + 12f + SafeBottom(scale);
+            float sheetH = 32f + 46f + cardH * 3f + gap * 2f + 20f + 66f + 12f + SafeBottom(scale);
             var sheet = new Rect(0, sh - sheetH, sw, sheetH + 30f);
             bool ready = inputCooldownTimer <= 0f;
             if (ready && OutsideTap(sheet, scale))
@@ -491,7 +491,7 @@ namespace EnerGo
             GUI.Label(new Rect(x, y, w, 30f), "Latihan (tanpa GPS)", new GUIStyle(sTitle) { alignment = TextAnchor.MiddleLeft });
             y += 46f;
             float cardW = (w - gap) * 0.5f;
-            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold, RandomResource };
+            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold, ResourceIds.Oil, ResourceIds.Uranium, RandomResource };
             for (int i = 0; i < ids.Length; i++)
             {
                 var rect = new Rect(x + (i % 2) * (cardW + gap), y + (i / 2) * (cardH + gap), cardW, cardH);
@@ -506,7 +506,7 @@ namespace EnerGo
                     inputCooldownTimer = 0.15f;
                 }
             }
-            y += cardH * 2f + gap + 20f;
+            y += cardH * 3f + gap * 2f + 20f;
             var go = new Rect(x, y, w, 66f);
             GUI.Label(DrawPrimaryButton(go, IsHeld(go, scale)), "MULAI LATIHAN", sPrimary);
             if (ready && ButtonHit(go))
