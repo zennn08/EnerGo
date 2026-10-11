@@ -42,10 +42,15 @@ namespace EnerGo
     {
         public int schemaVersion = 1;
         public string rulesetId = "demo-v1";
+        public static readonly string[] RequiredResources = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold };
+        public static readonly string[] AddedResources = { ResourceIds.Oil, ResourceIds.Uranium }; // missing in saves from before oil/uranium
+
         public InventoryEntry[] inventory = {
             new InventoryEntry { resourceId = ResourceIds.Sun },
             new InventoryEntry { resourceId = ResourceIds.Coal },
-            new InventoryEntry { resourceId = ResourceIds.Gold }
+            new InventoryEntry { resourceId = ResourceIds.Gold },
+            new InventoryEntry { resourceId = ResourceIds.Oil },
+            new InventoryEntry { resourceId = ResourceIds.Uranium }
         };
         public CaptureSession pendingCapture;
         public string lastCommittedCaptureId = "";
@@ -57,6 +62,14 @@ namespace EnerGo
             foreach (var entry in inventory)
                 if (entry != null && entry.resourceId == id) return entry;
             throw new ArgumentException("Unknown resource: " + id);
+        }
+
+        // Saves from before oil/uranium list only 3 resources: add the missing ones with 0 units.
+        public void AddMissingResources()
+        {
+            foreach (var id in AddedResources)
+                if (!inventory.Any(e => e != null && e.resourceId == id))
+                    inventory = inventory.Concat(new[] { new InventoryEntry { resourceId = id } }).ToArray();
         }
     }
 
@@ -112,6 +125,7 @@ namespace EnerGo
                 // JsonUtility materializes a null nested class as an empty object.
                 if (value != null && value.pendingCapture != null && string.IsNullOrEmpty(value.pendingCapture.sessionId)) value.pendingCapture = null;
                 if (!Valid(value)) return false;
+                value.AddMissingResources();
                 data = value;
                 return true;
             }
@@ -120,14 +134,12 @@ namespace EnerGo
 
         private static bool Valid(SaveGame value)
         {
-            if (value == null || value.schemaVersion != 1 || value.rulesetId != "demo-v1" || value.inventory == null || value.inventory.Length != 3 || !value.legacyGoldImported) return false;
-            foreach (string id in new[] { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold })
-            {
-                int matches = 0;
-                foreach (var entry in value.inventory)
-                    if (entry != null && entry.resourceId == id && entry.normalQuantity >= 0 && entry.pureQuantity >= 0) matches++;
-                if (matches != 1) return false;
-            }
+            if (value == null || value.schemaVersion != 1 || value.rulesetId != "demo-v1" || value.inventory == null || !value.legacyGoldImported) return false;
+            int Entries(string id) => value.inventory.Count(e => e != null && e.resourceId == id && e.normalQuantity >= 0 && e.pureQuantity >= 0);
+            int known = 0;
+            foreach (string id in SaveGame.RequiredResources) { int n = Entries(id); if (n != 1) return false; known += n; }
+            foreach (string id in SaveGame.AddedResources) { int n = Entries(id); if (n > 1) return false; known += n; }
+            if (known != value.inventory.Length) return false; // no null, unknown or duplicate entries
             var session = value.pendingCapture;
             if (session == null) return true;
             if (string.IsNullOrEmpty(session.sessionId) || QuizBank.Find(session.questionId, session.resourceId) == null) return false;
