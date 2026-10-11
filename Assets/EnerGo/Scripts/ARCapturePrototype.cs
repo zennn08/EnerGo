@@ -59,6 +59,7 @@ namespace EnerGo
         private const float SunDistance = 1.6f;
         private const float ReticleRadius = 56f;        // GUI units, same scale as the HUD
         private float sunProgress;
+        private float sunLastTickAt = -10f;   // soft tick while the light is in the reticle
         private bool sunInside;
         private float sunBaseYaw;
         private float sunSeed;
@@ -121,6 +122,7 @@ namespace EnerGo
         private bool goldRespawnFar;   // after a failure the next deposit spawns somewhere else around the player
         private float goldProgress;
         private bool goldRough;
+        private float goldLastRumbleAt = -10f; // warning rumble while panning too roughly
         private float goldSwirl;       // smoothed signed deg/s of the tilt direction
         private float goldTiltMag;
         private float goldLastAngle = float.NaN;
@@ -509,6 +511,7 @@ namespace EnerGo
                 cardReturning = false;
                 cardOffset = Vector2.zero;
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayQuizSalah();
+                Haptics.Pulse(200);
                 resultShownAt = Time.time;
             }
         }
@@ -697,12 +700,14 @@ namespace EnerGo
                 if (EnerGoProgress.Answer(answer))
                 {
                     var session = EnerGoProgress.Current.pendingCapture;
-                    if (SFXManager.Instance != null && session != null)
+                    if (session != null)
                     {
-                        if (session.correct)
-                            SFXManager.Instance.PlayQuizBenar();
-                        else
-                            SFXManager.Instance.PlayQuizSalah();
+                        Haptics.Pulse(session.correct ? 30 : 200);
+                        if (SFXManager.Instance != null)
+                        {
+                            if (session.correct) SFXManager.Instance.PlayQuizBenar();
+                            else SFXManager.Instance.PlayQuizSalah();
+                        }
                     }
                     resultShownAt = Time.time;
                 }
@@ -732,6 +737,7 @@ namespace EnerGo
             Vector2 centre = new Vector2(Screen.width, Screen.height) * 0.5f;
             sunInside = sp.z > arCamera.nearClipPlane && Vector2.Distance(sp, centre) <= ReticleRadius * HudScale;
             sunProgress = StepSunProgress(sunProgress, sunInside, Time.deltaTime);
+            if (sunInside && Time.time - sunLastTickAt >= 0.25f) { Haptics.Pulse(8); sunLastTickAt = Time.time; }
 
             // Extraction sound: playback position tracks sunProgress so the 8-second clip
             // maps 1:1 to the 0→100 % bar.  Pauses and seeks back when the sun escapes.
@@ -752,11 +758,13 @@ namespace EnerGo
                 case SunMath.Outcome.Captured:
                     // Full bar = Hebat; at time-out the share above 50 % decides the bonus. finishAt opens the quiz once (and retries on a save error).
                     capturePerformance = sunProgress >= 1f ? 1f : SunMath.SunPerformance(sunProgress);
+                    Haptics.Pulse(80);
                     sunDone = true;
                     finishAt = Time.time;
                     break;
                 case SunMath.Outcome.TooLittle:
                     if (SFXManager.Instance != null) { SFXManager.Instance.StopMatahari(); SFXManager.Instance.StopEkstrakMatahari(); }
+                    Haptics.Pulse(300);
                     Destroy(target);
                     target = null;
                     nextSpawnTime = Time.time + SunMath.FailShowSec; // HUD shows `feedback` while there is no target
@@ -935,12 +943,14 @@ namespace EnerGo
             if (best.hits < best.required)
             {
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraPukul();
+                Haptics.Pulse(20);
                 SetCoalStage(best, CoalStage(best.hits, best.required));
                 best.shakeUntil = Time.time + 0.18f;
                 return true;
             }
 
             if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraHancur();
+            Haptics.Pulse(50);
             SpawnCoalDebris(best);
             Destroy(best.root.gameObject);
             if (CoalBroken() == coalTotal)
@@ -949,6 +959,7 @@ namespace EnerGo
                 foreach (var lump in coalLumps) hits += lump.required;
                 capturePerformance = SpeedScore(Time.time - coalStartedAt, hits * CoalParPerHit + coalTotal * CoalParPerLump);
                 finishAt = Time.time + FinishDelay;
+                Haptics.Pulse(120);
                 feedback = "SEMUA BATU BARA TERKUMPUL";
             }
             return true;
@@ -1096,7 +1107,7 @@ namespace EnerGo
                     }
                     else flat = PointerScreen() == null; // editor: counts as level while not dragging
                     goldFlatHold = flat ? goldFlatHold + dt : Mathf.Max(0f, goldFlatHold - dt * 2f);
-                    if (goldFlatHold >= GoldFlatHoldSec) { goldPhase = GoldPhase.Countdown; goldPhaseAt = Time.time; }
+                    if (goldFlatHold >= GoldFlatHoldSec) { goldPhase = GoldPhase.Countdown; goldPhaseAt = Time.time; Haptics.Pulse(40); }
                     break;
                 }
                 case GoldPhase.Countdown:
@@ -1116,6 +1127,7 @@ namespace EnerGo
                     goldSwirl = StepSwirl(goldSwirl, ref goldLastAngle, goldTilt, dt);
                     goldProgress = StepGoldProgress(goldProgress, goldSwirl, goldTiltMag, jolt, dt, out goldRough);
                     StepGoldPieces(dt, goldRough, new Vector2(goldTilt.x, -goldTilt.y));
+                    if (goldRough && Time.time - goldLastRumbleAt >= 0.3f) { Haptics.Pulse(10); goldLastRumbleAt = Time.time; }
                     if (SFXManager.Instance != null)
                         SFXManager.Instance.SetAliranAirVolume(0.25f + 0.6f * Mathf.Clamp01(Mathf.Abs(goldSwirl) / GoldMaxSwirl));
                     CheckGoldOutcome();
@@ -1152,6 +1164,7 @@ namespace EnerGo
             }
             if (best < 0) return;
             goldLost[best] = true;
+            Haptics.Pulse(120);
             goldLostAt[best] = Time.time;
             Vector2 fly = goldPos[best] + dir;
             goldLostDir[best] = fly.sqrMagnitude > 1e-6f ? fly.normalized : Vector2.up;
@@ -1164,6 +1177,7 @@ namespace EnerGo
                 goldPhase = GoldPhase.Failed;
                 goldPhaseAt = Time.time;
                 if (SFXManager.Instance != null) SFXManager.Instance.StopAliranAir();
+                Haptics.Pulse(300);
                 feedback = "EMAS TERBUANG!";
             }
             else if (goldProgress >= 1f)
@@ -1172,6 +1186,7 @@ namespace EnerGo
                 goldPhaseAt = Time.time;
                 capturePerformance = Mathf.InverseLerp(GoldFailBelow, 1f, GoldLeft() / (float)GoldPieces);
                 finishAt = Time.time + FinishDelay;
+                Haptics.Pulse(80);
                 feedback = "EMAS TERPISAH DARI PASIR";
             }
         }
