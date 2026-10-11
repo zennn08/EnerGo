@@ -41,6 +41,7 @@ namespace EnerGo
         private GameObject sunModel;   // Resources/Sun/sun; falls back to a yellow sphere while it has no mesh
         private Material goldMaterial;
         private string resourceId;
+        private GuideViewer guide; // pre-game guide overlay; null = closed
         private CompassAnchor compass;
         private float captureBearing; // compass bearing of this capture's SDA (radar), random in practice mode
         private float resultShownAt;
@@ -252,6 +253,7 @@ namespace EnerGo
             {
                 arCamera.backgroundColor = EnerGoUI.Ink;
             }
+            if (save.pendingCapture == null && GuideViewer.ShouldShow(resourceId)) guide = new GuideViewer(resourceId, withStart: true);
         }
 
         private void Start()
@@ -461,7 +463,7 @@ namespace EnerGo
 
             // 3. Target Spawning
             bool canSpawn = (isUsingGyro || ARSession.state == ARSessionState.SessionTracking);
-            if (EnerGoProgress.Current.pendingCapture == null && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime && compass.ReadyToPlace)
+            if (EnerGoProgress.Current.pendingCapture == null && guide == null && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime && compass.ReadyToPlace)
             {
                 // Place the first target in view so sensor-mode users see an immediate response.
                 // A failed gold pan hides the next deposit somewhere around the player instead of in front.
@@ -554,6 +556,7 @@ namespace EnerGo
 
         private void HandleInputs()
         {
+            if (guide != null) return; // the overlay handles its own taps
             // ── When quiz card is showing, route input to card swipe ──
             if (EnerGoProgress.Current.pendingCapture != null
                 && EnerGoProgress.Current.pendingCapture.state == "awaiting-analysis")
@@ -1600,6 +1603,8 @@ namespace EnerGo
             var oreRect = new Rect(sw - 14f - oreW, safeTop, oreW, pillH);
             DrawPill(oreRect, ResourceIds.Name(resourceId).ToUpperInvariant(), $"{EnerGoProgress.Current.Get(resourceId).Total} UNIT", styleHeaderTag, styleGoldVal);
 
+            if (guide == null)
+            {
             if (resourceId == ResourceIds.Sun && target != null && EnerGoProgress.Current.pendingCapture == null) DrawSunReticle(sw, sh);
             if (resourceId == ResourceIds.Coal && target != null && EnerGoProgress.Current.pendingCapture == null) DrawCoalPips(scale);
             if (goldPanning && EnerGoProgress.Current.pendingCapture == null) DrawGoldPan(sw, sh);
@@ -1609,6 +1614,7 @@ namespace EnerGo
             // --- 2. RADAR & TARGET DIRECTION HUD ---
             DrawRadarHUD(sw, safeTop + pillH + 10f);
             if (EnerGoProgress.Current.pendingCapture == null) DrawCompassStrip(sw, safeTop + pillH + 10f + 72f);
+            }
 
             // --- 3. BOTTOM CONTROL BAR ---
             float botY = sh - 52f;
@@ -1616,7 +1622,7 @@ namespace EnerGo
             var resetRect = new Rect((sw - botBtnW) * 0.5f, botY, botBtnW, 40f);
 
             string resetLabel = isUsingGyro ? "RESET POSISI KE HADAPAN" : "MUNCULKAN ULANG TARGET";
-            if (EnerGoProgress.Current.pendingCapture == null && DrawBtn(resetRect, resetLabel, styleBtnText))
+            if (guide == null && EnerGoProgress.Current.pendingCapture == null && DrawBtn(resetRect, resetLabel, styleBtnText))
             {
                 if (target != null) Destroy(target);
                 target = null;
@@ -1639,6 +1645,11 @@ namespace EnerGo
                 EnerGoUI.DrawPanel(new Rect(hpos.x - r, hpos.y - r, r * 2f, r * 2f), Color.clear, EnerGoUI.Alpha(EnerGoUI.Orange, 1f - t), r, 3f);
             }
 
+            if (guide != null && guide.Draw(sw, sh, scale) == GuideViewer.Result.Start)
+            {
+                guide = null;
+                nextSpawnTime = Time.time; // the mini-game (and the sun timer) starts now
+            }
             if (EnerGoProgress.Current.pendingCapture != null) DrawAnalysis(sw, sh);
             GUI.color = prevColor;
             GUI.matrix = prevMatrix;
