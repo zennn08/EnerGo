@@ -19,6 +19,7 @@ namespace EnerGo
 
         private LocationFeed feed;
         private List<GeoSpawner.Spawn> nearby = new List<GeoSpawner.Spawn>();
+        private readonly HashSet<string> inRangeIds = new HashSet<string>(); // to buzz once when a spawn comes into range
         private float nextRefresh;
         private string selectedId;
         private bool safetySeen;
@@ -53,6 +54,18 @@ namespace EnerGo
             var captured = new HashSet<string>(EnerGoProgress.Current.capturedSpawns ?? new string[0]);
             nearby = GeoSpawner.Nearby(feed.Lat, feed.Lon, RangeM, NowUtc(), DateTime.Now.Hour, captured);
             if (nearby.FindIndex(s => s.Id == selectedId) < 0) selectedId = nearby.Count > 0 ? nearby[0].Id : null;
+            bool entered = false;
+            var now = new HashSet<string>();
+            foreach (var s in nearby)
+            {
+                if (!ResourceIds.IsPlayable(s.ResourceId)) continue;
+                if (!GeoSpawner.CanCapture(GeoSpawner.DistanceM(feed.Lat, feed.Lon, s.Lat, s.Lon), feed.AccuracyM)) continue;
+                now.Add(s.Id);
+                if (!inRangeIds.Contains(s.Id)) entered = true;
+            }
+            inRangeIds.Clear();
+            inRangeIds.UnionWith(now);
+            if (entered) Haptics.Pulse(60);
         }
 
         private void InitStyles()
