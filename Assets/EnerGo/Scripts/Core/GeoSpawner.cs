@@ -13,7 +13,7 @@ namespace EnerGo
         public const double CaptureRadiusM = 20.0;
         public const double MaxAccuracyBonusM = 15.0;   // a bad fix can stretch the capture radius by at most this
         public const double MaxPlausibleSpeedMps = 50.0; // faster than this is a GPS glitch, not walking
-        private const float HeadingSmoothing = 6f;       // higher = snappier compass
+        private const float HeadingSmoothing = 10f;      // higher = snappier compass
 
         private static readonly string[] DirectionNames =
             { "Utara", "Timur Laut", "Timur", "Tenggara", "Selatan", "Barat Daya", "Barat", "Barat Laut" };
@@ -47,6 +47,17 @@ namespace EnerGo
 
         public static bool PlausibleMove(double meters, double seconds) =>
             seconds > 0 ? meters / seconds <= MaxPlausibleSpeedMps : meters <= MaxPlausibleSpeedMps * 0.2;
+
+        // Compass heading (0 = north, clockwise) from an Android rotation-vector quaternion (device -> world, world =
+        // x East, y North, z Up). Uses whichever of the phone's top edge or back camera lies flatter: the top edge
+        // while the phone is held flat, the back camera while it is held upright.
+        public static float HeadingFromRotation(Quaternion deviceToWorld)
+        {
+            Vector3 top = deviceToWorld * Vector3.up;
+            Vector3 back = deviceToWorld * Vector3.back;
+            Vector3 v = Mathf.Abs(top.z) <= Mathf.Abs(back.z) ? top : back;
+            return Mathf.Repeat(Mathf.Atan2(v.x, v.y) * Mathf.Rad2Deg, 360f);
+        }
 
         // Low-pass on a circle: 359° -> 1° moves 2°, not 358°.
         public static float SmoothHeading(float current, float target, float dt) =>
