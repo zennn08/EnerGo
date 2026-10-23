@@ -1276,12 +1276,10 @@ namespace EnerGo
 
             if (goldPhase >= GoldPhase.Panning)
             {
-                var pill = new Rect(c.x - 60f, c.y - R - 40f, 120f, 30f);
-                EnerGoUI.DrawCard(pill, 15f);
-                GUI.Label(pill, $"EMAS {GoldLeft()}/{GoldPieces}", styleGoldVal);
+                DrawHudPill(new Rect(c.x - 70f, c.y - R - 50f, 140f, 40f), $"EMAS {GoldLeft()}/{GoldPieces}", Color.white);
             }
 
-            var big = new GUIStyle(styleRadarLocked) { fontSize = 46, normal = { textColor = EnerGoUI.Orange } };
+            var big = EnerGoUI.Title(60, Color.white);
             if (goldPhase == GoldPhase.Leveling)
             {
                 // Spirit level: centre the bubble in the ring.
@@ -1294,28 +1292,26 @@ namespace EnerGo
             else if (goldPhase == GoldPhase.Countdown)
             {
                 int n = Mathf.Clamp(Mathf.CeilToInt(GoldCountdownSec - (Time.time - goldPhaseAt)), 1, 3);
-                var card = new Rect(c.x - 100f, c.y - 62f, 200f, 124f);
-                EnerGoUI.DrawCard(card, 16f, EnerGoUI.Orange, 2f);
-                GUI.Label(new Rect(card.x, card.y + 12f, card.width, 20f), "SIAP?", styleRadarLocked);
-                GUI.Label(new Rect(card.x, card.y + 36f, card.width, 70f), n.ToString(), big);
+                var card = new Rect(c.x - 100f, c.y - 62f, 200f, 132f);
+                EnerGoUI.DrawCard(card);
+                EnerGoUI.DrawRibbon(card, "SIAP?", ButtonKind.Orange);
+                EnerGoUI.DrawStrokedLabel(new Rect(card.x, card.y + 34f, card.width, 80f), n.ToString(), big, EnerGoUI.M(3f), EnerGoUI.M(3f));
             }
             else if (goldPhase == GoldPhase.Panning && Time.time - goldPhaseAt < 0.8f)
             {
                 GUI.color = new Color(1f, 1f, 1f, 1f - (Time.time - goldPhaseAt) / 0.8f);
-                GUI.Label(new Rect(c.x - 150f, c.y - 35f, 300f, 70f), "MULAI!", big);
+                EnerGoUI.DrawStrokedLabel(new Rect(c.x - 150f, c.y - 40f, 300f, 80f), "MULAI!", big, EnerGoUI.M(3f), EnerGoUI.M(3f));
                 GUI.color = Color.white;
             }
             else if (goldPhase == GoldPhase.Failed)
             {
-                var amber = EnerGoUI.Orange;
-                float w = Mathf.Min(300f, sw * 0.84f);
-                var card = new Rect(c.x - w * 0.5f, c.y - 90f, w, 180f);
-                EnerGoUI.DrawCard(card, 16f, amber, 2f);
-                var title = new GUIStyle(styleRadarAlert) { fontSize = 22 };
-                var body = new GUIStyle(styleStatusSub) { wordWrap = true };
-                GUI.Label(new Rect(card.x + 16f, card.y + 16f, card.width - 32f, 30f), "EMAS TERBUANG!", title);
-                GUI.Label(new Rect(card.x + 16f, card.y + 50f, card.width - 32f, 50f), "Gerakanmu terlalu kencang, emasnya tumpah dari dulang.", body);
-                if (DrawPrimaryBtn(new Rect(card.x + 16f, card.yMax - 62f, card.width - 32f, 48f), "CARI ENDAPAN BARU"))
+                InitCardStyles();
+                float w = Mathf.Min(340f, sw * 0.86f);
+                var card = new Rect(c.x - w * 0.5f, c.y - 90f, w, 196f);
+                EnerGoUI.DrawCard(card);
+                EnerGoUI.DrawRibbon(card, "EMAS TERBUANG!", ButtonKind.Bad);
+                GUI.Label(new Rect(card.x + 18f, card.y + 46f, card.width - 36f, 56f), "Gerakanmu terlalu kencang, emasnya tumpah dari dulang.", styleCardHint);
+                if (DrawPrimaryBtn(new Rect(card.x + 18f, card.yMax - 78f, card.width - 36f, 60f), "CARI ENDAPAN BARU"))
                 {
                     if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     RetryGoldAtNewDeposit();
