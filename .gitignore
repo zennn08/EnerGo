@@ -72,3 +72,7 @@ BaselineSnapshot-*/
 .Trashes
 ehthumbs.db
 [Tt]humbs.db
+
+# brainstorm mockups and browser screenshots
+.superpowers/
+.playwright-mcp/
