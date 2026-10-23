@@ -1489,50 +1489,50 @@ namespace EnerGo
 
             styleHeaderTag = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 9,
+                fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Muted }
+                normal = { textColor = EnerGoUI.Sun }
             };
 
             styleHeaderVal = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 14,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Ink }
+                normal = { textColor = Color.white }
             };
 
             styleGoldVal = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 14,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Ink }
+                normal = { textColor = Color.white }
             };
 
             styleRadarAlert = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 15,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.OrangeLip }
+                normal = { textColor = EnerGoUI.OrangeTop }
             };
 
             styleRadarLocked = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 15,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Success }
+                normal = { textColor = EnerGoUI.OkTop }
             };
 
             styleTapsCounter = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 12,
+                fontSize = 13,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleLeft,
-                normal = { textColor = EnerGoUI.Ink }
+                normal = { textColor = Color.white }
             };
 
             styleBtnText = new GUIStyle(GUI.skin.label)
@@ -1553,10 +1553,10 @@ namespace EnerGo
 
             styleStatusSub = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 11,
+                fontSize = 12,
                 fontStyle = FontStyle.Normal,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Muted }
+                normal = { textColor = new Color(1f, 1f, 1f, 0.85f) }
             };
 
             EnerGoUI.ApplyFont(styleHeaderTag, styleHeaderVal, styleGoldVal, styleRadarAlert, styleRadarLocked,
@@ -1580,10 +1580,10 @@ namespace EnerGo
             float sw = Screen.width / scale;
             float sh = Screen.height / scale;
 
-            float safeTop = Mathf.Max(12f, (Screen.height - Screen.safeArea.yMax) / scale + 6f);
+            float safeTop = EnerGoUI.SafeTop(scale);
 
             // --- 1. TOP TELEMETRY BAR ---
-            float pillH = 44f;
+            float pillH = 50f;
 
             // Return to Lobby Button (Left)
             var lobbyRect = new Rect(14f, safeTop, 90f, pillH);
@@ -1912,8 +1912,8 @@ namespace EnerGo
             }
         }
 
-        private static readonly Color HudFill = EnerGoUI.Alpha(EnerGoUI.Paper, 0.96f);
-        private static readonly Color HudOutline = EnerGoUI.Line;
+        private static readonly Color HudFill = EnerGoUI.PillBg;
+        private static readonly Color HudOutline = EnerGoUI.Ink;
         private static readonly Color HudWarn = EnerGoUI.Orange;
         private static readonly Color HudOk = EnerGoUI.Success;
 
@@ -1988,7 +1988,7 @@ namespace EnerGo
 
             bool twoLines = line2 != null || locked;
             var box = new Rect(hudX, hudY, hudW, twoLines ? 64f : 42f);
-            EnerGoUI.DrawCard(box, EnerGoUI.Radius, accent, 2f);
+            DrawHudBox(box, accent == HudOutline ? (Color?)null : accent);
 
             GUI.Label(new Rect(hudX + 10, hudY + (twoLines ? 8f : 11f), hudW - 20, 20), line1, style1);
             if (line2 != null) GUI.Label(new Rect(hudX + 10, hudY + 34, hudW - 20, 18), line2, styleStatusSub);
@@ -2022,7 +2022,7 @@ namespace EnerGo
             if (compass == null || arCamera == null) return;
             if (stripLabelStyle == null) stripLabelStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
             var r = new Rect(16f, y, sw - 32f, 34f);
-            EnerGoUI.DrawCard(r, EnerGoUI.Radius, HudOutline, 1.5f);
+            DrawHudBox(r);
             float half = CompassMath.StripHalfSpanDeg, heading = compass.HeadingDeg;
             float X(float x01) => r.center.x + x01 * (r.width * 0.5f - 14f);
 
@@ -2034,7 +2034,7 @@ namespace EnerGo
                     float x01 = CompassMath.StripX(d, heading, half);
                     if (Mathf.Abs(x01) > 1f) continue;
                     if (d % 45 == 0) GUI.Label(new Rect(X(x01) - 16f, r.y + 2f, 32f, r.height - 4f), CompassMath.DirectionLabel(d), stripLabelStyle);
-                    else EnerGoUI.DrawPanel(new Rect(X(x01) - 1f, r.y + 12f, 2f, 10f), EnerGoUI.Line, Color.clear, 1f);
+                    else EnerGoUI.DrawPanel(new Rect(X(x01) - 1f, r.y + 12f, 2f, 10f), new Color(1f, 1f, 1f, 0.5f), Color.clear, 1f);
                 }
 
             if (resourceId == ResourceIds.Uranium)
@@ -2055,7 +2055,7 @@ namespace EnerGo
                 if (Mathf.Abs(x01) <= 1f) EnerGoUI.DrawPanel(new Rect(X(x01) - 6f, r.center.y - 6f, 12f, 12f), EnerGoUI.Orange, EnerGoUI.Ink, 6f, 1.5f);
                 else StripEdge(r, x01, Mathf.Abs(Mathf.DeltaAngle(heading, bearing)));
             }
-            if (compass.HasCompass) EnerGoUI.DrawPanel(new Rect(r.center.x - 1f, r.y + 2f, 2f, r.height - 4f), EnerGoUI.Ink, Color.clear, 1f); // view direction
+            if (compass.HasCompass) EnerGoUI.DrawPanel(new Rect(r.center.x - 1.5f, r.y + 3f, 3f, r.height - 6f), EnerGoUI.Sun, Color.clear, 1.5f); // view direction
         }
 
         private void StripEdge(Rect r, float x01, float deg)
@@ -2069,10 +2069,32 @@ namespace EnerGo
         // Horizontal progress bar with a short label (percentage or count) on the right.
         private void DrawHudBar(float x, float y, float w, float progress, Color fillCol, string label)
         {
-            float labelW = 44f;
-            var track = new Rect(x, y + 3f, w - labelW - 8f, 12f);
-            EnerGoUI.DrawBar(track, progress, fillCol);
-            GUI.Label(new Rect(track.xMax + 8f, y, labelW, 18f), label, styleTapsCounter);
+            float labelW = 48f;
+            var track = new Rect(x, y, w - labelW - 8f, 18f);
+            if (fillCol == HudOk) EnerGoUI.DrawBar(track, progress, EnerGoUI.OkTop, EnerGoUI.OkBot);
+            else if (fillCol == HudWarn) EnerGoUI.DrawBar(track, progress, EnerGoUI.OrangeTop, EnerGoUI.OrangeBot);
+            else EnerGoUI.DrawBar(track, progress, fillCol);
+            EnerGoUI.DrawStrokedLabel(new Rect(track.xMax + 8f, y - 1f, labelW, 20f), label, EnerGoUI.Title(16, Color.white, TextAnchor.MiddleLeft), 1.5f);
+        }
+
+        // Dark rounded box with an Ink outline: the base for every HUD panel over the camera.
+        // `accent` (warn/ok) draws a thin coloured ring just inside the outline.
+        private static void DrawHudBox(Rect r, Color? accent = null)
+        {
+            float rad = Mathf.Min(EnerGoUI.M(16f), r.height * 0.5f), w = EnerGoUI.M(2.5f);
+            EnerGoUI.DrawPanel(r, HudFill, Color.clear, rad);
+            if (accent != null)
+                EnerGoUI.DrawPanel(new Rect(r.x + w, r.y + w, r.width - w * 2f, r.height - w * 2f), Color.clear, accent.Value, rad - w, 2.5f);
+            EnerGoUI.DrawPanel(r, Color.clear, EnerGoUI.Ink, rad, w);
+        }
+
+        // One-line pill over the camera; the text shrinks to fit instead of clipping.
+        private void DrawHudPill(Rect r, string text, Color textColor)
+        {
+            var inner = EnerGoUI.DrawPill(r);
+            var style = EnerGoUI.Title(Mathf.RoundToInt(r.height * 0.42f), textColor);
+            int fit = EnerGoUI.FitSize(style, text, inner.width, 11);
+            GUI.Label(inner, text, fit == style.fontSize ? style : EnerGoUI.Title(fit, textColor));
         }
 
         // Remaining-hit pips floating above each coal lump: filled = hits landed.
@@ -2096,49 +2118,50 @@ namespace EnerGo
             }
         }
 
-        // Fixed aiming ring in the middle of the screen; glows and pulses while the light is inside.
+        // Fixed aiming ring in the middle of the screen: a dotted white ring with Ink edges; Sun glow while the light is inside.
         private void DrawSunReticle(float sw, float sh)
         {
             float r = ReticleRadius * (sunInside ? 1f + 0.04f * Mathf.Sin(Time.time * 8f) : 1f);
-            var rect = new Rect(sw * 0.5f - r, sh * 0.5f - r, r * 2f, r * 2f);
-            Color ring = sunInside ? EnerGoUI.Orange : new Color(1f, 1f, 1f, 0.9f);
-            Color fill = sunInside ? EnerGoUI.Alpha(EnerGoUI.Orange, 0.14f) : new Color(1f, 1f, 1f, 0.05f);
-            EnerGoUI.DrawPanel(rect, fill, ring, r, 3f);
+            var c = new Vector2(sw * 0.5f, sh * 0.5f);
+            if (sunInside) EnerGoUI.DrawPanel(new Rect(c.x - r, c.y - r, r * 2f, r * 2f), EnerGoUI.Alpha(EnerGoUI.Sun, 0.35f), Color.clear, r);
+            Color dot = sunInside ? EnerGoUI.Sun : Color.white;
+            const int dots = 28;
+            const float d = 8f;
+            for (int i = 0; i < dots; i++)
+            {
+                float a = i * Mathf.PI * 2f / dots;
+                var p = c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+                EnerGoUI.DrawPanel(new Rect(p.x - d * 0.5f, p.y - d * 0.5f, d, d), dot, EnerGoUI.Ink, d * 0.5f, 2f);
+            }
             // Small centre dot to aim with
-            EnerGoUI.DrawPanel(new Rect(sw * 0.5f - 3f, sh * 0.5f - 3f, 6f, 6f), ring, Color.clear, 3f);
+            EnerGoUI.DrawPanel(new Rect(c.x - 5f, c.y - 5f, 10f, 10f), dot, EnerGoUI.Ink, 5f, 2f);
         }
 
 
+        // Dark pill with a small Sun tag over a white value.
         private void DrawPill(Rect rect, string tag, string val, GUIStyle sTag, GUIStyle sVal)
         {
-            EnerGoUI.DrawCard(rect);
-            GUI.Label(new Rect(rect.x + 6, rect.y + 5, rect.width - 12, 15), tag, sTag);
-            GUI.Label(new Rect(rect.x + 6, rect.y + 20, rect.width - 12, 20), val, sVal);
+            var inner = EnerGoUI.DrawPill(rect);
+            GUI.Label(new Rect(inner.x, rect.y + 5f, inner.width, 15f), tag, sTag);
+            var v = EnerGoUI.Title(17, Color.white);
+            int fit = EnerGoUI.FitSize(v, val, inner.width, 11);
+            GUI.Label(new Rect(inner.x, rect.y + 19f, inner.width, rect.height - 23f), val, fit == v.fontSize ? v : EnerGoUI.Title(fit, Color.white));
         }
 
+        // Small Paper button with an Ink Lilita label (lobby/radar back, mode switch, respawn).
         private bool DrawBtn(Rect rect, string text, GUIStyle style)
         {
-            bool isPressed = rect.Contains(Event.current.mousePosition) && Mouse.current != null && Mouse.current.leftButton.isPressed;
-
-            GUI.Label(EnerGoUI.DrawSecondaryButton(rect, isPressed), text, style);
-
-            if (ButtonHit(rect))
-            {
-                return true;
-            }
-
-            return false;
+            var face = EnerGoUI.DrawButton(rect, ButtonKind.Paper, EnerGoUI.IsHeld(rect, HudScale));
+            EnerGoUI.ButtonLabel(face, text, 16, ButtonKind.Paper);
+            return ButtonHit(rect);
         }
 
         private static string MiniGameName(string id) =>
             id == ResourceIds.Sun ? "Ekstraksi" : id == ResourceIds.Coal ? "Tambang" : id == ResourceIds.Uranium ? "Pemburu Geiger" : id == ResourceIds.Oil ? "Bor & Pompa" : "Dulang";
 
-        private GUIStyle stylePrimaryText;
-
         private bool DrawPrimaryBtn(Rect rect, string text)
         {
-            if (stylePrimaryText == null) stylePrimaryText = EnerGoUI.Text(16, true, EnerGoUI.Paper);
-            GUI.Label(EnerGoUI.DrawPrimaryButton(rect, EnerGoUI.IsHeld(rect, HudScale)), text, stylePrimaryText);
+            EnerGoUI.ButtonLabel(EnerGoUI.DrawPrimaryButton(rect, EnerGoUI.IsHeld(rect, HudScale)), text, 20, ButtonKind.Orange);
             return ButtonHit(rect);
         }
 
