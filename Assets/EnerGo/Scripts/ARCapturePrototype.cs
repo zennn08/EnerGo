@@ -190,7 +190,6 @@ namespace EnerGo
 
         // UI Textures
         private Texture2D texWhite;
-        private Texture2D texPill;
 
         // Styles
         private GUIStyle styleHeaderTag;
@@ -245,7 +244,6 @@ namespace EnerGo
             captureBearing = ExploreSession.PendingSpawnId != null && ExploreSession.PendingBearingDeg.HasValue
                 ? ExploreSession.PendingBearingDeg.Value : Random.Range(0f, 360f);
 
-            LoadTextures();
             CreateSolidTextures();
 
             // Set camera background fallback color
@@ -341,11 +339,6 @@ namespace EnerGo
                     arCamera.clearFlags = CameraClearFlags.Depth;
                 }
             }
-        }
-
-        private void LoadTextures()
-        {
-            texPill = Resources.Load<Texture2D>("UI/pill_badge");
         }
 
         private void CreateSolidTextures()
@@ -1577,7 +1570,6 @@ namespace EnerGo
         {
             InitStyles();
 
-            if (texPill == null) LoadTextures();
             if (texWhite == null) CreateSolidTextures();
 
             var prevMatrix = GUI.matrix;
