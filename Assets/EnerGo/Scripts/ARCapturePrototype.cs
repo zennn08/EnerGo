@@ -720,6 +720,7 @@ namespace EnerGo
                 isDraggingCard = false;
                 cardReturning = false;
                 cardOffset = new Vector2(answer ? 4f : -4f, 0f);
+                EnerGoUI.BlockTaps(0.35f); // the feedback card draws this frame; its button must not take this touch
                 CommitAnswer(answer);
                 return true;
             }

@@ -137,6 +137,10 @@ namespace EnerGo
         // ── Input ─────────────────────────────────────────────────────
         private static float tapBlockedUntil;
 
+        // Swallow taps for a moment, e.g. after an answer committed on touch-down so the same touch cannot also
+        // press whatever button the next screen puts under the finger.
+        public static void BlockTaps(float seconds) => tapBlockedUntil = Mathf.Max(tapBlockedUntil, Time.unscaledTime + seconds);
+
         // One physical tap = one button press. Touches are read on touch-down from EnhancedTouch; IMGUI's own
         // button only counts real mouse clicks, because Android also replays every touch as a mouse event.
         // Counting both made a single tap press two buttons in a row (e.g. "LIHAT HASIL" and then
