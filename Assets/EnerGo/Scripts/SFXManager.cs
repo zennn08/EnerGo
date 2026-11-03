@@ -32,7 +32,6 @@ namespace EnerGo
         public AudioClip clipDulangEmas;
         public AudioClip clipAliranAir;
         public AudioClip clipBatuJatuh;
-        public AudioClip clipPickaxe;
         public AudioClip clipQuizBenar;
         public AudioClip clipQuizSalah;
         public AudioClip clipMatahari;
@@ -40,6 +39,7 @@ namespace EnerGo
         public AudioClip clipBaraHancur;
         public AudioClip clipSungai;
         public AudioClip clipEkstrakMatahari;
+        public AudioClip clipTambangSelesai;
 
         [Header("Music")]
         public AudioClip clipLobbyMusic;
@@ -93,7 +93,6 @@ namespace EnerGo
             clipDulangEmas = Resources.Load<AudioClip>("Audio/SFX/sfx_dulang_emas");
             clipAliranAir = Resources.Load<AudioClip>("Audio/SFX/sfx_aliran_air");
             clipBatuJatuh = Resources.Load<AudioClip>("Audio/SFX/sfx_batu_jatuh");
-            clipPickaxe = Resources.Load<AudioClip>("Audio/SFX/sfx_pickaxe");
             clipQuizBenar = Resources.Load<AudioClip>("Audio/SFX/sfx_quiz_benar");
             clipQuizSalah = Resources.Load<AudioClip>("Audio/SFX/sfx_quiz_salah");
             clipMatahari = Resources.Load<AudioClip>("Audio/SFX/sfx_matahari");
@@ -101,6 +100,7 @@ namespace EnerGo
             clipBaraHancur = Resources.Load<AudioClip>("Audio/SFX/sfx_bara_hancur");
             clipSungai = Resources.Load<AudioClip>("Audio/SFX/sfx_sungai");
             clipEkstrakMatahari = Resources.Load<AudioClip>("Audio/SFX/sfx_ekstrak_matahari");
+            clipTambangSelesai = Resources.Load<AudioClip>("Audio/SFX/sfx_tambang_selesai");
             clipLobbyMusic = Resources.Load<AudioClip>("Audio/SFX/music_lobby");
         }
 
@@ -127,15 +127,33 @@ namespace EnerGo
 
         public void PlayBatuJatuh() => PlayOneShot(clipBatuJatuh, 1f);
 
-        public void PlayPickaxe() => PlayOneShot(clipPickaxe, 1f);
-
         public void PlayQuizBenar() => PlayOneShot(clipQuizBenar, 1f);
 
         public void PlayQuizSalah() => PlayOneShot(clipQuizSalah, 1f);
 
-        public void PlayBaraPukul() => PlayOneShot(clipBaraPukul, 1f);
+        // A coal round has 10-25 hits; the same sample at the same pitch every time sounds mechanical.
+        // Each hit gets its own source (round robin) so a new pitch never bends a hit that is still ringing.
+        private AudioSource[] variedSources;
+        private int variedNext;
+        private void PlayVaried(AudioClip clip, float spread = 0.08f)
+        {
+            if (clip == null) return;
+            if (variedSources == null)
+            {
+                variedSources = new AudioSource[3];
+                for (int i = 0; i < variedSources.Length; i++) { variedSources[i] = gameObject.AddComponent<AudioSource>(); variedSources[i].playOnAwake = false; }
+            }
+            var src = variedSources[variedNext];
+            variedNext = (variedNext + 1) % variedSources.Length;
+            src.pitch = Random.Range(1f - spread, 1f + spread);
+            src.PlayOneShot(clip, 1f);
+        }
 
-        public void PlayBaraHancur() => PlayOneShot(clipBaraHancur, 1f);
+        public void PlayBaraPukul() => PlayVaried(clipBaraPukul);
+
+        public void PlayBaraHancur() => PlayVaried(clipBaraHancur, 0.05f);
+
+        public void PlayTambangSelesai() => PlayOneShot(clipTambangSelesai, 1f);
 
         private AudioClip geigerClick;
         private AudioSource pumpSource;

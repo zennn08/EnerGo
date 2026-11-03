@@ -93,6 +93,12 @@ namespace EnerGo
         }
         private readonly List<CoalLump> coalLumps = new List<CoalLump>();
         private GameObject[] coalStageModels;
+        private GameObject coalChipModel, pickaxeModel; // Resources/Coal/serpihan, Resources/Coal/pickaxe (both optional)
+        private Transform pickaxe;                       // swings in from the lower right on every hit
+        private float pickSwingAt = -10f;
+        private Vector3 pickTarget;
+        private const float PickSwingSec = 0.26f, PickScale = 0.55f; // 0.74 m model -> ~0.4 m in hand
+        private const float PickImpactSec = 0.07f;                    // when the head lands; hit feedback waits for it
         private Light coalLight;
         private int coalTotal;
         private float finishAt = -1f; // shared by coal and gold: when to open the quiz
@@ -466,6 +472,7 @@ namespace EnerGo
             }
 
             compass.TargetPlaced = target != null; // CompassAnchor runs in LateUpdate, after this
+            AnimatePickaxe();
 
             // 4. Idle Target Animation
             if (target != null)
@@ -865,6 +872,8 @@ namespace EnerGo
             {
                 coalStageModels = new GameObject[4];
                 for (int i = 0; i < 4; i++) coalStageModels[i] = Resources.Load<GameObject>("Coal/bara_" + (i + 1));
+                coalChipModel = Resources.Load<GameObject>("Coal/serpihan");
+                pickaxeModel = Resources.Load<GameObject>("Coal/pickaxe");
             }
             if (System.Array.IndexOf(coalStageModels, null) >= 0)
             {
@@ -951,29 +960,61 @@ namespace EnerGo
             best.hits++;
             lastHitTime = Time.time;
             lastHitScreenPos = screenPosition;
+            pickSwingAt = Time.time;
+            pickTarget = best.root.position;
+            // The count (and the score) change on the tap; what the player sees, hears and feels waits for the
+            // pickaxe head to land, so the swing and the hit read as one blow.
+            var lumpHit = best;
             if (best.hits < best.required)
             {
-                if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraPukul();
-                Haptics.Pulse(20);
-                SetCoalStage(best, CoalStage(best.hits, best.required));
-                best.shakeUntil = Time.time + 0.18f;
+                int stage = CoalStage(best.hits, best.required);
+                AtPickImpact(() =>
+                {
+                    if (lumpHit.root == null) return; // field respawned during the swing
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraPukul();
+                    Haptics.Pulse(20);
+                    SetCoalStage(lumpHit, stage);
+                    lumpHit.shakeUntil = Time.time + 0.18f;
+                });
                 return true;
             }
 
-            if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraHancur();
-            Haptics.Pulse(50);
-            SpawnCoalDebris(best);
-            Destroy(best.root.gameObject);
+            AtPickImpact(() =>
+            {
+                if (lumpHit.root == null) return;
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraHancur();
+                Haptics.Pulse(50);
+                SpawnCoalDebris(lumpHit);
+                Destroy(lumpHit.root.gameObject);
+            });
             if (CoalBroken() == coalTotal)
             {
                 int hits = 0;
                 foreach (var lump in coalLumps) hits += lump.required;
                 capturePerformance = SpeedScore(Time.time - coalStartedAt, hits * CoalParPerHit + coalTotal * CoalParPerLump);
                 finishAt = Time.time + FinishDelay;
-                Haptics.Pulse(120);
                 feedback = "SEMUA BATU BARA TERKUMPUL";
+                AtPickImpact(() => // after the last shatter has started, so the two sounds do not mask each other
+                {
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayTambangSelesai();
+                    Haptics.Pulse(120);
+                }, 0.25f);
             }
             return true;
+        }
+
+        // Run `action` when the pickaxe head lands (plus `extra`), or right away when there is no pickaxe model.
+        private void AtPickImpact(System.Action action, float extra = 0f)
+        {
+            float delay = (pickaxeModel != null ? PickImpactSec : 0f) + extra;
+            if (delay <= 0f) action();
+            else StartCoroutine(After(delay, action));
+        }
+
+        private static System.Collections.IEnumerator After(float seconds, System.Action action)
+        {
+            yield return new WaitForSeconds(seconds);
+            action();
         }
 
         private int CoalBroken()
@@ -983,15 +1024,20 @@ namespace EnerGo
             return n;
         }
 
-        // A few small chunks that burst out and fall, then clean themselves up.
+        // A few small coal chips that burst out and fall, then clean themselves up.
         private void SpawnCoalDebris(CoalLump lump)
         {
             var r = lump.visual != null ? lump.visual.GetComponentInChildren<Renderer>() : null;
             for (int i = 0; i < 8; i++)
             {
-                var chip = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                Destroy(chip.GetComponent<Collider>());
-                if (r != null) chip.GetComponent<Renderer>().sharedMaterial = r.sharedMaterial;
+                GameObject chip;
+                if (coalChipModel != null) chip = Instantiate(coalChipModel); // 1 m model, scaled below
+                else
+                {
+                    chip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    Destroy(chip.GetComponent<Collider>());
+                    if (r != null) chip.GetComponent<Renderer>().sharedMaterial = r.sharedMaterial;
+                }
                 chip.transform.position = lump.root.position + Random.insideUnitSphere * lump.size * 0.3f;
                 chip.transform.rotation = Random.rotation;
                 chip.transform.localScale = Vector3.one * lump.size * Random.Range(0.12f, 0.22f);
@@ -1000,6 +1046,48 @@ namespace EnerGo
                 body.angularVelocity = Random.insideUnitSphere * 10f;
                 Destroy(chip, 0.9f);
             }
+        }
+
+        // First-person pickaxe: on each hit it appears raised at the lower right, chops down at the lump
+        // (the hit lands ~0.07 s in), recoils and drops out of view. Runs every frame, independent of the
+        // coal field, so it never stays on screen when the target is respawned.
+        private void AnimatePickaxe()
+        {
+            float t = Time.time - pickSwingAt;
+            bool swinging = resourceId == ResourceIds.Coal && arCamera != null && pickaxeModel != null && t < PickSwingSec;
+            if (!swinging)
+            {
+                if (pickaxe != null && pickaxe.gameObject.activeSelf) pickaxe.gameObject.SetActive(false);
+                return;
+            }
+            if (pickaxe == null)
+            {
+                pickaxe = Instantiate(pickaxeModel, arCamera.transform, false).transform;
+                pickaxe.localScale = Vector3.one * PickScale;
+            }
+            pickaxe.gameObject.SetActive(true);
+
+            // Everything in camera space: +Z forward, +Y up, +X right.
+            // At the hit the head must sit on the line of sight to the lump, so it covers the lump on screen:
+            // find the point on that ray one handle length from the grip and point the handle at it.
+            var grip = new Vector3(0.14f, -0.25f, 0.3f);
+            const float HandleLen = 0.72f * PickScale; // model head sits 0.72 m up the handle
+            Vector3 ray = arCamera.transform.InverseTransformPoint(pickTarget).normalized;
+            float rg = Vector3.Dot(ray, grip), disc = rg * rg - grip.sqrMagnitude + HandleLen * HandleLen;
+            Vector3 hitPoint = disc > 0f ? ray * (rg + Mathf.Sqrt(disc)) : arCamera.transform.InverseTransformPoint(pickTarget);
+            Vector3 aim = (hitPoint - grip).normalized;
+            Vector3 axis = Vector3.Cross(aim, Vector3.up).normalized;
+            if (axis.sqrMagnitude < 0.01f) axis = Vector3.right;
+
+            const float RaisedDeg = 75f, StrikeAt = PickImpactSec, HoldUntil = 0.11f;
+            float angle, drop = 0f;
+            if (t < StrikeAt) { float k = t / StrikeAt; angle = RaisedDeg * (1f - k * k); }            // speeds up into the hit
+            else if (t < HoldUntil) angle = 6f * Mathf.Sin((t - StrikeAt) / (HoldUntil - StrikeAt) * Mathf.PI); // small recoil
+            else { float k = (t - HoldUntil) / (PickSwingSec - HoldUntil); angle = 25f * k; drop = 0.25f * k * k; } // out of view
+
+            Vector3 handle = Quaternion.AngleAxis(angle, axis) * aim;
+            pickaxe.localPosition = grip + Vector3.down * drop;
+            pickaxe.localRotation = Quaternion.LookRotation(axis, handle); // model: handle along +Y, head across X
         }
 
         private void UpdateCoal()
