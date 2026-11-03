@@ -122,7 +122,6 @@ namespace EnerGo
         private const int GoldPieces = 18;               // gold flakes and nuggets in the pan
         private const float GoldFailBelow = 0.4f;        // fewer than 40% of the gold left = thrown away, fail
         private const float GoldSpillEverySec = 0.35f;   // while too rough, one piece flies out this often
-        private const int GoldSandGrains = 40;
         private const float GoldSloshGain = 2.4f;        // how far sand/water visibly slide per unit of tilt
         private GoldPhase goldPhase;
         private bool goldPanning => goldPhase != GoldPhase.None; // the pan is on screen
@@ -140,7 +139,6 @@ namespace EnerGo
         private Vector2 goldBubble;    // spirit-level bubble offset (screen space, units of g) while levelling
         private Vector3 goldBaseline;  // gravity direction the player holds as "level"
         private float goldGravity;     // accelerometer magnitude at rest (units differ per platform)
-        private Vector2[] goldSand;    // sand grain offsets inside the pan, unit circle
         // Gold pieces, in pan units (1 = inner rim), screen-oriented (y down).
         private Vector2[] goldPos, goldVel, goldHome, goldLostDir;
         private float[] goldSize, goldLostAt; // goldLostAt: when the piece flew out (for the fly-out animation)
@@ -1107,8 +1105,6 @@ namespace EnerGo
             goldLastAngle = float.NaN;
             goldTilt = Vector2.zero;
             goldBubble = Vector2.zero;
-            goldSand = new Vector2[GoldSandGrains];
-            for (int i = 0; i < goldSand.Length; i++) goldSand[i] = Random.insideUnitCircle;
             goldPos = new Vector2[GoldPieces];
             goldVel = new Vector2[GoldPieces];
             goldHome = new Vector2[GoldPieces];
@@ -1301,55 +1297,14 @@ namespace EnerGo
             radius = Mathf.Min(sw * 0.4f, 160f);
         }
 
-        // The pan: wooden rim, water that sloshes with the tilt, gold under a sand bed that washes out as
-        // progress rises, gold flying over the rim when spilled, plus the level / countdown / fail overlays.
+        // Overlays on the 3D pan: gold count, spirit level, countdown, MULAI! and the fail card.
         private void DrawGoldPan(float sw, float sh)
         {
             GoldPanRect(sw, sh, out Vector2 c, out float R);
             Rect Circle(Vector2 p, float r) => new Rect(p.x - r, p.y - r, r * 2f, r * 2f);
-            // Visual slosh, deliberately exaggerated so a small tilt already looks lively (screen y points down).
-            Vector2 slosh = Vector2.ClampMagnitude(new Vector2(goldTilt.x, -goldTilt.y) * GoldSloshGain, 0.9f) * R;
             var mint = HudOk;
 
-            EnerGoUI.DrawPanel(Circle(c + new Vector2(0f, 8f), R), new Color(0f, 0f, 0f, 0.35f), Color.clear, R);
-            EnerGoUI.DrawPanel(Circle(c, R), new Color(0.55f, 0.36f, 0.18f, 1f), new Color(0.30f, 0.18f, 0.08f, 1f), R, 3f);
-            EnerGoUI.DrawPanel(Circle(c, R * 0.84f), new Color(0.30f, 0.21f, 0.13f, 1f), new Color(0.22f, 0.14f, 0.07f, 1f), R * 0.84f, 2f);
-            EnerGoUI.DrawPanel(Circle(c + slosh * 0.12f, R * 0.78f), new Color(0.30f, 0.58f, 0.80f, 0.18f), Color.clear, R * 0.78f);
-            // Water wave crest piling up on the low side.
-            if (slosh.sqrMagnitude > 1f)
-                EnerGoUI.DrawPanel(Circle(c + slosh * 0.55f, R * 0.32f), new Color(0.55f, 0.80f, 0.95f, 0.22f), Color.clear, R * 0.32f);
-
-            // Gold in the pan, drawn under the sand so washing the sand away is what reveals it.
-            for (int i = 0; i < GoldPieces; i++)
-            {
-                if (goldLost[i]) continue;
-                DrawGoldPiece(c + goldPos[i] * R * 0.78f, goldSize[i] + 0.6f * Mathf.Sin(Time.time * 5f + i), 1f);
-            }
-
-            // Wet sand bed that thins and shrinks as it washes out, plus loose grains riding the water.
-            float left = 1f - goldProgress;
-            float bedR = R * 0.62f * Mathf.Sqrt(left);
-            if (bedR > 2f)
-                EnerGoUI.DrawPanel(Circle(c + Vector2.ClampMagnitude(slosh * 0.6f, R * 0.84f - bedR), bedR), new Color(0.58f, 0.44f, 0.27f, 0.9f * left + 0.1f), Color.clear, bedR);
-            int sand = Mathf.RoundToInt(GoldSandGrains * left);
-            var sandCol = new Color(0.72f, 0.57f, 0.37f, 1f);
-            for (int i = 0; i < sand; i++)
-            {
-                // Loose grains ride the water further than the bed, with a little per-grain jitter.
-                Vector2 jitter = new Vector2(Mathf.Sin(Time.time * 7f + i * 1.3f), Mathf.Cos(Time.time * 6f + i * 0.7f)) * slosh.magnitude * 0.06f;
-                Vector2 p = Vector2.ClampMagnitude(goldSand[i] * R * 0.72f + slosh * 1.1f + jitter, R * 0.78f);
-                EnerGoUI.DrawPanel(Circle(c + p, 3f), sandCol, Color.clear, 3f);
-            }
-
-            // Spilled gold arcs out over the rim and fades.
-            for (int i = 0; i < GoldPieces; i++)
-            {
-                if (!goldLost[i]) continue;
-                float t = (Time.time - goldLostAt[i]) / 0.6f;
-                if (t >= 1f) continue;
-                Vector2 p = c + goldLostDir[i] * R * (0.8f + t * 0.9f) + Vector2.up * (-40f * t + 60f * t * t);
-                DrawGoldPiece(p, goldSize[i], 1f - t);
-            }
+            // The pan itself, its water, sand and gold are the 3D Dulang (ARCapturePrototype.Dulang.cs); this draws the overlays.
 
             if (goldPhase >= GoldPhase.Panning)
             {
@@ -1394,13 +1349,6 @@ namespace EnerGo
                     RetryGoldAtNewDeposit();
                 }
             }
-        }
-
-        private static void DrawGoldPiece(Vector2 p, float r, float alpha)
-        {
-            EnerGoUI.DrawPanel(new Rect(p.x - r, p.y - r, r * 2f, r * 2f), new Color(1f, 0.80f, 0.10f, alpha), new Color(1f, 0.97f, 0.7f, alpha * 0.8f), r, 1.5f);
-            float h = r * 0.3f;
-            EnerGoUI.DrawPanel(new Rect(p.x - r * 0.35f - h, p.y - r * 0.35f - h, h * 2f, h * 2f), new Color(1f, 1f, 1f, 0.85f * alpha), Color.clear, h);
         }
 
         // World point at this capture's bearing (plus a yaw offset), tilted by pitch, `dist` metres from the camera.
