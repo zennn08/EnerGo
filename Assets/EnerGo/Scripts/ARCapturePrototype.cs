@@ -1556,6 +1556,7 @@ namespace EnerGo
             if (energyMaterial == null) return;
             foreach (var r in model.GetComponentsInChildren<Renderer>(true))
             {
+                bool corona = IsCorona(r);
                 var mats = r.sharedMaterials;
                 for (int i = 0; i < mats.Length; i++)
                 {
@@ -1564,26 +1565,48 @@ namespace EnerGo
                     Color col = src != null && src.HasProperty("_BaseColor") ? src.GetColor("_BaseColor")
                         : src != null && src.HasProperty("_Color") ? src.GetColor("_Color") : new Color(1f, 0.68f, 0.12f);
                     // Neutral white/grey parts (the core) get the sun's yellow so it stays visible on a bright camera feed.
-                    Color.RGBToHSV(col, out _, out float sat, out float val);
-                    if (sat < 0.15f) col = new Color(1f, 0.74f, 0.16f, col.a) * Mathf.Max(val, 0.9f);
-                    m.SetColor("_BaseColor", col);
                     Texture tex = src != null && src.HasProperty("_BaseMap") ? src.GetTexture("_BaseMap")
                         : src != null && src.HasProperty("_MainTex") ? src.GetTexture("_MainTex") : null;
+                    // Textured parts keep their own colours (white tint); only an untextured grey core is tinted yellow.
+                    Color.RGBToHSV(col, out _, out float sat, out float val);
+                    if (tex != null) col = Color.white;
+                    else if (sat < 0.15f) col = new Color(1f, 0.74f, 0.16f, col.a) * Mathf.Max(val, 0.9f);
+                    m.SetColor("_BaseColor", col);
                     m.SetTexture("_BaseMap", tex);
+                    if (corona) MakeTransparent(m);
                     mats[i] = m;
                 }
                 r.sharedMaterials = mats;
             }
         }
 
+        // The sun's corona is a camera-facing glow plane far wider than the sun itself, so sizing ignores it.
+        private static bool IsCorona(Renderer r) => r.name.EndsWith("_korona");
+
+        // Alpha-blended, both faces, no depth write: the corona's soft rays fade into the camera feed.
+        private static void MakeTransparent(Material m)
+        {
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetFloat("_Cull", 0f);
+            m.SetFloat("_ZWrite", 0f);
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        }
+
         private static bool TryGetBounds(GameObject model, out Bounds bounds)
         {
-            var renderers = model.GetComponentsInChildren<Renderer>();
             bounds = default;
-            if (renderers.Length == 0) return false;
-            bounds = renderers[0].bounds;
-            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-            return true;
+            bool any = false;
+            foreach (var r in model.GetComponentsInChildren<Renderer>())
+            {
+                if (IsCorona(r)) continue;
+                if (any) bounds.Encapsulate(r.bounds); else { bounds = r.bounds; any = true; }
+            }
+            return any;
         }
 
         private void InitStyles()
