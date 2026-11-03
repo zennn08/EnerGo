@@ -10,6 +10,10 @@ namespace EnerGo
 
         public static float SafeTop(float screenH, float safeYMax, float scale) => Mathf.Max(16f, (screenH - safeYMax) / scale + 12f);
 
+        // Unsafe strip at the bottom of the screen (gesture bar, cutout), converted to UI Toolkit panel units.
+        public static float PanelBottomInset(float safeYMin, float screenW, float panelW) =>
+            screenW <= 0f ? 0f : Mathf.Max(0f, safeYMin) * panelW / screenW;
+
         public static float SafeBottom(float safeYMin, float scale) => Mathf.Max(20f, safeYMin / scale + 16f);
 
         // Cells fill row by row; a short last row is centred under the full ones.

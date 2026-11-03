@@ -48,5 +48,14 @@ namespace EnerGo.Tests
             Assert.AreEqual(3, UiLayout.Stars(5));
             Assert.AreEqual(0, UiLayout.Stars(-1));
         }
+
+        [Test]
+        public void BottomInsetIsTheUnsafeStripInPanelUnits()
+        {
+            // 1080 px phone with a 96 px gesture bar, panel 480 units wide.
+            Assert.AreEqual(42.667f, UiLayout.PanelBottomInset(96f, 1080f, 480f), 0.001f);
+            Assert.AreEqual(0f, UiLayout.PanelBottomInset(0f, 1080f, 480f));
+            Assert.AreEqual(0f, UiLayout.PanelBottomInset(96f, 0f, 480f));
+        }
     }
 }
