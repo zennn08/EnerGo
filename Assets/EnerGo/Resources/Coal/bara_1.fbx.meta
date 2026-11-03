@@ -3,7 +3,22 @@ guid: 743b056a2f8e5c24688dcda10a1b2fca
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_batubara
+    second: {fileID: 2100000, guid: b36a151dc8fc2714e88e586a3e115d3b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_batubara_terang
+    second: {fileID: 2100000, guid: 4af9d4a68fd359c47b3f36d39bfa3848, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_tinta
+    second: {fileID: 2100000, guid: aa04b2e3f873c6042861d5e307f9147a, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -35,7 +50,7 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 1
-    meshCompression: 0
+    meshCompression: 1
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1

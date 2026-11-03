@@ -81,7 +81,9 @@ namespace EnerGo
         private float quizShownAt;
         private string quizShownKey;
         private const float FinishDelay = 0.6f;         // let the last break / gold reveal play before the quiz opens
-        private static readonly float[] CoalStageFit = { 1f, 0.95f, 0.9f, 0.8f }; // stage models are flatter piles
+        // Fit of the longest side per break stage. Stages 3-4 are low, wide piles, so their longest side is the width:
+        // fitting them larger keeps them about as wide as the lump they came from instead of shrinking away.
+        private static readonly float[] CoalStageFit = { 1f, 0.95f, 1.2f, 1.3f };
         private class CoalLump
         {
             public Transform root;
