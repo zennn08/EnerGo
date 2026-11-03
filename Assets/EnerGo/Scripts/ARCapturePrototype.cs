@@ -39,7 +39,6 @@ namespace EnerGo
         private GameObject target;
         private GameObject goldModel;
         private GameObject sunModel;   // Resources/Sun/sun; falls back to a yellow sphere while it has no mesh
-        private Material goldMaterial;
         private string resourceId;
         private GuideViewer guide; // pre-game guide overlay; null = closed
         private CompassAnchor compass;
@@ -102,7 +101,7 @@ namespace EnerGo
         // The two sharp ends of the pick head in model space (measured in Art/energo_gaya.blend, sda_pickaxe):
         // 0.26 m either side of the handle, 0.64 m above the grip.
         private static readonly Vector3[] PickTips = { new Vector3(0.26f, 0.64f, 0f), new Vector3(-0.26f, 0.64f, 0f) };
-        private Light coalLight;
+        private Light modelLight; // the Blender models (coal, gold) use lit materials
         private int coalTotal;
         private float finishAt = -1f; // shared by coal and gold: when to open the quiz
 
@@ -275,24 +274,6 @@ namespace EnerGo
                 return;
             }
 
-            var shader = energyMaterial != null ? energyMaterial.shader :
-                (Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Texture") ?? Shader.Find("Standard"));
-
-            if (energyMaterial != null)
-                goldMaterial = new Material(energyMaterial) { name = "Gold runtime material" };
-            else if (shader != null)
-                goldMaterial = new Material(shader) { name = "Gold runtime material" };
-
-            var texture = Resources.Load<Texture2D>("Gold/texture");
-            if (texture != null && goldMaterial != null)
-            {
-                texture.filterMode = FilterMode.Point;
-                goldMaterial.SetTexture("_BaseMap", texture);
-                if (goldMaterial.HasProperty("_MainTex")) goldMaterial.SetTexture("_MainTex", texture);
-                goldMaterial.SetColor("_BaseColor", Color.white);
-                if (goldMaterial.HasProperty("_Color")) goldMaterial.SetColor("_Color", Color.white);
-            }
-
             // Gold is panned at a river: quiet ambience for the whole gold capture scene.
             if (resourceId == ResourceIds.Gold && SFXManager.Instance != null) SFXManager.Instance.PlaySungai();
 
@@ -365,7 +346,6 @@ namespace EnerGo
         private void OnDestroy()
         {
             if (target != null) Destroy(target);
-            if (goldMaterial != null) Destroy(goldMaterial);
             if (texWhite != null) Destroy(texWhite);
             if (SFXManager.Instance != null) // manager outlives the scene
             {
@@ -374,7 +354,7 @@ namespace EnerGo
                 SFXManager.Instance.StopAliranAir();
                 SFXManager.Instance.StopSungai();
             }
-            if (coalLight != null) Destroy(coalLight.gameObject);
+            if (modelLight != null) Destroy(modelLight.gameObject);
             StopCameraFeed();
         }
 
@@ -869,6 +849,17 @@ namespace EnerGo
             return false;
         }
 
+        // The Blender models use lit materials and these scenes have no light, so they would render near-black.
+        private void EnsureModelLight()
+        {
+            if (modelLight != null) return;
+            modelLight = new GameObject("Model light").AddComponent<Light>();
+            modelLight.type = LightType.Directional;
+            modelLight.intensity = 1.2f;
+            modelLight.color = new Color(1f, 0.96f, 0.9f);
+            modelLight.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
+        }
+
         private void SpawnCoalField()
         {
             if (coalStageModels == null)
@@ -886,15 +877,7 @@ namespace EnerGo
                 return;
             }
 
-            // The coal materials are lit and these scenes have no light, so they would render near-black.
-            if (coalLight == null)
-            {
-                coalLight = new GameObject("Coal light").AddComponent<Light>();
-                coalLight.type = LightType.Directional;
-                coalLight.intensity = 1.2f;
-                coalLight.color = new Color(1f, 0.96f, 0.9f);
-                coalLight.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
-            }
+            EnsureModelLight();
 
             target = new GameObject("Coal field");
             coalLumps.Clear();
@@ -1513,14 +1496,11 @@ namespace EnerGo
             TryGetBounds(visual, out bounds);
             visual.transform.position -= bounds.center;
 
-            if (resourceId == ResourceIds.Gold && goldMaterial != null)
+            if (resourceId == ResourceIds.Gold)
             {
-                foreach (var renderer in visual.GetComponentsInChildren<Renderer>())
-                {
-                    var materials = renderer.sharedMaterials;
-                    for (int i = 0; i < materials.Length; i++) materials[i] = goldMaterial;
-                    renderer.sharedMaterials = materials;
-                }
+                EnsureModelLight();
+                var sparkle = visual.transform.Find("sda_emas_kilau");
+                if (sparkle != null) sparkle.gameObject.AddComponent<Melayang>();
             }
 
             // Gold sits at the radar bearing; after a spilled pan the next deposit hides a little to the side.
