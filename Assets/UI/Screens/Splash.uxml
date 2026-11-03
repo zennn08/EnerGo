@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Splash (LayarAwal preview, first frame, without the EKSPEDISI stamp). Animated by LobbyView. -->
+    <ui:VisualElement name="splash" class="eg-layar eg-aman splash">
+        <ui:VisualElement name="splash-kartu" class="eg-kartu splash__kartu">
+            <ui:VisualElement name="splash-tanda" class="splash__tanda" />
+            <ui:Label class="splash__wordmark" text="Ener&lt;color=#a6481a&gt;Go&lt;/color&gt;" />
+            <ui:Label class="splash__tagline" text="Jelajahi sumber daya, temukan energinya." />
+        </ui:VisualElement>
+        <ui:VisualElement class="splash__bawah">
+            <ui:VisualElement name="splash-bar" class="eg-bar eg-bar--tipis"><ui:VisualElement class="eg-bar__isi" /></ui:VisualElement>
+            <ui:Label name="splash-ajakan" class="eg-status__teks splash__ajakan" text="SENTUH LAYAR UNTUK MULAI" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
