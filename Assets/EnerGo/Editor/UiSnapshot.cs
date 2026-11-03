@@ -44,6 +44,45 @@ namespace EnerGo.EditorTools
             Root.Q<Label>("mode-kamera").text = LobbyText.CameraMode(true);
         }
 
+        // Shows one sheet the way the LayarSheet preview pictures it (state copied into the elements by hand).
+        public static void ShowSheetSample(string which)
+        {
+            FillLobbySample();
+            var r = Root;
+            r.Q("lapis-sheet").style.display = DisplayStyle.Flex;
+            foreach (var n in new[] { "sheet-pengaturan", "sheet-latihan", "sheet-panduan" })
+            {
+                var s = r.Q(n);
+                if (s == null) continue;
+                bool on = n == "sheet-" + which;
+                s.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+                s.EnableInClassList("is-terbuka", on);
+            }
+            if (which == "pengaturan")
+            {
+                r.Q("atur-ar").Q(className: "eg-toggle").AddToClassList("is-nyala");
+                r.Q<Label>("atur-ar-sub").text = "Butuh Google Play Services for AR";
+                r.Q("atur-getar").Q(className: "eg-toggle").AddToClassList("is-nyala");
+                r.Q("atur-volume").Q(className: "eg-bar__isi").style.width = Length.Percent(70);
+                r.Q("atur-volume").Q(className: "eg-slider__kenop").style.left = Length.Percent(70);
+                r.Q<Label>("atur-volume-persen").text = "70%";
+                var reset = r.Q<Button>("btn-reset");
+                reset.text = "TEKAN LAGI UNTUK MENGHAPUS";
+                reset.RemoveFromClassList("eg-btn--kertas"); reset.RemoveFromClassList("eg-btn--teks-bahaya"); reset.AddToClassList("eg-btn--bahaya");
+                r.Q("reset-bar").Q(className: "eg-bar__isi").style.width = Length.Percent(60);
+            }
+            if (which == "latihan")
+            {
+                string[] ids = { "sun", "coal", "gold", "oil", "uranium", "random" };
+                int[] n = { 12, 31, 14, 6, 0, -1 };
+                for (int i = 0; i < ids.Length; i++)
+                {
+                    EnerGo.UI.LobbyView.FillTile(r.Q("latihan-" + ids[i]), ids[i], n[i], false, false);
+                    r.Q("latihan-" + ids[i]).Q(className: "eg-tile").EnableInClassList("is-terpilih", ids[i] == "gold");
+                }
+            }
+        }
+
         public static string End(string outPng)
         {
             var go = GameObject.Find(Name);

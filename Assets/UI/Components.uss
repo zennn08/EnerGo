@@ -181,3 +181,5 @@
 .eg-ikon--oil { background-image: url("project://database/Assets/UI/Icons/sda-minyak.svg"); }
 .eg-ikon--uranium { background-image: url("project://database/Assets/UI/Icons/sda-uranium.svg"); }
 .eg-ikon--random { background-image: url("project://database/Assets/UI/Icons/sda-acak.svg"); }
+.eg-toggle__tanda { background-image: url("project://database/Assets/UI/Icons/silang.svg"); }
+.eg-toggle.is-nyala .eg-toggle__tanda { background-image: url("project://database/Assets/UI/Icons/centang.svg"); }

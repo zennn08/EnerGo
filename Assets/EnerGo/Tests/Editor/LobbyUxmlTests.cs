@@ -29,5 +29,17 @@ namespace EnerGo.Tests
         public void SceneRootHasEveryLayer() =>
             AssertNames(Clone("Assets/UI/Screens/LobbyScene.uxml"),
                 "lapis-splash", "lapis-lobby", "lapis-sheet", "lapis-panduan", "lapis-transisi");
+
+        [Test]
+        public void SheetsHaveEveryNamedElement()
+        {
+            AssertNames(Clone("Assets/UI/Screens/LobbyScene.uxml"), "tirai");
+            AssertNames(Clone("Assets/UI/Screens/SheetPengaturan.uxml"),
+                "sheet-pengaturan", "atur-ar", "atur-ar-sub", "atur-volume", "atur-volume-persen", "atur-getar", "atur-getar-sub",
+                "btn-ke-latihan", "btn-reset", "reset-bar", "btn-selesai");
+            AssertNames(Clone("Assets/UI/Screens/SheetLatihan.uxml"),
+                "sheet-latihan", "latihan-sun", "latihan-coal", "latihan-gold", "latihan-oil", "latihan-uranium", "latihan-random",
+                "btn-mulai-latihan");
+        }
     }
 }

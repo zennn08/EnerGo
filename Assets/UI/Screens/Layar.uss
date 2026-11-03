@@ -9,3 +9,23 @@
 .lobby__tiles .eg-tile { margin: 7px 5px; }
 .lobby__mode { min-height: 32px; font-size: 13px; align-self: center; margin-bottom: 12px; }
 .lobby__dock { flex-direction: row; justify-content: space-around; margin-top: auto; }
+
+/* Sheets: paper card rising from the bottom over the shared curtain (LayarSheet preview) */
+.eg-sheet {
+    position: absolute; left: 12px; right: 12px; bottom: -16px; padding: 36px 20px 40px 20px;
+    border-radius: 24px 24px 0 0; border-bottom-width: 0;
+    translate: 0 100%; transition-property: translate; transition-duration: 0.25s; transition-timing-function: ease-out;
+}
+.eg-sheet.is-terbuka { translate: 0 0; }
+.sheet--latihan { padding: 36px 16px 40px 16px; }
+.sheet__sub { -unity-text-align: middle-center; font-size: 16px; margin-bottom: 18px; }
+.sheet__grid { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+.sheet__grid .eg-tile { margin: 8px 4px; }
+.sheet__mulai { margin-top: 28px; }
+.sheet__tombol { margin-top: 20px; }
+.sheet__tombol .eg-btn { margin-top: 7px; margin-bottom: 7px; }
+.sheet__tombol #btn-reset { font-size: 18px; }
+.sheet__reset-bar { margin: -4px 8px 4px 8px; }
+.sheet__ikon-suara { width: 32px; height: 32px; background-image: url("project://database/Assets/UI/Icons/suara.svg"); }
+.sheet__persen { width: 48px; -unity-text-align: middle-right; }
+.sheet__notice { -unity-text-align: middle-center; margin-top: 6px; }

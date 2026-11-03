@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Sheet Latihan (docs/design-system/components/LayarSheet/preview.html, second frame). -->
+    <ui:Template name="Tile" src="project://database/Assets/UI/Screens/Tile.uxml" />
+    <ui:VisualElement name="sheet-latihan" class="eg-kartu eg-sheet sheet--latihan">
+        <ui:Label class="eg-selotip" text="LATIHAN" />
+        <ui:Label class="eg-kecil sheet__sub" text="Pilih sumber daya, main tanpa GPS" />
+        <ui:VisualElement class="sheet__grid">
+            <ui:Instance template="Tile" name="latihan-sun" />
+            <ui:Instance template="Tile" name="latihan-coal" />
+            <ui:Instance template="Tile" name="latihan-gold" />
+            <ui:Instance template="Tile" name="latihan-oil" />
+            <ui:Instance template="Tile" name="latihan-uranium" />
+            <ui:Instance template="Tile" name="latihan-random" />
+        </ui:VisualElement>
+        <ui:Button name="btn-mulai-latihan" class="eg-btn eg-btn--utama eg-btn--penuh sheet__mulai" text="MULAI LATIHAN" />
+    </ui:VisualElement>
+</ui:UXML>
