@@ -175,3 +175,9 @@
 .eg-isi--laut { background-color: var(--laut); }
 .eg-isi--stempel { background-color: var(--stempel); }
 .eg-isi--oranye { background-color: var(--oranye); }
+.eg-ikon--sun { background-image: url("project://database/Assets/UI/Icons/sda-matahari.svg"); }
+.eg-ikon--coal { background-image: url("project://database/Assets/UI/Icons/sda-batubara.svg"); }
+.eg-ikon--gold { background-image: url("project://database/Assets/UI/Icons/sda-emas.svg"); }
+.eg-ikon--oil { background-image: url("project://database/Assets/UI/Icons/sda-minyak.svg"); }
+.eg-ikon--uranium { background-image: url("project://database/Assets/UI/Icons/sda-uranium.svg"); }
+.eg-ikon--random { background-image: url("project://database/Assets/UI/Icons/sda-acak.svg"); }

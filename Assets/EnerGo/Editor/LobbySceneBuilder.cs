@@ -49,11 +49,34 @@ namespace EnerGo.Editor
 
             // 2. Lobby Controller
             var lobbyGo = new GameObject("Lobby Controller");
-            lobbyGo.AddComponent<LobbyController>();
+            var controller = lobbyGo.AddComponent<LobbyController>();
 
-            // 3. Save Scene
+            // 3. UI Toolkit screens
+            InstallLobbyUi(controller);
+
+            // 4. Save Scene
             EditorSceneManager.SaveScene(newScene, LobbyScenePath);
             Debug.Log("LobbyScene created and saved at: " + LobbyScenePath);
+        }
+
+        // The "UI" object that draws LobbyScene: UIDocument (480 x 800 panel, LobbyScene.uxml), LobbyView, SafeArea.
+        // Replaces an existing "UI" object, so it can be run again on the open LobbyScene.
+        public static GameObject InstallLobbyUi(LobbyController controller)
+        {
+            var old = GameObject.Find("UI");
+            if (old != null) Object.DestroyImmediate(old);
+            var ui = new GameObject("UI");
+            ui.SetActive(false); // wire everything before OnEnable runs
+            var doc = ui.AddComponent<UnityEngine.UIElements.UIDocument>();
+            doc.panelSettings = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.PanelSettings>("Assets/UI/PanelSettings.asset");
+            doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>("Assets/UI/Screens/LobbyScene.uxml");
+            var view = ui.AddComponent<EnerGo.UI.LobbyView>();
+            var so = new SerializedObject(view);
+            so.FindProperty("controller").objectReferenceValue = controller;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            ui.AddComponent<EnerGo.UI.SafeArea>();
+            ui.SetActive(true);
+            return ui;
         }
 
         // Run once from the menu (or via MCP). Not done automatically on load, because it switches the open scene.

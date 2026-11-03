@@ -1,0 +1,11 @@
+/* Screen layouts for LobbyScene, positions from docs/design-system/components/LayarAwal and LayarSheet previews (480 x 800). */
+.eg-lapis { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.eg-layar { position: absolute; left: 0; top: 0; right: 0; bottom: 0; flex-direction: column; padding: 28px 16px 24px 16px; }
+
+/* Lobby */
+.lobby__judul { font-size: 60px; margin: 12px 0 22px 0; }
+.lobby__koleksi { padding: 28px 8px 16px 8px; margin-bottom: 12px; }
+.lobby__tiles { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+.lobby__tiles .eg-tile { margin: 7px 5px; }
+.lobby__mode { min-height: 32px; font-size: 13px; align-self: center; margin-bottom: 12px; }
+.lobby__dock { flex-direction: row; justify-content: space-around; margin-top: auto; }
