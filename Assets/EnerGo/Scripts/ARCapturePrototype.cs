@@ -99,6 +99,9 @@ namespace EnerGo
         private Vector3 pickTarget;
         private const float PickSwingSec = 0.26f, PickScale = 0.55f; // 0.74 m model -> ~0.4 m in hand
         private const float PickImpactSec = 0.07f;                    // when the head lands; hit feedback waits for it
+        // The two sharp ends of the pick head in model space (measured in Art/energo_gaya.blend, sda_pickaxe):
+        // 0.26 m either side of the handle, 0.64 m above the grip.
+        private static readonly Vector3[] PickTips = { new Vector3(0.26f, 0.64f, 0f), new Vector3(-0.26f, 0.64f, 0f) };
         private Light coalLight;
         private int coalTotal;
         private float finishAt = -1f; // shared by coal and gold: when to open the quiz
@@ -1068,18 +1071,25 @@ namespace EnerGo
             pickaxe.gameObject.SetActive(true);
 
             // Everything in camera space: +Z forward, +Y up, +X right.
-            // At the hit the head must sit on the line of sight to the lump, so it covers the lump on screen:
-            // find the point on that ray one handle length from the grip and point the handle at it.
+            // At the hit the sharp tip of the pick, not the middle of the head, must sit on the line of sight to
+            // the lump: find the point on that ray one grip-to-tip length away, then turn the handle back by the
+            // fixed angle between handle and tip so the tip lands exactly there.
             var grip = new Vector3(0.14f, -0.25f, 0.3f);
-            const float HandleLen = 0.72f * PickScale; // model head sits 0.72 m up the handle
+            float tipLen = PickTips[0].magnitude * PickScale;
             Vector3 ray = arCamera.transform.InverseTransformPoint(pickTarget).normalized;
-            float rg = Vector3.Dot(ray, grip), disc = rg * rg - grip.sqrMagnitude + HandleLen * HandleLen;
+            float rg = Vector3.Dot(ray, grip), disc = rg * rg - grip.sqrMagnitude + tipLen * tipLen;
             Vector3 hitPoint = disc > 0f ? ray * (rg + Mathf.Sqrt(disc)) : arCamera.transform.InverseTransformPoint(pickTarget);
-            Vector3 aim = (hitPoint - grip).normalized;
-            Vector3 axis = Vector3.Cross(aim, Vector3.up).normalized;
+            Vector3 toTip = (hitPoint - grip).normalized;
+            Vector3 axis = Vector3.Cross(toTip, Vector3.up).normalized;
             if (axis.sqrMagnitude < 0.01f) axis = Vector3.right;
 
             const float RaisedDeg = 75f, StrikeAt = PickImpactSec, HoldUntil = 0.11f;
+            // The tip that leads the chop is the one that hits: the one pointing along the swing's motion.
+            var probe = Quaternion.LookRotation(axis, toTip);
+            Vector3 motion = toTip - Quaternion.AngleAxis(RaisedDeg, axis) * toTip;
+            Vector3 tip = Vector3.Dot(probe * PickTips[0], motion) >= Vector3.Dot(probe * PickTips[1], motion) ? PickTips[0] : PickTips[1];
+            float tipFromHandle = Vector3.SignedAngle(toTip, probe * tip, axis);
+            Vector3 aim = Quaternion.AngleAxis(-tipFromHandle, axis) * toTip; // handle direction at the hit
             float angle, drop = 0f;
             if (t < StrikeAt) { float k = t / StrikeAt; angle = RaisedDeg * (1f - k * k); }            // speeds up into the hit
             else if (t < HoldUntil) angle = 6f * Mathf.Sin((t - StrikeAt) / (HoldUntil - StrikeAt) * Mathf.PI); // small recoil
