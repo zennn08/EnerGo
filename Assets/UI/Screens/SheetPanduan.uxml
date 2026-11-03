@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Sheet Panduan (PRD 3.5): the five SDA as tiles; tap one to read its guide card. -->
+    <ui:Template name="Tile" src="project://database/Assets/UI/Screens/Tile.uxml" />
+    <ui:VisualElement name="sheet-panduan" class="eg-kartu eg-sheet sheet--latihan">
+        <ui:Label class="eg-selotip" text="PANDUAN" />
+        <ui:Label class="eg-kecil sheet__sub" text="Ketuk untuk membaca cara mainnya" />
+        <ui:VisualElement class="sheet__grid">
+            <ui:Instance template="Tile" name="panduan-sun" />
+            <ui:Instance template="Tile" name="panduan-coal" />
+            <ui:Instance template="Tile" name="panduan-gold" />
+            <ui:Instance template="Tile" name="panduan-oil" />
+            <ui:Instance template="Tile" name="panduan-uranium" />
+        </ui:VisualElement>
+        <ui:Button name="btn-reset-panduan" class="eg-btn eg-btn--kertas eg-btn--penuh sheet__mulai" text="TAMPILKAN SEMUA PANDUAN LAGI" style="font-size: 17px;" />
+        <ui:Label name="panduan-notice" class="eg-kecil sheet__notice" text="Panduan akan muncul lagi" />
+    </ui:VisualElement>
+</ui:UXML>

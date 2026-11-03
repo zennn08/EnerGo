@@ -41,5 +41,16 @@ namespace EnerGo.Tests
                 "sheet-latihan", "latihan-sun", "latihan-coal", "latihan-gold", "latihan-oil", "latihan-uranium", "latihan-random",
                 "btn-mulai-latihan");
         }
+
+        [Test]
+        public void GuideSheetAndCardHaveEveryNamedElement()
+        {
+            AssertNames(Clone("Assets/UI/Screens/SheetPanduan.uxml"),
+                "sheet-panduan", "panduan-sun", "panduan-coal", "panduan-gold", "panduan-oil", "panduan-uranium",
+                "btn-reset-panduan", "panduan-notice");
+            AssertNames(Clone("Assets/UI/Screens/KartuPanduan.uxml"),
+                "kartu-panduan", "panduan-selotip", "panduan-langkah", "panduan-ilustrasi", "panduan-judul", "panduan-isi",
+                "panduan-titik", "btn-panduan-utama", "btn-panduan-tutup");
+        }
     }
 }

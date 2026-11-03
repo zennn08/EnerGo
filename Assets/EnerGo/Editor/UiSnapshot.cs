@@ -83,6 +83,28 @@ namespace EnerGo.EditorTools
             }
         }
 
+        // Guide sheet with the read-mode card open on a page (preview: Emas, step 2 of 3).
+        public static void ShowGuideSample(bool withCard)
+        {
+            ShowSheetSample("panduan");
+            var r = Root;
+            foreach (var id in GuideBook.Ids) EnerGo.UI.LobbyView.FillTile(r.Q("panduan-" + id), id, -1, false, false);
+            r.Q<Label>("panduan-notice").style.visibility = Visibility.Hidden;
+            r.Q("lapis-panduan").style.display = withCard ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!withCard) return;
+            var cards = GuideBook.For(ResourceIds.Gold);
+            var pager = new GuidePager(cards.Length);
+            pager.Next();
+            r.Q<Label>("panduan-selotip").text = "EMAS";
+            r.Q<Label>("panduan-langkah").text = pager.StepLabel;
+            r.Q("panduan-ilustrasi").AddToClassList("eg-ikon--gold");
+            r.Q<Label>("panduan-judul").text = cards[pager.Page].Title;
+            r.Q<Label>("panduan-isi").text = cards[pager.Page].Body;
+            r.Q<Button>("btn-panduan-utama").text = pager.PrimaryLabel;
+            var titik = r.Q("panduan-titik");
+            for (int i = 0; i < pager.Count; i++) { var d = new VisualElement(); d.AddToClassList(i == pager.Page ? "panduan__titik-kini" : "panduan__titik-lain"); titik.Add(d); }
+        }
+
         public static string End(string outPng)
         {
             var go = GameObject.Find(Name);

@@ -3,6 +3,8 @@
     <ui:Template name="Lobby" src="project://database/Assets/UI/Screens/Lobby.uxml" />
     <ui:Template name="SheetPengaturan" src="project://database/Assets/UI/Screens/SheetPengaturan.uxml" />
     <ui:Template name="SheetLatihan" src="project://database/Assets/UI/Screens/SheetLatihan.uxml" />
+    <ui:Template name="SheetPanduan" src="project://database/Assets/UI/Screens/SheetPanduan.uxml" />
+    <ui:Template name="KartuPanduan" src="project://database/Assets/UI/Screens/KartuPanduan.uxml" />
     <Style src="project://database/Assets/UI/Theme.uss" />
     <Style src="project://database/Assets/UI/Components.uss" />
     <Style src="project://database/Assets/UI/Screens/Layar.uss" />
@@ -13,8 +15,11 @@
             <ui:VisualElement name="tirai" class="eg-redup" />
             <ui:Instance template="SheetPengaturan" class="eg-lapis" picking-mode="Ignore" />
             <ui:Instance template="SheetLatihan" class="eg-lapis" picking-mode="Ignore" />
+            <ui:Instance template="SheetPanduan" class="eg-lapis" picking-mode="Ignore" />
         </ui:VisualElement>
-        <ui:VisualElement name="lapis-panduan" class="eg-lapis" picking-mode="Ignore" />
+        <ui:VisualElement name="lapis-panduan" class="eg-lapis" picking-mode="Ignore">
+            <ui:Instance template="KartuPanduan" class="eg-lapis" picking-mode="Ignore" />
+        </ui:VisualElement>
         <ui:VisualElement name="lapis-splash" class="eg-lapis" picking-mode="Ignore" />
         <ui:VisualElement name="lapis-transisi" class="eg-lapis" picking-mode="Ignore" />
     </ui:VisualElement>

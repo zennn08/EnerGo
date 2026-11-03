@@ -29,3 +29,19 @@
 .sheet__ikon-suara { width: 32px; height: 32px; background-image: url("project://database/Assets/UI/Icons/suara.svg"); }
 .sheet__persen { width: 48px; -unity-text-align: middle-right; }
 .sheet__notice { -unity-text-align: middle-center; margin-top: 6px; }
+
+/* Guide card, read mode (LayarSheet preview, third frame) */
+.panduan__layar { justify-content: center; }
+.panduan__kartu { padding: 34px 20px 20px 20px; }
+.panduan__garis { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.panduan__langkah { -unity-text-align: middle-center; font-size: 14px; color: var(--tinta-pudar); }
+.panduan__bingkai {
+    height: 170px; margin: 12px 0; align-items: center; justify-content: center;
+    background-color: var(--kertas-300); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: 12px;
+}
+.panduan__ilustrasi { width: 96px; height: 96px; }
+.panduan__isi { margin: 6px 0 14px 0; }
+.panduan__titik { margin-bottom: 16px; }
+.panduan__titik-kini { width: 24px; height: 10px; border-radius: 5px; background-color: var(--tinta); margin: 0 4px; }
+.panduan__titik-lain { width: 10px; height: 10px; border-radius: 5px; background-color: var(--kertas-300); border-width: var(--garis-tinta); border-color: var(--tinta); margin: 0 4px; }
+.panduan__utama { margin-left: var(--space-3); }
