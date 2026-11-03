@@ -1,0 +1,82 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+    <!-- Component gallery for checking Components.uss against docs/design-system previews. Not used in the game. -->
+    <Style src="project://database/Assets/UI/Theme.uss" />
+    <Style src="project://database/Assets/UI/Components.uss" />
+    <ui:VisualElement style="width: 480px; height: 1400px;">
+        <eg:PetaLatar />
+        <ui:VisualElement style="padding: 16px;">
+            <ui:VisualElement class="eg-baris" style="justify-content: space-between; margin-bottom: 12px;">
+                <ui:VisualElement class="eg-pil eg-pil--angka">
+                    <ui:VisualElement class="eg-pil__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/petir.svg&quot;);" />
+                    <ui:Label text="63 unit" />
+                </ui:VisualElement>
+                <ui:VisualElement class="eg-pil eg-pil--laut">
+                    <ui:VisualElement class="eg-pil__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/kamera.svg&quot;);" />
+                    <ui:Label text="MODE KAMERA: AR (ARCORE)" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label class="eg-judul-layar" text="ENER&lt;color=#a6481a&gt;GO!&lt;/color&gt;" />
+            <ui:VisualElement class="eg-kartu" style="margin-top: 28px;">
+                <ui:Label class="eg-selotip" text="KOLEKSI ENERGIMU" />
+                <ui:VisualElement class="eg-tengah" style="flex-wrap: wrap;">
+                    <ui:VisualElement class="eg-tile eg-tile--ringkas eg-muda--sun" style="margin: 7px 5px;">
+                        <ui:Label class="eg-tile__no" text="No.01" />
+                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-matahari.svg&quot;);" />
+                        <ui:Label class="eg-tile__nama" text="Matahari" />
+                        <ui:Label class="eg-badge" text="12" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="eg-tile eg-tile--ringkas eg-muda--gold is-terpilih" style="margin: 7px 5px;">
+                        <ui:VisualElement class="eg-tile__cincin" />
+                        <ui:Label class="eg-tile__no" text="No.03" />
+                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-emas.svg&quot;);" />
+                        <ui:Label class="eg-tile__nama" text="Emas" />
+                        <ui:Label class="eg-badge" text="99+" />
+                        <ui:Label class="eg-tile__dipilih" text="DIPILIH" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="eg-tile eg-tile--ringkas eg-muda--uranium is-terkunci" style="margin: 7px 5px;">
+                        <ui:Label class="eg-tile__no" text="No.05" />
+                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-uranium.svg&quot;);" />
+                        <ui:Label class="eg-tile__nama" text="Uranium" />
+                        <ui:Label class="eg-badge" text="0" />
+                        <ui:VisualElement class="eg-tile__gembok" style="background-image: url(&quot;project://database/Assets/UI/Icons/gembok.svg&quot;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Button class="eg-btn eg-btn--utama eg-btn--besar eg-btn--penuh" style="margin-top: 16px;">
+                <ui:VisualElement class="eg-btn__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/radar.svg&quot;);" />
+                <ui:Label text="BERBURU!" />
+            </ui:Button>
+            <ui:VisualElement class="eg-baris" style="justify-content: space-around; margin-top: 12px;">
+                <ui:VisualElement class="eg-bulat eg-bulat--oker"><ui:Button class="eg-bulat__tombol"><ui:VisualElement class="eg-bulat__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/buku.svg&quot;);" /></ui:Button><ui:Label text="Panduan" /></ui:VisualElement>
+                <ui:VisualElement class="eg-bulat eg-bulat--laut"><ui:Button class="eg-bulat__tombol"><ui:VisualElement class="eg-bulat__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/target.svg&quot;);" /></ui:Button><ui:Label text="Latihan" /></ui:VisualElement>
+                <ui:VisualElement class="eg-bulat"><ui:Button class="eg-bulat__tombol"><ui:VisualElement class="eg-bulat__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/gir.svg&quot;);" /></ui:Button><ui:Label text="Pengaturan" /></ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="eg-kartu" style="margin-top: 32px;">
+                <ui:Label class="eg-selotip" text="PENGATURAN" />
+                <ui:VisualElement class="eg-baris-atur">
+                    <ui:VisualElement class="eg-baris-atur__teks"><ui:Label class="eg-baris-atur__judul" text="Mode AR (ARCore)" /><ui:Label class="eg-baris-atur__sub" text="Butuh Google Play Services for AR" /></ui:VisualElement>
+                    <ui:VisualElement class="eg-toggle is-nyala"><ui:VisualElement class="eg-toggle__kenop"><ui:VisualElement class="eg-toggle__tanda" style="background-image: url(&quot;project://database/Assets/UI/Icons/centang.svg&quot;);" /></ui:VisualElement></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="eg-baris-atur">
+                    <ui:VisualElement class="eg-pil__ikon" style="width: 32px; height: 32px; background-image: url(&quot;project://database/Assets/UI/Icons/suara.svg&quot;);" />
+                    <ui:VisualElement class="eg-slider">
+                        <ui:VisualElement class="eg-bar"><ui:VisualElement class="eg-bar__isi eg-isi--laut" style="width: 70%;" /></ui:VisualElement>
+                        <ui:VisualElement class="eg-slider__kenop" style="left: 70%;" />
+                    </ui:VisualElement>
+                    <ui:Label class="eg-data-tebal" text="70%" />
+                </ui:VisualElement>
+                <ui:VisualElement class="eg-baris-atur">
+                    <ui:VisualElement class="eg-baris-atur__teks"><ui:Label class="eg-baris-atur__judul" text="Getaran" /><ui:Label class="eg-baris-atur__sub" text="Mati: tanpa getaran" /></ui:VisualElement>
+                    <ui:VisualElement class="eg-toggle"><ui:VisualElement class="eg-toggle__kenop"><ui:VisualElement class="eg-toggle__tanda" style="background-image: url(&quot;project://database/Assets/UI/Icons/silang.svg&quot;);" /></ui:VisualElement></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Button class="eg-btn eg-btn--info eg-btn--penuh" text="LATIHAN (TANPA GPS)" style="margin-top: 16px;" />
+                <ui:Button class="eg-btn eg-btn--bahaya eg-btn--penuh" text="TEKAN LAGI UNTUK MENGHAPUS" style="font-size: 18px; margin-top: 12px;" />
+                <ui:VisualElement class="eg-bar eg-bar--tipis" style="margin: 0 8px 12px 8px;"><ui:VisualElement class="eg-bar__isi eg-isi--stempel" style="width: 60%;" /></ui:VisualElement>
+                <ui:Button class="eg-btn eg-btn--kertas eg-btn--teks-bahaya eg-btn--penuh" text="RESET PROGRES" />
+                <ui:Button class="eg-btn eg-btn--nonaktif eg-btn--penuh" text="BACA DULU..." style="margin-top: 12px;" />
+                <ui:Button class="eg-btn eg-btn--utama eg-btn--penuh" text="SELESAI" style="margin-top: 12px;" />
+                <ui:Label class="eg-catatan" text="langka! cuma 3%" style="margin-top: 8px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
