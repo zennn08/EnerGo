@@ -1,0 +1,1 @@
+Tanda EnerGo: piringan kompas dengan jarum berbentuk petir. `energo-mark.svg` berwarna (piringan `kertas-100`, garis `tinta`, petir `oranye`); `energo-mark-mono.svg` satu tinta `tinta` (#1f2a36) dengan latar transparan, untuk cetak satu warna. Wordmark tidak berupa gambar: set "EnerGo" dalam Bricolage Grotesque ExtraBold, "Go" berwarna `oranye-tua`.

@@ -1,0 +1,87 @@
+<!-- @dsCard group="Layar" page height=960 width=1600 subtitle="Radar, peringatan keselamatan, dan GPS gagal" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Layar radar</title></head>
+<body>
+<div class="eg-baris-hp">
+
+  <!-- Radar -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-layar" style="gap:14px;align-items:center">
+        <div class="eg-baris" style="justify-content:space-between;width:100%">
+          <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Lobby</button>
+          <span class="eg-pil eg-pil--data"><img src="../../assets/Ikon/jam.svg" alt="" style="width:20px;height:20px">SPAWN BARU 12:48</span>
+        </div>
+        <div class="eg-radar">
+          <div class="eg-radar__kipas"></div>
+          <div class="eg-radar__cincin" style="width:133px;height:133px"></div>
+          <div class="eg-radar__cincin" style="width:267px;height:267px"></div>
+          <span class="eg-radar__label" style="left:140px;top:206px">50 m</span>
+          <span class="eg-radar__label" style="left:72px;top:206px">100 m</span>
+          <span class="eg-radar__arah u" style="left:111px;top:46px">U</span>
+          <span class="eg-radar__arah" style="left:354px;top:111px">T</span>
+          <span class="eg-radar__arah" style="left:289px;top:354px">S</span>
+          <span class="eg-radar__arah" style="left:46px;top:289px">B</span>
+          <div class="eg-node is-dekat is-terpilih" style="left:236px;top:150px"><img src="../../assets/Ikon/sda-matahari.svg" alt="Matahari"></div>
+          <div class="eg-node" style="left:118px;top:262px"><img src="../../assets/Ikon/sda-batubara.svg" alt="Batu Bara"></div>
+          <div class="eg-node" style="left:304px;top:286px"><img src="../../assets/Ikon/sda-emas.svg" alt="Emas"></div>
+          <div class="eg-node" style="left:286px;top:72px"><img src="../../assets/Ikon/sda-minyak.svg" alt="Minyak Bumi"></div>
+          <div class="eg-node is-langka" style="left:92px;top:130px"><img src="../../assets/Ikon/sda-uranium.svg" alt="Uranium"></div>
+          <div class="eg-radar__pemain"></div>
+        </div>
+        <div class="eg-pil eg-pil--data" style="flex-direction:column;align-items:flex-start;gap:2px;padding:8px 16px;border-radius:14px;width:100%">
+          <span><img src="../../assets/Ikon/kompas.svg" alt="" style="width:18px;height:18px;display:inline;vertical-align:-3px"> Kompas: rotasi fusi · 32°</span>
+          <span><img src="../../assets/Ikon/lokasi.svg" alt="" style="width:18px;height:18px;display:inline;vertical-align:-3px"> GPS ±6 m</span>
+        </div>
+        <div class="eg-kartu" style="width:100%;padding-top:14px;margin-top:auto">
+          <div class="eg-baris"><img src="../../assets/Ikon/sda-matahari.svg" alt="" width="56" height="56"><div class="eg-isi"><div style="font-family:var(--font-judul);font-weight:800;font-size:24px;line-height:28px">Matahari</div><div class="eg-data" style="font-weight:700;font-size:15px">14 m · Timur Laut</div></div><img src="../../assets/Ikon/panah.svg" alt="Arah jalan" width="40" height="40" style="transform:rotate(20deg)"></div>
+          <button class="eg-btn eg-btn--utama eg-btn--penuh" style="margin-top:14px">Tangkap</button>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Radar · Matahari dalam jangkauan</div>
+  </div>
+
+  <!-- Keselamatan -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-redup"></div>
+      <div class="eg-layar" style="justify-content:center">
+        <div class="eg-kartu" style="padding:40px 22px 22px;text-align:center">
+          <div class="eg-selotip eg-selotip--merah">Hati-hati di jalan</div>
+          <svg viewBox="0 0 200 120" width="200" height="120" style="display:block;margin:0 auto 12px" aria-hidden="true">
+            <path d="M10 104 L190 104" stroke="#1f2a36" stroke-width="3" stroke-linecap="round"/>
+            <path d="M70 104 L100 20 L130 104 Z" fill="#f07f3c" stroke="#1f2a36" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M84 70 h32 M78 88 h44" stroke="#fbf6ea" stroke-width="7"/>
+            <circle cx="40" cy="60" r="12" fill="#e7d9ba" stroke="#1f2a36" stroke-width="2.5"/>
+            <rect x="34" y="74" width="12" height="28" rx="4" fill="#e7d9ba" stroke="#1f2a36" stroke-width="2.5"/>
+          </svg>
+          <p style="margin:0 0 20px;font-size:18px;line-height:28px">Perhatikan jalan dan sekitarmu saat berburu. Jangan masuk ke area berbahaya atau milik orang lain.</p>
+          <button class="eg-btn eg-btn--utama eg-btn--penuh">Saya mengerti</button>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Peringatan keselamatan · sekali per instalasi</div>
+  </div>
+
+  <!-- GPS gagal -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-layar" style="gap:20px">
+        <div class="eg-baris"><button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Lobby</button></div>
+        <div class="eg-tengah" style="margin-top:20px"><div class="eg-radar" style="width:300px;height:300px;filter:grayscale(1);opacity:.55"><div class="eg-radar__cincin" style="width:100px;height:100px"></div><div class="eg-radar__cincin" style="width:200px;height:200px"></div><div class="eg-radar__pemain" style="background:var(--kertas-300)"></div></div></div>
+        <div class="eg-kartu" style="padding:38px 20px 20px;margin-top:8px">
+          <div class="eg-selotip eg-selotip--merah">GPS tidak merespons</div>
+          <p style="margin:0 0 6px;font-size:18px;line-height:26px;text-align:center">Coba pindah ke tempat terbuka, lalu coba lagi.</p>
+          <div class="eg-catatan" style="text-align:center;margin-bottom:16px">atap & gedung tinggi menghalangi sinyal</div>
+          <div class="eg-kolom"><button class="eg-btn eg-btn--info eg-btn--penuh">Coba lagi</button><button class="eg-btn eg-btn--kertas eg-btn--penuh">Main mode latihan</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">GPS gagal · juga untuk izin ditolak & lokasi mati</div>
+  </div>
+
+</div>
+</body>
+</html>
