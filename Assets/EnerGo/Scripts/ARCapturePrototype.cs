@@ -107,14 +107,7 @@ namespace EnerGo
 
         // Gold "Stabilizer" mini-game (mendulang): tap the deposit to scoop sand, then swirl the phone's tilt
         // in slow circles (accelerometer) so the sand washes over the rim and the gold flakes stay behind.
-        // Tuning knobs; tilt is in units of g (≈ sin of the tilt angle), jolt is |accel|/gravity - 1.
-        private const float GoldFillPerSec = 1f / 10f;   // ~10 s of good swirling
-        private const float GoldSpillPerSec = 1f / 6f;   // too rough: gold spills back out
-        private const float GoldMinTilt = 0.08f;         // below this the pan is just being held level
-        private const float GoldMaxTilt = 0.6f;          // tipping the pan further than this spills
-        private const float GoldMinSwirl = 40f;          // deg/s of the tilt direction that counts as swirling
-        private const float GoldMaxSwirl = 420f;         // faster than this is sloshing, not panning
-        private const float GoldMaxJolt = 0.5f;          // a shake/jerk stronger than this spills
+        // The rules and their tuning knobs are in DulangMath.
         private enum GoldPhase { None, Leveling, Countdown, Panning, Done, Failed }
         private const float GoldFlatDeg = 12f;           // "datar": screen facing up within this many degrees
         private const float GoldFlatHoldSec = 1f;        // hold it level this long before the countdown
@@ -122,7 +115,6 @@ namespace EnerGo
         private const int GoldPieces = 18;               // gold flakes and nuggets in the pan
         private const float GoldFailBelow = 0.4f;        // fewer than 40% of the gold left = thrown away, fail
         private const float GoldSpillEverySec = 0.35f;   // while too rough, one piece flies out this often
-        private const float GoldSloshGain = 2.4f;        // how far sand/water visibly slide per unit of tilt
         private GoldPhase goldPhase;
         private bool goldPanning => goldPhase != GoldPhase.None; // the pan is on screen
         private float goldPhaseAt;
@@ -133,6 +125,8 @@ namespace EnerGo
         private bool goldRough;
         private float goldLastRumbleAt = -10f; // warning rumble while panning too roughly
         private float goldSwirl;       // smoothed signed deg/s of the tilt direction
+        private float goldTiltSpeed, goldRoughFor; // how fast the tilt moves; how long the motion has been too much
+        private Vector2 goldTiltBefore;
         private float goldTiltMag;
         private float goldLastAngle = float.NaN;
         private Vector2 goldTilt;      // smoothed, drives the sloshing grains
@@ -140,31 +134,9 @@ namespace EnerGo
         private Vector3 goldBaseline;  // gravity direction the player holds as "level"
         private float goldGravity;     // accelerometer magnitude at rest (units differ per platform)
         // Gold pieces, in pan units (1 = inner rim), screen-oriented (y down).
-        private Vector2[] goldPos, goldVel, goldHome, goldLostDir;
+        private Vector2[] goldPos, goldVel, goldLostDir;
         private float[] goldSize, goldLostAt; // goldLostAt: when the piece flew out (for the fly-out animation)
         private bool[] goldLost;
-
-        // Smoothed signed angular speed (deg/s) of the tilt direction. Steady one-way circles give a
-        // large value; rocking back and forth flips the sign every swing and averages out near zero.
-        public static float StepSwirl(float swirl, ref float lastAngle, Vector2 tilt, float dt)
-        {
-            float k = 1f - Mathf.Exp(-6f * dt);
-            if (tilt.magnitude < GoldMinTilt * 0.5f) { lastAngle = float.NaN; return Mathf.Lerp(swirl, 0f, k); }
-            float angle = Mathf.Atan2(tilt.y, tilt.x) * Mathf.Rad2Deg;
-            if (!float.IsNaN(lastAngle)) swirl = Mathf.Lerp(swirl, Mathf.DeltaAngle(lastAngle, angle) / dt, k);
-            lastAngle = angle;
-            return swirl;
-        }
-
-        // One step of the panning bar. Returns the new progress; `rough` says the motion spilled gold.
-        public static float StepGoldProgress(float progress, float swirlDegPerSec, float tiltMag, float jolt, float dt, out bool rough)
-        {
-            float speed = Mathf.Abs(swirlDegPerSec);
-            rough = speed > GoldMaxSwirl || tiltMag > GoldMaxTilt || jolt > GoldMaxJolt;
-            if (rough) return Mathf.Clamp01(progress - GoldSpillPerSec * dt);
-            if (speed >= GoldMinSwirl && tiltMag >= GoldMinTilt) return Mathf.Clamp01(progress + GoldFillPerSec * dt);
-            return progress; // held still or barely moving: nothing washes out
-        }
 
         // Break-stage model to show after `hits` of `required` hits: 0 = intact lump, then spread over
         // medium (1), granules (2) and powder (3). At `required` hits the lump is gone.
@@ -1103,18 +1075,18 @@ namespace EnerGo
             goldRough = false;
             goldSwirl = 0f;
             goldLastAngle = float.NaN;
-            goldTilt = Vector2.zero;
+            goldTilt = goldTiltBefore = Vector2.zero;
+            goldTiltSpeed = goldRoughFor = 0f;
             goldBubble = Vector2.zero;
             goldPos = new Vector2[GoldPieces];
             goldVel = new Vector2[GoldPieces];
-            goldHome = new Vector2[GoldPieces];
             goldLostDir = new Vector2[GoldPieces];
             goldSize = new float[GoldPieces];
             goldLostAt = new float[GoldPieces];
             goldLost = new bool[GoldPieces];
             for (int i = 0; i < GoldPieces; i++)
             {
-                goldHome[i] = goldPos[i] = Random.insideUnitCircle * 0.5f;
+                goldPos[i] = Random.insideUnitCircle * 0.55f;
                 goldSize[i] = i < 4 ? Random.Range(6.5f, 8.5f) : Random.Range(3f, 5f); // a few nuggets, mostly flakes
             }
             target.SetActive(false); // the deposit has been scooped; keep the object so nothing respawns
@@ -1205,19 +1177,21 @@ namespace EnerGo
                         goldPhaseAt = Time.time;
                         goldBaseline = Vector3.zero; // "level" is however the player holds it right now
                         if (SFXManager.Instance != null) SFXManager.Instance.PlayAliranAir();
-                        feedback = "PUTAR HP PERLAHAN SEPERTI MENDULANG";
+                        feedback = "MIRINGKAN HP BERPUTAR PELAN";
                     }
                     break;
                 case GoldPhase.Panning:
                     ReadGoldTilt(out Vector2 raw, out float jolt);
                     goldTilt = Vector2.Lerp(goldTilt, raw, 1f - Mathf.Exp(-12f * dt));
                     goldTiltMag = goldTilt.magnitude;
-                    goldSwirl = StepSwirl(goldSwirl, ref goldLastAngle, goldTilt, dt);
-                    goldProgress = StepGoldProgress(goldProgress, goldSwirl, goldTiltMag, jolt, dt, out goldRough);
+                    goldSwirl = DulangMath.StepSwirl(goldSwirl, ref goldLastAngle, goldTilt, dt);
+                    goldTiltSpeed = DulangMath.StepTiltSpeed(goldTiltSpeed, goldTiltBefore, goldTilt, dt);
+                    goldTiltBefore = goldTilt;
+                    goldProgress = DulangMath.StepProgress(goldProgress, goldSwirl, goldTiltSpeed, goldTiltMag, jolt, ref goldRoughFor, dt, out goldRough);
                     StepGoldPieces(dt, goldRough, new Vector2(goldTilt.x, -goldTilt.y));
                     if (goldRough && Time.time - goldLastRumbleAt >= 0.3f) { Haptics.Pulse(10); goldLastRumbleAt = Time.time; }
                     if (SFXManager.Instance != null)
-                        SFXManager.Instance.SetAliranAirVolume(0.25f + 0.6f * Mathf.Clamp01(Mathf.Abs(goldSwirl) / GoldMaxSwirl));
+                        SFXManager.Instance.SetAliranAirVolume(0.25f + 0.6f * Mathf.Clamp01(goldTiltSpeed / DulangMath.MaxTiltSpeed));
                     CheckGoldOutcome();
                     break;
             }
@@ -1232,10 +1206,25 @@ namespace EnerGo
             for (int i = 0; i < GoldPieces; i++)
             {
                 if (goldLost[i]) continue;
-                Vector2 acc = downhill * 2.2f - (goldPos[i] - goldHome[i]) * 2.5f - goldVel[i] * 1.6f;
+                // Heavy: it slides downhill, the bowl's slope brings it back toward the middle, and it stops quickly.
+                Vector2 acc = downhill * 1.7f - goldPos[i] * 1.1f - goldVel[i] * 2.6f;
                 if (rough) acc += dir * 1.2f;
                 goldVel[i] += acc * dt;
                 goldPos[i] = Vector2.ClampMagnitude(goldPos[i] + goldVel[i] * dt, 0.92f);
+            }
+            // Pieces lie side by side instead of inside each other.
+            for (int i = 0; i < GoldPieces; i++)
+            {
+                if (goldLost[i]) continue;
+                for (int j = i + 1; j < GoldPieces; j++)
+                {
+                    if (goldLost[j]) continue;
+                    Vector2 gap = goldPos[j] - goldPos[i];
+                    float min = (i < 4 ? 0.13f : 0.07f) + (j < 4 ? 0.13f : 0.07f), d = gap.magnitude;
+                    if (d >= min || d < 1e-4f) continue;
+                    Vector2 push = gap / d * (min - d) * 0.5f;
+                    goldPos[i] -= push; goldPos[j] += push;
+                }
             }
 
             if (!rough) { goldSpillTimer = Mathf.Max(0f, goldSpillTimer - dt); return; }
@@ -1297,7 +1286,32 @@ namespace EnerGo
             radius = Mathf.Min(sw * 0.4f, 160f);
         }
 
-        // Overlays on the 3D pan: gold count, spirit level, countdown, MULAI! and the fail card.
+        // Dots round the pan show the circle to tilt along: one runs ahead until the player is swirling,
+        // and the big one shows where the phone is tipped right now.
+        private void DrawGoldGuide(Vector2 c, float R)
+        {
+            float ring = R * 1.12f;
+            Rect Dot(float deg, float r)
+            {
+                float a = deg * Mathf.Deg2Rad;
+                return new Rect(c.x + Mathf.Cos(a) * ring - r, c.y - Mathf.Sin(a) * ring - r, r * 2f, r * 2f);
+            }
+            bool swirling = Mathf.Abs(goldSwirl) >= DulangMath.MinSwirl && goldTiltMag >= DulangMath.MinTilt;
+            var paper = EnerGoUI.Alpha(EnerGoUI.Paper, swirling ? 0.35f : 0.8f);
+            for (int i = 0; i < 16; i++) { var d = Dot(i * 22.5f, 2.5f); EnerGoUI.DrawPanel(d, paper, Color.clear, 2.5f); }
+            if (!swirling)
+            {
+                var lead = Dot(Time.time * 90f, 6f);
+                EnerGoUI.DrawPanel(lead, EnerGoUI.Paper, EnerGoUI.Ink, 6f, 1.5f);
+            }
+            if (goldTiltMag >= DulangMath.MinTilt * 0.5f)
+            {
+                var now = Dot(Mathf.Atan2(goldTilt.y, goldTilt.x) * Mathf.Rad2Deg, 9f);
+                EnerGoUI.DrawPanel(now, goldRough ? EnerGoUI.Danger : swirling ? HudOk : EnerGoUI.Orange, EnerGoUI.Ink, 9f, 2f);
+            }
+        }
+
+        // Overlays on the 3D pan: gold count, tilt guide, spirit level, countdown, MULAI! and the fail card.
         private void DrawGoldPan(float sw, float sh)
         {
             GoldPanRect(sw, sh, out Vector2 c, out float R);
@@ -1306,6 +1320,7 @@ namespace EnerGo
 
             // The pan itself, its water, sand and gold are the 3D Dulang (ARCapturePrototype.Dulang.cs); this draws the overlays.
 
+            if (goldPhase == GoldPhase.Panning) DrawGoldGuide(c, R);
             if (goldPhase >= GoldPhase.Panning)
             {
                 DrawHudPill(new Rect(c.x - 70f, c.y - R - 50f, 140f, 40f), $"EMAS {GoldLeft()}/{GoldPieces}", Color.white);
@@ -2067,7 +2082,7 @@ namespace EnerGo
                     : goldPhase == GoldPhase.Countdown ? "SIAP-SIAP MENDULANG"
                     : goldPhase == GoldPhase.Done ? "EMAS TERPISAH DARI PASIR!"
                     : goldPhase == GoldPhase.Failed ? "EMAS TERBUANG!"
-                    : goldRough ? "TERLALU KENCANG! EMAS BISA TUMPAH" : "PUTAR HP PERLAHAN SEPERTI MENDULANG";
+                    : goldRough ? "TERLALU KENCANG! EMAS BISA TUMPAH" : "MIRINGKAN HP BERPUTAR PELAN";
                 style1 = warn ? styleRadarAlert : styleRadarLocked;
                 accent = warn ? HudWarn : HudOk;
                 locked = true;

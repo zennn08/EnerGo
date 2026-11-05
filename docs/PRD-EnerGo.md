@@ -279,9 +279,9 @@ Fase:
 1. Cari: endapan emas berputar pelan di arah SDA. Kotak status "ENDAPAN EMAS DITEMUKAN" + "Ketuk endapannya untuk menyendok pasir". Suara sungai diputar sepanjang scene emas.
 2. Mendatar: dulang muncul di layar. Pemain meletakkan HP datar (layar menghadap ke atas, toleransi 12 derajat) selama 1 detik. Ada gelembung waterpass di tengah dulang; cincin dan gelembung jadi hijau saat datar. Kotak status "LETAKKAN HP MENDATAR" dengan bar lama menahan.
 3. Hitung mundur: kartu "SIAP?" dengan angka 3-2-1, lalu tulisan "MULAI!".
-4. Mendulang: pemain memutar kemiringan HP pelan membentuk lingkaran. Air dan pasir di dulang ikut bergoyang. Lapisan pasir menipis seiring progres, memperlihatkan emas di bawahnya.
-   - Terisi jika kecepatan putar 40-420 derajat/detik dan miring cukup (0,08-0,6 g). Penuh dalam 10 detik.
-   - Terlalu kasar (putar lebih dari 420 derajat/detik, miring lebih dari 0,6 g, atau guncangan lebih dari 0,5 g): bar turun, dan setiap 0,35 detik satu keping emas terlempar keluar dari dulang (animasi melengkung lalu hilang). Kotak status "TERLALU KENCANG! EMAS BISA TUMPAH".
+4. Mendulang: pemain memutar kemiringan HP pelan membentuk lingkaran; titik di sekeliling dulang menunjukkan arah miring dan lingkaran yang harus diikuti. Air mengalir ke sisi rendah, butir pasir berputar dan tumpah di bibir dulang, gundukan pasir menipis seiring progres, memperlihatkan emas di bawahnya.
+   - Terisi jika arah miring berputar minimal 40 derajat/detik dan miring cukup (0,08-0,6 g). Penuh dalam 10 detik.
+   - Terlalu kasar selama 0,25 detik atau lebih (kemiringan bergerak lebih dari 2,2 g/detik, miring lebih dari 0,6 g, atau guncangan lebih dari 0,5 g): bar turun, dan setiap 0,35 detik satu keping emas terlempar keluar dari dulang (animasi melengkung lalu hilang). Kotak status "TERLALU KENCANG! EMAS BISA TUMPAH".
    - Diam saja: bar tidak bergerak.
    - Pil di atas dulang: "EMAS n/18" (18 keping: 4 bongkah besar, 14 serpih kecil).
 5. Selesai: "EMAS TERPISAH DARI PASIR". Skor = sisa emas, dari 40% (skor 0) sampai 100% (skor 1).
