@@ -52,5 +52,28 @@ namespace EnerGo.Tests
             Assert.AreEqual("Belum ada yang tepat. Coba lagi di tangkapan berikutnya.", CaptureScreens.ResultMessage(0, 3));
             Assert.AreEqual("Bagus! Jawab semua dengan tepat untuk hasil Murni.", CaptureScreens.ResultMessage(1, 3));
         }
+
+        [Test]
+        public void PumpRingShrinksFromLastStrokeToTheTarget()
+        {
+            Assert.AreEqual(2.6f, CaptureScreens.PumpRingScale(0f, 1.2f), 0.001f);
+            Assert.AreEqual(1f, CaptureScreens.PumpRingScale(1.2f, 1.2f), 0.001f);
+            Assert.AreEqual(1f, CaptureScreens.PumpRingScale(5f, 1.2f), 0.001f);
+        }
+
+        [Test]
+        public void GaugeWarnsOnlyAboveItsLimit()
+        {
+            Assert.IsTrue(CaptureScreens.GaugeWarn(0.61f, 0.6f));
+            Assert.IsFalse(CaptureScreens.GaugeWarn(0.6f, 0.6f));
+        }
+
+        [Test]
+        public void UraniumHeatIsTheMeterAsAFraction()
+        {
+            Assert.AreEqual(0f, CaptureScreens.UraniumHeat(0), 0.001f);
+            Assert.AreEqual(0.5f, CaptureScreens.UraniumHeat(50), 0.001f);
+            Assert.AreEqual(1f, CaptureScreens.UraniumHeat(140), 0.001f);
+        }
     }
 }

@@ -25,6 +25,13 @@ namespace EnerGo
         // A wrong answer holds the button 2 s so the explanation gets read; 1 = ready.
         public static float ReadHold(bool correct, float secondsSinceShown) => correct ? 1f : UnityEngine.Mathf.Clamp01(secondsSinceShown / 2f);
 
+        // The pump's ring shrinks from 2.6 x the target to the target over one beat; press when they meet.
+        public static float PumpRingScale(float secsSinceStroke, float beat) => UnityEngine.Mathf.Lerp(2.6f, 1f, secsSinceStroke / beat);
+
+        public static float UraniumHeat(int meter) => UnityEngine.Mathf.Clamp01(meter / 100f);
+
+        public static bool GaugeWarn(float value, float limit) => value > limit;
+
         public static string ResultMessage(int right, int count) => right == count ? "Sempurna! Semua jawaban tepat."
             : right == 0 ? "Belum ada yang tepat. Coba lagi di tangkapan berikutnya."
             : "Bagus! Jawab semua dengan tepat untuk hasil Murni.";

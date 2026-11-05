@@ -8,7 +8,7 @@ namespace EnerGo
     // to pump the drum full without building up too much pressure.
     public partial class ARCapturePrototype
     {
-        private enum OilPhase { None, Drill, Pump, Done, Failed }
+        public enum OilPhase { None, Drill, Pump, Done, Failed }
         private const float OilModelScale = 0.2f;  // sda_pompa is about 3.5 m wide; at 1.4 m this fills the view like the old rig
         private const float OilCrankRate = 9f;     // how fast the crank catches up with the finger
 
@@ -220,74 +220,11 @@ namespace EnerGo
             return HudStatus.WithBar(drill, gas && oilGasPressure > 0.4f, oilDepth, Mathf.RoundToInt(oilDepth * OilMath.DisplayDepthM) + "m");
         }
 
-        private void DrawOilOverlay(float sw, float sh)
-        {
-            if (oilLayerStyle == null)
-                oilLayerStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleLeft, normal = { textColor = Color.white } };
-            // The section stays up a moment after striking oil, so the splash is seen.
-            if (oilPumping && !(oilPhase == OilPhase.Pump && Time.time - oilPhaseAt < OilSplashHold)) DrawOilPump(sw, sh);
-            else DrawOilSection(sw, sh);
-        }
-
         private static void OilSectionRect(float sw, float sh, out Rect p)
         {
             float pw = Mathf.Min(sw - 72f, 300f), ph = Mathf.Min(sh * 0.48f, 420f);
             p = new Rect((sw - pw) * 0.5f, sh * 0.3f, pw, ph);
         }
 
-        // Overlays on the 3D cross-section (ARCapturePrototype.Bor.cs): layer names and the gas pressure gauge on the right.
-        private void DrawOilSection(float sw, float sh)
-        {
-            OilSectionRect(sw, sh, out Rect p);
-            float pw = p.width, ph = p.height;
-            float prev = 0f;
-            for (int i = 0; i < OilLayerColors.Length; i++)
-            {
-                float bottom = i < oilLayers.Length ? oilLayers[i] : 1f;
-                var band = new Rect(p.x, p.y + prev * ph, pw, (bottom - prev) * ph);
-                if (band.height >= 14f)
-                {
-                    // Text over the camera and the textured layers always sits on a pill.
-                    var size = oilLayerStyle.CalcSize(new GUIContent(OilLayerNames[i]));
-                    float pillH = Mathf.Min(band.height - 2f, size.y + 2f);
-                    var pill = new Rect(band.x + 6f, band.center.y - pillH * 0.5f, size.x + 14f, pillH);
-                    EnerGoUI.DrawPanel(pill, new Color(EnerGoUI.Ink.r, EnerGoUI.Ink.g, EnerGoUI.Ink.b, 0.78f), Color.clear, pillH * 0.5f);
-                    GUI.Label(new Rect(pill.x + 7f, pill.y, size.x + 4f, pill.height), OilLayerNames[i], oilLayerStyle);
-                }
-                prev = bottom;
-            }
-            var gauge = new Rect(p.xMax + 14f, p.y, 12f, ph);
-            EnerGoUI.DrawPanel(gauge, HudFill, HudOutline, 6f, 1.5f);
-            float gh = (ph - 4f) * oilGasPressure;
-            EnerGoUI.DrawPanel(new Rect(gauge.x + 2f, gauge.yMax - 2f - gh, 8f, gh), oilGasPressure > 0.6f ? EnerGoUI.Danger : EnerGoUI.Orange, Color.clear, 4f);
-        }
-
-        // Pump: a ring shrinks from the last stroke toward the target circle; press when they meet.
-        private void DrawOilPump(float sw, float sh)
-        {
-            float beat = OilMath.BeatFor(oilDrum);
-            var c = new Vector2(sw * 0.5f, sh * 0.7f);
-            const float r0 = 44f;
-            Rect Circle(float r) => new Rect(c.x - r, c.y - r, r * 2f, r * 2f);
-            EnerGoUI.DrawPanel(Circle(r0), EnerGoUI.Alpha(EnerGoUI.Orange, 0.18f), EnerGoUI.Orange, r0, 3f);
-            if (float.IsNegativeInfinity(oilLastStrokeAt))
-                DrawHudTag(c.x, c.y + r0 + 10f, 240f, "TEKAN UNTUK MULAI MEMOMPA", sw);
-            else
-            {
-                float t = Mathf.Clamp01((Time.time - oilLastStrokeAt) / beat);
-                float r = Mathf.Lerp(r0 * 2.6f, r0, t);
-                // Light ring with a dark rim: readable over both bright and dark camera feeds.
-                EnerGoUI.DrawPanel(Circle(r + 1.5f), Color.clear, EnerGoUI.Alpha(EnerGoUI.Ink, 0.7f), r + 1.5f, 6f);
-                EnerGoUI.DrawPanel(Circle(r), Color.clear, EnerGoUI.Paper, r, 3f);
-            }
-            DrawHudTag(c.x, c.y - 11f, 80f, "POMPA", sw);
-
-            float dw = Mathf.Min(sw - 64f, 320f);
-            var pr = new Rect((sw - dw) * 0.5f, sh - 104f, dw, 34f);
-            bool high = oilPumpPressure > 0.6f;
-            DrawHudBox(pr, high ? HudWarn : (Color?)null);
-            GUI.Label(new Rect(pr.x + 10f, pr.y + 8f, 70f, 18f), "TEKANAN", styleTapsCounter);
-            EnerGoUI.DrawBar(new Rect(pr.x + 80f, pr.y + 8f, dw - 94f, 18f), oilPumpPressure, high ? EnerGoUI.BadTop : EnerGoUI.OrangeTop, high ? EnerGoUI.BadBot : EnerGoUI.OrangeBot);
-        }
     }
 }

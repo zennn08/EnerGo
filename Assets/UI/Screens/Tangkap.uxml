@@ -2,6 +2,7 @@
     <!-- Capture screens (docs/design-system/components/HudTangkap, LayarTangkapA, LayarTangkapB). Values are set by CaptureView. -->
     <ui:Template name="KartuPanduan" src="project://database/Assets/UI/Screens/KartuPanduan.uxml" />
     <ui:Template name="Kuis" src="project://database/Assets/UI/Screens/Kuis.uxml" />
+    <ui:Template name="Overlay" src="project://database/Assets/UI/Screens/Overlay.uxml" />
     <Style src="project://database/Assets/UI/Theme.uss" />
     <Style src="project://database/Assets/UI/Components.uss" />
     <Style src="project://database/Assets/UI/Screens/Layar.uss" />
@@ -30,6 +31,7 @@
         <ui:VisualElement class="eg-isi" picking-mode="Ignore" />
         <ui:Button name="btn-ulang" class="eg-btn eg-btn--kecil eg-btn--kertas eg-btn--penuh" text="MUNCULKAN ULANG TARGET" />
     </ui:VisualElement>
+    <ui:Instance template="Overlay" class="eg-lapis" picking-mode="Ignore" />
     <ui:VisualElement name="riak" class="tangkap__riak" picking-mode="Ignore" />
     <ui:Instance template="Kuis" class="eg-lapis" picking-mode="Ignore" />
     <ui:VisualElement name="lapis-panduan" class="eg-lapis" picking-mode="Ignore">

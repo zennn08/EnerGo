@@ -108,7 +108,7 @@ namespace EnerGo
         // Gold "Stabilizer" mini-game (mendulang): tap the deposit to scoop sand, then swirl the phone's tilt
         // in slow circles (accelerometer) so the sand washes over the rim and the gold flakes stay behind.
         // The rules and their tuning knobs are in DulangMath.
-        private enum GoldPhase { None, Leveling, Countdown, Panning, Done, Failed }
+        public enum GoldPhase { None, Leveling, Countdown, Panning, Done, Failed }
         private const float GoldFlatDeg = 12f;           // "datar": screen facing up within this many degrees
         private const float GoldFlatHoldSec = 1f;        // hold it level this long before the countdown
         private const float GoldCountdownSec = 3f;       // 3-2-1, then "MULAI!"
@@ -1282,86 +1282,6 @@ namespace EnerGo
             radius = Mathf.Min(sw * 0.4f, 160f);
         }
 
-        // Dots round the pan show the circle to tilt along: one runs ahead until the player is swirling,
-        // and the big one shows where the phone is tipped right now.
-        private void DrawGoldGuide(Vector2 c, float R)
-        {
-            float ring = R * 1.12f;
-            Rect Dot(float deg, float r)
-            {
-                float a = deg * Mathf.Deg2Rad;
-                return new Rect(c.x + Mathf.Cos(a) * ring - r, c.y - Mathf.Sin(a) * ring - r, r * 2f, r * 2f);
-            }
-            bool swirling = Mathf.Abs(goldSwirl) >= DulangMath.MinSwirl && goldTiltMag >= DulangMath.MinTilt;
-            var paper = EnerGoUI.Alpha(EnerGoUI.Paper, swirling ? 0.35f : 0.8f);
-            for (int i = 0; i < 16; i++) { var d = Dot(i * 22.5f, 2.5f); EnerGoUI.DrawPanel(d, paper, Color.clear, 2.5f); }
-            if (!swirling)
-            {
-                var lead = Dot(Time.time * 90f, 6f);
-                EnerGoUI.DrawPanel(lead, EnerGoUI.Paper, EnerGoUI.Ink, 6f, 1.5f);
-            }
-            if (goldTiltMag >= DulangMath.MinTilt * 0.5f)
-            {
-                var now = Dot(Mathf.Atan2(goldTilt.y, goldTilt.x) * Mathf.Rad2Deg, 9f);
-                EnerGoUI.DrawPanel(now, goldRough ? EnerGoUI.Danger : swirling ? HudOk : EnerGoUI.Orange, EnerGoUI.Ink, 9f, 2f);
-            }
-        }
-
-        // Overlays on the 3D pan: gold count, tilt guide, spirit level, countdown, MULAI! and the fail card.
-        private void DrawGoldPan(float sw, float sh)
-        {
-            GoldPanRect(sw, sh, out Vector2 c, out float R);
-            Rect Circle(Vector2 p, float r) => new Rect(p.x - r, p.y - r, r * 2f, r * 2f);
-            var mint = HudOk;
-
-            // The pan itself, its water, sand and gold are the 3D Dulang (ARCapturePrototype.Dulang.cs); this draws the overlays.
-
-            if (goldPhase == GoldPhase.Panning) DrawGoldGuide(c, R);
-            if (goldPhase >= GoldPhase.Panning)
-            {
-                DrawHudPill(new Rect(c.x - 70f, c.y - R - 50f, 140f, 40f), $"EMAS {GoldLeft()}/{GoldPieces}", Color.white);
-            }
-
-            var big = EnerGoUI.Title(60, Color.white);
-            if (goldPhase == GoldPhase.Leveling)
-            {
-                // Spirit level: centre the bubble in the ring.
-                bool flat = goldFlatHold > 0f;
-                float ringR = R * 0.2f;
-                EnerGoUI.DrawPanel(Circle(c, ringR), new Color(0f, 0f, 0f, 0.25f), flat ? mint : new Color(1f, 1f, 1f, 0.8f), ringR, 2.5f);
-                Vector2 b = Vector2.ClampMagnitude(goldBubble * R * 1.6f, R * 0.7f);
-                EnerGoUI.DrawPanel(Circle(c + b, 11f), new Color(1f, 1f, 1f, 0.85f), flat ? mint : Color.white, 11f, 2f);
-            }
-            else if (goldPhase == GoldPhase.Countdown)
-            {
-                int n = Mathf.Clamp(Mathf.CeilToInt(GoldCountdownSec - (Time.time - goldPhaseAt)), 1, 3);
-                var card = new Rect(c.x - 100f, c.y - 62f, 200f, 132f);
-                EnerGoUI.DrawCard(card);
-                EnerGoUI.DrawRibbon(card, "SIAP?", ButtonKind.Orange);
-                EnerGoUI.DrawStrokedLabel(new Rect(card.x, card.y + 34f, card.width, 80f), n.ToString(), big, EnerGoUI.M(3f), EnerGoUI.M(3f));
-            }
-            else if (goldPhase == GoldPhase.Panning && Time.time - goldPhaseAt < 0.8f)
-            {
-                GUI.color = new Color(1f, 1f, 1f, 1f - (Time.time - goldPhaseAt) / 0.8f);
-                EnerGoUI.DrawStrokedLabel(new Rect(c.x - 150f, c.y - 40f, 300f, 80f), "MULAI!", big, EnerGoUI.M(3f), EnerGoUI.M(3f));
-                GUI.color = Color.white;
-            }
-            else if (goldPhase == GoldPhase.Failed)
-            {
-                InitCardStyles();
-                float w = Mathf.Min(340f, sw * 0.86f);
-                var card = new Rect(c.x - w * 0.5f, c.y - 90f, w, 196f);
-                EnerGoUI.DrawCard(card);
-                EnerGoUI.DrawRibbon(card, "EMAS TERBUANG!", ButtonKind.Bad);
-                GUI.Label(new Rect(card.x + 18f, card.y + 46f, card.width - 36f, 56f), "Gerakanmu terlalu kencang, emasnya tumpah dari dulang.", styleCardHint);
-                if (DrawPrimaryBtn(new Rect(card.x + 18f, card.yMax - 78f, card.width - 36f, 60f), "CARI ENDAPAN BARU"))
-                {
-                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                    RetryGoldAtNewDeposit();
-                }
-            }
-        }
-
         // World point at this capture's bearing (plus a yaw offset), tilted by pitch, `dist` metres from the camera.
         private Vector3 AtBearing(float yawOffsetDeg, float pitchDeg, float dist) =>
             arCamera.transform.position + compass.Direction(captureBearing + yawOffsetDeg, pitchDeg) * dist;
@@ -1698,26 +1618,8 @@ namespace EnerGo
             float sw = Screen.width / scale;
             float sh = Screen.height / scale;
 
-            if (!guideOpen)
-            {
-            if (resourceId == ResourceIds.Sun && target != null && EnerGoProgress.Current.pendingCapture == null) DrawSunReticle(sw, sh);
-            if (resourceId == ResourceIds.Coal && target != null && EnerGoProgress.Current.pendingCapture == null) DrawCoalPips(scale);
-            if (goldPanning && EnerGoProgress.Current.pendingCapture == null) DrawGoldPan(sw, sh);
-            if (uraniumPhase != UraniumPhase.None && EnerGoProgress.Current.pendingCapture == null) DrawUraniumOverlay(sw, sh);
-            if (oilPhase != OilPhase.None && EnerGoProgress.Current.pendingCapture == null) DrawOilOverlay(sw, sh);
-
-            }
-
             GUI.color = prevColor;
             GUI.matrix = prevMatrix;
-        }
-
-        // Only the gold fail card still needs this; it goes when that card moves to UI Toolkit.
-        private void InitCardStyles()
-        {
-            if (cardStylesInit) return;
-            styleCardHint = EnerGoUI.Text(16, false, EnerGoUI.Muted, TextAnchor.UpperCenter, wrap: true);
-            cardStylesInit = true;
         }
 
         // Right/wrong per question of the current capture, filled in as each feedback card shows (null = not seen).
@@ -1900,46 +1802,6 @@ namespace EnerGo
             var style = EnerGoUI.Title(Mathf.RoundToInt(r.height * 0.42f), textColor);
             int fit = EnerGoUI.FitSize(style, text, inner.width, 11);
             GUI.Label(inner, text, fit == style.fontSize ? style : EnerGoUI.Title(fit, textColor));
-        }
-
-        // Remaining-hit pips floating above each coal lump: filled = hits landed.
-        private void DrawCoalPips(float scale)
-        {
-            var done = EnerGoUI.Orange;
-            const float size = 9f, gap = 4f;
-            foreach (var lump in coalLumps)
-            {
-                if (lump.root == null) continue;
-                Vector3 sp = arCamera.WorldToScreenPoint(lump.root.position + Vector3.up * lump.size * 0.75f);
-                if (sp.z <= arCamera.nearClipPlane) continue;
-                float cx = sp.x / scale, y = (Screen.height - sp.y) / scale - size;
-                float x = cx - (lump.required * size + (lump.required - 1) * gap) * 0.5f;
-                for (int i = 0; i < lump.required; i++)
-                {
-                    bool hit = i < lump.hits;
-                    EnerGoUI.DrawPanel(new Rect(x + i * (size + gap), y, size, size),
-                        hit ? done : EnerGoUI.Alpha(EnerGoUI.Paper, 0.9f), hit ? done : EnerGoUI.Ink, 3f);
-                }
-            }
-        }
-
-        // Fixed aiming ring in the middle of the screen: a dotted white ring with Ink edges; Sun glow while the light is inside.
-        private void DrawSunReticle(float sw, float sh)
-        {
-            float r = ReticleRadius * (sunInside ? 1f + 0.04f * Mathf.Sin(Time.time * 8f) : 1f);
-            var c = new Vector2(sw * 0.5f, sh * 0.5f);
-            if (sunInside) EnerGoUI.DrawPanel(new Rect(c.x - r, c.y - r, r * 2f, r * 2f), EnerGoUI.Alpha(EnerGoUI.Sun, 0.35f), Color.clear, r);
-            Color dot = sunInside ? EnerGoUI.Sun : Color.white;
-            const int dots = 28;
-            const float d = 8f;
-            for (int i = 0; i < dots; i++)
-            {
-                float a = i * Mathf.PI * 2f / dots;
-                var p = c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
-                EnerGoUI.DrawPanel(new Rect(p.x - d * 0.5f, p.y - d * 0.5f, d, d), dot, EnerGoUI.Ink, d * 0.5f, 2f);
-            }
-            // Small centre dot to aim with
-            EnerGoUI.DrawPanel(new Rect(c.x - 5f, c.y - 5f, 10f, 10f), dot, EnerGoUI.Ink, 5f, 2f);
         }
 
 
