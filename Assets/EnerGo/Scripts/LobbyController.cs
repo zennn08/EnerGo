@@ -63,8 +63,8 @@ namespace EnerGo
         public ScreenState State => currentState;
         public bool InputReady => inputCooldownTimer <= 0f && Time.unscaledTime >= tapBlockedUntil;
 
-        // The IMGUI buttons (EnerGoUI.TapHit) swallowed every tap for 0.35 s after one landed, so one physical tap
-        // pressed one button and a quick double tap could not, say, confirm RESET PROGRES at once. Kept here.
+        // Every tap is swallowed for 0.35 s after one lands, so one physical tap presses one button and a quick double
+        // tap cannot, say, confirm RESET PROGRES at once.
         private float tapBlockedUntil;
         private void BlockTaps() => tapBlockedUntil = Time.unscaledTime + 0.35f;
         public float SplashTimer => splashTimer;

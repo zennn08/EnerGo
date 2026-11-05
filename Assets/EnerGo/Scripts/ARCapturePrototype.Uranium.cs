@@ -27,7 +27,6 @@ namespace EnerGo
         private float uraniumGravity;
         private int uraniumMeter, uraniumTrendFrom, uraniumTrend;   // RAD 0..100, value at the start of the trend window, -1/0/+1
         private float uraniumTrendAt;
-        private GUIStyle uraniumRadStyle;
         private float uraniumRevealAt, uraniumPhaseAt;
         private string uraniumFailText = "";
 
@@ -267,7 +266,6 @@ namespace EnerGo
             }
         }
 
-        private GUIStyle hudTagStyle;
 
     }
 }

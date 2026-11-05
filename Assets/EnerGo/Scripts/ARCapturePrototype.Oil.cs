@@ -35,7 +35,6 @@ namespace EnerGo
         private string oilFailText = "";
         private Transform oilBeam, oilCrank, oilPitman, oilRod, oilCable;
         private float oilCrankAngle, oilCrankTarget;
-        private GUIStyle oilLayerStyle;
 
         private OilMath.Layer OilLayerNow => OilMath.LayerAt(oilDepth, oilLayers);
 

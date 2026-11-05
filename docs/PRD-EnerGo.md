@@ -498,7 +498,7 @@ Skor kecepatan: selesai pada atau di bawah target = 1, selesai pada 2,5 kali tar
 | Android minimum | API 30 (Android 11) |
 | Versi aplikasi | 0.1.0 |
 | Orientasi | Portrait |
-| UI | IMGUI digambar dengan kode, skala dasar 480 × 800 unit, memperhatikan safe area (notch) |
+| UI | UI Toolkit (UXML dan USS di `Assets/UI`), skala dasar 480 × 800 unit, memperhatikan safe area (notch) |
 
 ### 5.2 Sensor dan izin
 
