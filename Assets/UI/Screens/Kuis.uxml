@@ -1,0 +1,66 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+    <!-- Quiz, feedback and result (docs/design-system/components/LayarKuis, KartuSoal, KartuUmpanBalik). Values are set by CaptureView. -->
+    <Style src="project://database/Assets/UI/Theme.uss" />
+    <Style src="project://database/Assets/UI/Components.uss" />
+    <Style src="project://database/Assets/UI/Screens/Layar.uss" />
+    <ui:VisualElement name="lapis-kuis" class="eg-lapis">
+        <eg:PetaLatar class="eg-peta" />
+        <ui:VisualElement name="kuis-pendar-kiri" class="kuis__pendar kuis__pendar--kiri" picking-mode="Ignore" />
+        <ui:VisualElement name="kuis-pendar-kanan" class="kuis__pendar kuis__pendar--kanan" picking-mode="Ignore" />
+        <ui:VisualElement class="eg-layar eg-aman" picking-mode="Ignore">
+            <ui:VisualElement class="eg-baris kuis__atas" picking-mode="Ignore">
+                <ui:VisualElement name="kuis-penanda" class="eg-baris" picking-mode="Ignore" />
+                <ui:VisualElement class="eg-pil eg-pil--data" picking-mode="Ignore"><ui:Label name="pil-soal" text="SOAL 1/3" /></ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="kuis-soal" class="kuis__isi" picking-mode="Ignore">
+                <ui:Label class="eg-judul-layar kuis__judul" text="BENAR &lt;color=#a6481a&gt;ATAU&lt;/color&gt; SALAH?" />
+                <ui:VisualElement class="kuis__tumpuk" picking-mode="Ignore">
+                    <ui:VisualElement class="eg-kartu kuis__belakang" picking-mode="Ignore" />
+                    <ui:VisualElement name="kartu-soal" class="eg-kartu kuis__kartu" picking-mode="Ignore">
+                        <ui:VisualElement class="eg-baris" picking-mode="Ignore">
+                            <ui:VisualElement class="kuis__jam" picking-mode="Ignore" />
+                            <ui:VisualElement name="soal-waktu" class="eg-bar eg-bar--tipis eg-isi" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi" picking-mode="Ignore" /></ui:VisualElement>
+                            <ui:Label name="soal-detik" class="eg-data-tebal kuis__detik" text="15" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="soal-ikon" class="kuis__ikon" picking-mode="Ignore" />
+                        <ui:Label name="soal-teks" class="kuis__teks" text="" />
+                        <ui:Label name="cap-jawab" class="kuis__cap" text="BENAR" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="kartu-balik" class="eg-kartu kuis__balik" picking-mode="Ignore">
+                <ui:Label name="balik-selotip" class="eg-selotip" text="BENAR!" />
+                <ui:VisualElement class="eg-tengah" picking-mode="Ignore"><ui:VisualElement name="balik-jawab-ikon" class="kuis__chip-ikon" picking-mode="Ignore" /><ui:Label name="balik-jawab" class="kuis__chip kuis__chip--ikon" text="" /></ui:VisualElement>
+                <ui:VisualElement name="balik-ikon" class="kuis__ikon" picking-mode="Ignore" />
+                <ui:Label name="balik-teks" class="eg-isi-teks kuis__penjelasan" text="" />
+                <ui:VisualElement class="eg-tengah" picking-mode="Ignore"><ui:Label name="balik-unit" class="kuis__chip kuis__chip--oker" text="+1 unit" /></ui:VisualElement>
+                <ui:Button name="btn-lanjut" class="eg-btn eg-btn--utama eg-btn--penuh kuis__tombol" text="SOAL BERIKUTNYA">
+                    <ui:VisualElement name="lanjut-isi" class="kuis__tahan" picking-mode="Ignore" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="kuis-hasil" class="kuis__hasil" picking-mode="Ignore">
+                <ui:Label name="hasil-judul" class="eg-judul-layar kuis__judul-hasil" text="BAGUS!" />
+                <ui:VisualElement name="kartu-hasil" class="eg-kartu kuis__balik" picking-mode="Ignore">
+                    <ui:Label class="eg-selotip" text="HASIL ANALISIS" />
+                    <ui:VisualElement name="hasil-bintang" class="eg-tengah kuis__bintang" picking-mode="Ignore" />
+                    <ui:Label name="hasil-skor" class="eg-judul-kartu kuis__skor" text="0/3 BENAR" />
+                    <ui:VisualElement class="eg-tengah kuis__hadiah" picking-mode="Ignore">
+                        <ui:VisualElement name="hasil-ikon" class="kuis__hadiah-ikon" picking-mode="Ignore" />
+                        <ui:Label name="hasil-plus" class="eg-judul-layar kuis__plus" text="+0" />
+                        <ui:Label name="hasil-mutu" class="kuis__chip" text="Normal" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="hasil-rincian" class="kuis__rincian" picking-mode="Ignore" />
+                    <ui:Label name="hasil-pesan" class="eg-isi-teks kuis__penjelasan" text="" />
+                    <ui:Button name="btn-selesai-hasil" class="eg-btn eg-btn--utama eg-btn--penuh kuis__tombol" text="LANJUT KE LOBBY" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:Label name="kuis-error" class="eg-kecil kuis__error" text="" />
+        </ui:VisualElement>
+        <ui:Button name="btn-salah" class="eg-btn eg-btn--bahaya kuis__jawab" text="SALAH" picking-mode="Ignore" />
+        <ui:Button name="btn-benar" class="eg-btn eg-btn--ok kuis__jawab" text="BENAR" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

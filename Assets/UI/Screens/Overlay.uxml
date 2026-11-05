@@ -1,0 +1,71 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+    <!-- Mini-game overlays (LingkaranBidik, TombolJepit, BarUkur, LayarTangkapA, LayarTangkapB). Positions and values are set by CaptureView. Only the fail card's button takes the pointer: game input is read by the controller. -->
+    <ui:VisualElement name="lapis-overlay" class="eg-lapis" picking-mode="Ignore">
+        <eg:LingkaranBidik name="bidik" class="overlay__mutlak" picking-mode="Ignore" />
+        <ui:Label name="bidik-persen" class="eg-pil eg-pil--angka overlay__pil overlay__tengah" picking-mode="Ignore" text="0%" />
+        <ui:VisualElement name="pip-batu" class="eg-lapis" picking-mode="Ignore" />
+
+        <ui:VisualElement name="dulang" class="eg-lapis" picking-mode="Ignore">
+            <eg:PanduanDulang name="dulang-panduan" class="overlay__mutlak" picking-mode="Ignore" />
+            <ui:Label name="dulang-pil" class="eg-pil eg-pil--angka overlay__pil overlay__tengah" picking-mode="Ignore" text="EMAS 0/18" />
+            <ui:VisualElement name="dulang-waterpass" class="overlay__mutlak overlay__bulat overlay__waterpass" picking-mode="Ignore" />
+            <ui:VisualElement name="dulang-gelembung" class="overlay__mutlak overlay__bulat overlay__gelembung" picking-mode="Ignore" />
+            <ui:VisualElement name="dulang-hitung" class="eg-kartu overlay__tengah overlay__hitung" picking-mode="Ignore">
+                <ui:Label class="eg-selotip" picking-mode="Ignore" text="SIAP?" />
+                <ui:Label name="dulang-angka" class="eg-judul overlay__angka" picking-mode="Ignore" text="3" />
+            </ui:VisualElement>
+            <ui:Label name="dulang-mulai" class="eg-pil overlay__pil overlay__tengah overlay__mulai" picking-mode="Ignore" text="MULAI!" />
+            <ui:VisualElement name="kartu-terbuang" class="eg-kartu eg-kartu--salah overlay__tengah overlay__terbuang" picking-mode="Ignore">
+                <ui:Label class="eg-selotip eg-selotip--merah" picking-mode="Ignore" text="EMAS TERBUANG!" />
+                <ui:Label class="overlay__terbuang-teks" picking-mode="Ignore" text="Gerakanmu terlalu kencang, emasnya tumpah dari dulang." />
+                <ui:Button name="btn-endapan-baru" class="eg-btn eg-btn--utama eg-btn--penuh" text="CARI ENDAPAN BARU" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="bor" class="eg-lapis" picking-mode="Ignore">
+            <ui:VisualElement name="bor-label" class="eg-lapis" picking-mode="Ignore" />
+            <ui:VisualElement name="bor-gas" class="overlay__mutlak overlay__gas" picking-mode="Ignore"><ui:VisualElement name="bor-gas-isi" class="overlay__gas-isi" picking-mode="Ignore" /></ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="pompa" class="eg-lapis" picking-mode="Ignore">
+            <ui:VisualElement name="pompa-target" class="overlay__mutlak overlay__bulat overlay__target" picking-mode="Ignore" />
+            <eg:LingkaranBidik name="pompa-cincin" class="overlay__mutlak" picking-mode="Ignore" />
+            <ui:Label name="pompa-tag" class="eg-pil overlay__pil overlay__pil--kecil overlay__tengah" picking-mode="Ignore" text="POMPA" />
+            <ui:Label name="pompa-mulai" class="eg-pil overlay__pil overlay__pil--kecil overlay__tengah" picking-mode="Ignore" text="TEKAN UNTUK MULAI MEMOMPA" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="btn-jepit" class="overlay__mutlak overlay__bulat overlay__jepit" picking-mode="Ignore">
+            <ui:VisualElement name="jepit-isi" class="overlay__bulat overlay__jepit-isi" picking-mode="Ignore" />
+            <ui:Label class="eg-judul overlay__jepit-teks" picking-mode="Ignore" text="JEPIT" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="eg-layar eg-aman" picking-mode="Ignore">
+            <ui:VisualElement class="eg-isi" picking-mode="Ignore" />
+            <ui:VisualElement name="pompa-bawah" class="eg-kartu overlay__bawah" picking-mode="Ignore">
+                <ui:VisualElement class="eg-baris overlay__meter" picking-mode="Ignore">
+                    <ui:Label class="eg-data-tebal overlay__meter-nama" picking-mode="Ignore" text="DRUM" />
+                    <ui:VisualElement name="pompa-drum" class="eg-bar eg-isi" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi overlay__isi-minyak" picking-mode="Ignore" /></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="eg-baris overlay__meter" picking-mode="Ignore">
+                    <ui:Label class="eg-data-tebal overlay__meter-nama" picking-mode="Ignore" text="TEKANAN" />
+                    <ui:VisualElement name="pompa-tekanan" class="eg-bar eg-isi" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi eg-isi--oker" picking-mode="Ignore" /></ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="rad-bawah" class="overlay__bawah-rad" picking-mode="Ignore">
+                <ui:VisualElement class="eg-kartu overlay__rad" picking-mode="Ignore">
+                    <ui:VisualElement class="eg-baris" picking-mode="Ignore">
+                        <ui:Label class="status__tag overlay__rad-tag" picking-mode="Ignore" text="RAD" />
+                        <ui:Label name="rad-angka" class="eg-data-tebal overlay__rad-angka" picking-mode="Ignore" text="0" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="rad-bar" class="eg-bar eg-bar--tebal" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi overlay__isi-uranium" picking-mode="Ignore" /></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label name="rad-tren" class="eg-pil eg-pil--angka overlay__pil overlay__pil--kecil overlay__tren" picking-mode="Ignore" text="SINYAL MENGUAT" />
+                <ui:VisualElement name="dosis-baris" class="eg-kartu overlay__bawah eg-baris overlay__dosis" picking-mode="Ignore">
+                    <ui:Label class="eg-data-tebal overlay__meter-nama" picking-mode="Ignore" text="DOSIS" />
+                    <ui:VisualElement name="dosis-bar" class="eg-bar eg-isi" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi eg-isi--oker" picking-mode="Ignore" /></ui:VisualElement>
+                    <ui:Label name="dosis-hitung" class="eg-data-tebal overlay__dosis-hitung" picking-mode="Ignore" text="0/3" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -7,7 +7,7 @@ namespace EnerGo
     // then pick its fragments up with the tongs (hold JEPIT while aiming) before the radiation dose fills up.
     public partial class ARCapturePrototype
     {
-        private enum UraniumPhase { None, Search, Collect, Done, Failed }
+        public enum UraniumPhase { None, Search, Collect, Done, Failed }
 
         private static readonly Color UraniumGlow = new Color(0.22f, 1f, 0.08f); // #39FF14
         private const float UraniumFragmentSize = 1.8f, UraniumOreDistance = 1.6f; // sda_uranium_serpihan is 0.12 m long
@@ -27,7 +27,6 @@ namespace EnerGo
         private float uraniumGravity;
         private int uraniumMeter, uraniumTrendFrom, uraniumTrend;   // RAD 0..100, value at the start of the trend window, -1/0/+1
         private float uraniumTrendAt;
-        private GUIStyle uraniumRadStyle;
         private float uraniumRevealAt, uraniumPhaseAt;
         private string uraniumFailText = "";
 
@@ -245,96 +244,28 @@ namespace EnerGo
             feedback = "CARI BIJIH URANIUM BARU";
         }
 
-        private void DrawUraniumHud(float x, float y, float w)
+        private HudStatus ReadUraniumHud()
         {
-            string line;
-            bool warn;
-            float bar;
-            string label;
+            string count = uraniumCollected + "/" + UraniumMath.FragmentCount;
+            float got = uraniumCollected / (float)UraniumMath.FragmentCount;
             switch (uraniumPhase)
             {
                 case UraniumPhase.Search:
-                    line = uraniumLockHold > 0f ? "SINYAL KUAT! TAHAN ARAH HP" : "IKUTI SEKTOR HIJAU · CARI RAD TERTINGGI";
-                    warn = false;
-                    bar = uraniumMeter / 100f;
-                    label = uraniumMeter.ToString();
-                    break;
+                    return HudStatus.WithBar(uraniumLockHold > 0f ? "SINYAL KUAT! TAHAN ARAH HP" : "IKUTI SEKTOR HIJAU · CARI RAD TERTINGGI", false, uraniumMeter / 100f, uraniumMeter.ToString());
                 case UraniumPhase.Done:
-                    line = "URANIUM AMAN DI WADAH TIMBAL!";
-                    warn = false;
-                    bar = 1f;
-                    label = UraniumMath.FragmentCount + "/" + UraniumMath.FragmentCount;
-                    break;
+                    return HudStatus.WithBar("URANIUM AMAN DI WADAH TIMBAL!", false, 1f, UraniumMath.FragmentCount + "/" + UraniumMath.FragmentCount);
                 case UraniumPhase.Failed:
-                    line = uraniumFailText;
-                    warn = true;
-                    bar = uraniumCollected / (float)UraniumMath.FragmentCount;
-                    label = uraniumCollected + "/" + UraniumMath.FragmentCount;
-                    break;
+                    return HudStatus.Failed(uraniumFailText, got, count);
                 default:
                     bool lost = Time.time - uraniumGripLostAt < 1f;
-                    line = lost ? "JEPITAN LEPAS! PEGANG HP STABIL"
+                    string line = lost ? "JEPITAN LEPAS! PEGANG HP STABIL"
                         : uraniumGrip > 0f ? "MENJEPIT... TAHAN"
                         : uraniumAngle <= UraniumMath.GripAngleDeg ? "TAHAN TOMBOL JEPIT"
                         : "CARI SERPIHAN · IKUTI RAD";
-                    warn = lost || uraniumDose > 0.75f;
-                    bar = uraniumCollected / (float)UraniumMath.FragmentCount;
-                    label = uraniumCollected + "/" + UraniumMath.FragmentCount;
-                    break;
+                    return HudStatus.WithBar(line, lost || uraniumDose > 0.75f, got, count);
             }
-            DrawHudBox(new Rect(x, y, w, 64f), warn ? HudWarn : HudOk);
-            GUI.Label(new Rect(x + 10f, y + 8f, w - 20f, 20f), line, warn ? styleRadarAlert : styleRadarLocked);
-            DrawHudBar(x + 20f, y + 36f, w - 40f, bar, warn ? HudWarn : HudOk, label);
         }
 
-        // Small dark pill with centred white text, kept 8 px inside the screen edges; readable over the camera feed.
-        private void DrawHudTag(float cx, float y, float w, string text, float sw)
-        {
-            if (hudTagStyle == null)
-                hudTagStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
-            var r = new Rect(Mathf.Clamp(cx - w * 0.5f, 8f, sw - 8f - w), y, w, 26f);
-            EnerGoUI.DrawPill(r);
-            GUI.Label(r, text, hudTagStyle);
-        }
-        private GUIStyle hudTagStyle;
 
-        // Search and Collect: aiming reticle + big RAD meter with a trend line. Collect adds the JEPIT button and the dose bar.
-        private void DrawUraniumOverlay(float sw, float sh)
-        {
-            if (uraniumPhase != UraniumPhase.Search && uraniumPhase != UraniumPhase.Collect) return;
-            float lockAngle = uraniumPhase == UraniumPhase.Search ? UraniumMath.RevealAngleDeg : UraniumMath.GripAngleDeg;
-            bool near = uraniumAngle <= lockAngle;
-            float rr = ReticleRadius * (near ? 1f + 0.06f * Mathf.Sin(Time.time * 10f) : 1f);
-            EnerGoUI.DrawPanel(new Rect(sw * 0.5f - rr, sh * 0.5f - rr, rr * 2f, rr * 2f),
-                near ? EnerGoUI.Alpha(UraniumGlow, 0.15f) : Color.clear, near ? UraniumGlow : new Color(1f, 1f, 1f, 0.9f), rr, 3f);
-
-            if (uraniumRadStyle == null) uraniumRadStyle = new GUIStyle(styleRadarLocked) { fontSize = 26, alignment = TextAnchor.MiddleCenter };
-            float mw = Mathf.Min(sw - 64f, 300f);
-            var m = new Rect((sw - mw) * 0.5f, sh - 176f, mw, 64f);
-            DrawHudBox(m, near ? HudOk : (Color?)null);
-            GUI.Label(new Rect(m.x, m.y + 4f, mw, 30f), "RAD " + uraniumMeter, uraniumRadStyle);
-            Color heat = Color.Lerp(EnerGoUI.Muted, UraniumGlow, uraniumMeter / 100f);
-            EnerGoUI.DrawBar(new Rect(m.x + 16f, m.y + 38f, mw - 32f, 14f), uraniumMeter / 100f, heat);
-            string trend = uraniumTrend > 0 ? "SINYAL MENGUAT" : uraniumTrend < 0 ? "SINYAL MELEMAH" : "";
-            if (trend.Length > 0) DrawHudTag(sw * 0.5f, m.yMax + 4f, 160f, trend, sw);
-            if (uraniumPhase == UraniumPhase.Search) return;
-
-            // JEPIT: round button; the inner disc grows with the grip.
-            UraniumGripRect(sw, sh, out Rect btn);
-            var face = EnerGoUI.DrawButton(btn, uraniumGripHeld ? ButtonKind.Orange : ButtonKind.Dark, uraniumGripHeld);
-            if (uraniumGrip > 0f)
-            {
-                float gr = face.width * 0.42f * uraniumGrip;
-                EnerGoUI.DrawPanel(new Rect(face.center.x - gr, face.center.y - gr, gr * 2f, gr * 2f), EnerGoUI.Alpha(UraniumGlow, 0.8f), Color.clear, gr);
-            }
-            EnerGoUI.ButtonLabel(face, "JEPIT", 20, ButtonKind.Dark);
-
-            float dw = Mathf.Min(sw - 64f, 320f);
-            var dose = new Rect((sw - dw) * 0.5f, sh - 104f, dw, 34f);
-            bool high = uraniumDose > 0.75f;
-            DrawHudBox(dose, high ? HudWarn : (Color?)null);
-            GUI.Label(new Rect(dose.x + 10f, dose.y + 8f, 60f, 18f), "DOSIS", styleTapsCounter);
-            EnerGoUI.DrawBar(new Rect(dose.x + 70f, dose.y + 8f, dw - 84f, 18f), uraniumDose, high ? EnerGoUI.BadTop : EnerGoUI.OrangeTop, high ? EnerGoUI.BadBot : EnerGoUI.OrangeBot);
-        }
     }
 }

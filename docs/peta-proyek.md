@@ -1,5 +1,7 @@
 # Peta Proyek EnerGo
 
+> **Pembaruan 5 Nov 2026:** semua layar sudah pindah ke UI Toolkit dan tidak ada lagi `OnGUI`, `EnerGoUI`, font Fredoka/Lilita, atau `Resources/UI/Icons`. Tampilan kini ada di `Assets/UI` (UXML, USS) dan `Assets/EnerGo/Scripts/UI` (`LobbyView`, `RadarView`, `CaptureView` beserta `.Quiz` dan `.Overlay`). Keadaan yang dibaca overlay ada di `ARCapturePrototype.Overlay.cs`. Nama fungsi gambar dan nomor baris IMGUI di bawah ini adalah catatan saat dokumen dibuat.
+
 Dibuat 3 Nov 2026 dari branch `feat/ui-arcade-cerah` (commit d114c55). Dokumen ini hanya membaca kode, tidak ada kode yang diubah. Semua path relatif ke root repo, nomor baris dari kode saat ini.
 
 Script game ada di `Assets/EnerGo/Scripts/`, resource di `Assets/EnerGo/Resources/` (bukan `Assets/Resources/`, folder itu ada tapi kosong). Folder `Assets/UI/` belum ada.

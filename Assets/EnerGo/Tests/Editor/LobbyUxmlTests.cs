@@ -26,6 +26,45 @@ namespace EnerGo.Tests
                 "mode-kamera", "btn-berburu", "btn-panduan", "btn-latihan", "btn-pengaturan");
 
         [Test]
+        public void RadarHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Radar.uxml"),
+                "btn-kembali", "pil-spawn", "radar-disk", "info-kompas", "info-gps", "kartu-target", "target-ikon", "target-nama",
+                "target-jarak", "target-panah", "target-kosong", "btn-tangkap", "kartu-gps", "gps-judul", "gps-isi", "btn-coba-lagi",
+                "btn-latihan-gps", "kartu-tunggu", "lapis-aman", "btn-mengerti");
+
+        [Test]
+        public void CaptureFrameHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Tangkap.uxml"),
+                "lapis-hud", "btn-kembali", "btn-mode", "pil-mode", "pil-sda", "pil-sda-ikon", "pil-sda-teks", "kotak-status", "status-tag",
+                "status-teks", "status-sub", "status-bar", "status-angka", "pita-kompas", "btn-ulang", "riak", "lapis-panduan",
+                "kartu-panduan", "panduan-ingatkan", "panduan-centang", "btn-panduan-tutup", "btn-panduan-utama");
+
+        [Test]
+        public void GuideReminderIsAButtonSoItDoesNotFlipThePage() =>
+            Assert.IsNotNull(Clone("Assets/UI/Screens/KartuPanduan.uxml").Q<UnityEngine.UIElements.Button>("panduan-ingatkan"));
+
+        [Test]
+        public void FeedbackChipHasAnIconElement() => AssertNames(Clone("Assets/UI/Screens/Kuis.uxml"), "balik-jawab-ikon");
+
+        [Test]
+        public void TrendPillUsesTheFontThatHasArrows() =>
+            Assert.IsTrue(Clone("Assets/UI/Screens/Overlay.uxml").Q("rad-tren").ClassListContains("eg-pil--angka"));
+
+        [Test]
+        public void OverlayHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Overlay.uxml"),
+                "bidik", "bidik-persen", "dulang-pil", "dulang-waterpass", "dulang-hitung", "dulang-mulai", "kartu-terbuang", "btn-endapan-baru",
+                "bor-label", "bor-gas", "pompa-cincin", "pompa-drum", "pompa-tekanan", "rad-angka", "rad-tren", "btn-jepit", "jepit-isi", "dosis-bar");
+
+        [Test]
+        public void QuizHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Kuis.uxml"),
+                "lapis-kuis", "kuis-penanda", "pil-soal", "kuis-soal", "kartu-soal", "soal-waktu", "soal-detik", "soal-ikon", "soal-teks", "cap-jawab",
+                "btn-benar", "btn-salah", "kartu-balik", "balik-selotip", "balik-jawab", "balik-ikon", "balik-teks", "balik-unit", "btn-lanjut", "lanjut-isi",
+                "kuis-hasil", "hasil-judul", "kartu-hasil", "hasil-bintang", "hasil-skor", "hasil-ikon", "hasil-plus", "hasil-mutu", "hasil-rincian", "hasil-pesan",
+                "btn-selesai-hasil", "kuis-error", "kuis-pendar-kiri", "kuis-pendar-kanan");
+
+        [Test]
         public void SceneRootHasEveryLayer() =>
             AssertNames(Clone("Assets/UI/Screens/LobbyScene.uxml"),
                 "lapis-splash", "lapis-lobby", "lapis-sheet", "lapis-panduan", "lapis-transisi");

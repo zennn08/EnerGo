@@ -12,6 +12,10 @@
             <ui:Label name="panduan-judul" class="eg-judul-kartu" text="Judul" />
             <ui:Label name="panduan-isi" class="eg-isi-teks panduan__isi" text="Isi" />
             <ui:VisualElement name="panduan-titik" class="eg-tengah panduan__titik" />
+            <ui:Button name="panduan-ingatkan" class="eg-baris panduan__ingatkan">
+                <ui:VisualElement name="panduan-centang" class="panduan__centang" picking-mode="Ignore" />
+                <ui:Label class="eg-kecil" text="Jangan ingatkan lagi" picking-mode="Ignore" />
+            </ui:Button>
             <ui:VisualElement class="eg-baris">
                 <ui:Button name="btn-panduan-tutup" class="eg-btn eg-btn--kecil eg-btn--kertas" text="TUTUP" />
                 <ui:Button name="btn-panduan-utama" class="eg-btn eg-btn--utama eg-isi panduan__utama" text="LANJUT" />

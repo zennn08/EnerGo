@@ -40,7 +40,7 @@ namespace EnerGo
         private GameObject goldModel;
         private GameObject sunModel;   // Resources/Sun/sun; falls back to a yellow sphere while it has no mesh
         private string resourceId;
-        private GuideViewer guide; // pre-game guide overlay; null = closed
+        private bool guideOpen; // the pre-game guide overlay is showing
         private CompassAnchor compass;
         private float captureBearing; // compass bearing of this capture's SDA (radar), random in practice mode
         private float resultShownAt;
@@ -108,7 +108,7 @@ namespace EnerGo
         // Gold "Stabilizer" mini-game (mendulang): tap the deposit to scoop sand, then swirl the phone's tilt
         // in slow circles (accelerometer) so the sand washes over the rim and the gold flakes stay behind.
         // The rules and their tuning knobs are in DulangMath.
-        private enum GoldPhase { None, Leveling, Countdown, Panning, Done, Failed }
+        public enum GoldPhase { None, Leveling, Countdown, Panning, Done, Failed }
         private const float GoldFlatDeg = 12f;           // "datar": screen facing up within this many degrees
         private const float GoldFlatHoldSec = 1f;        // hold it level this long before the countdown
         private const float GoldCountdownSec = 3f;       // 3-2-1, then "MULAI!"
@@ -156,32 +156,15 @@ namespace EnerGo
         private Vector2  cardDragStart   = Vector2.zero;   // screen-space drag start
         private bool     cardFlicking    = false;          // animating off-screen
         private bool     cardReturning   = false;          // snapping back to center
-        private const float SwipeThreshold   = 90f;        // pixels (scaled) to commit
         private const float FlickSpeed       = 2800f;      // pixels/sec exit speed
         private const float ReturnSmoothing  = 12f;        // lerp speed for snap-back
-        private GUIStyle styleCardStatement;
-        private GUIStyle styleCardHint;
-        private bool cardStylesInit = false;
 
         // Visual Feedback
         private string feedback = "Memulai inisialisasi sensor spasial...";
         private float lastHitTime = -10f;
         private Vector2 lastHitScreenPos;
 
-        // UI Textures
-        private Texture2D texWhite;
-
-        // Styles
-        private GUIStyle styleHeaderTag;
-        private GUIStyle styleHeaderVal;
-        private GUIStyle styleGoldVal;
-        private GUIStyle styleRadarAlert;
-        private GUIStyle styleRadarLocked;
-        private GUIStyle styleTapsCounter;
-        private GUIStyle styleBtnText;
-        private GUIStyle styleBtnWarn;
-        private GUIStyle styleStatusSub;
-        private bool stylesInitialized = false;
+        private static readonly Color CameraFallback = new Color32(0x14, 0x21, 0x3A, 0xff);
 
         private float HudScale => Mathf.Max(1f, Mathf.Min(Screen.width / 480f, Screen.height / 800f));
 
@@ -224,14 +207,12 @@ namespace EnerGo
             captureBearing = ExploreSession.PendingSpawnId != null && ExploreSession.PendingBearingDeg.HasValue
                 ? ExploreSession.PendingBearingDeg.Value : Random.Range(0f, 360f);
 
-            CreateSolidTextures();
-
             // Set camera background fallback color
             if (arCamera != null)
             {
-                arCamera.backgroundColor = EnerGoUI.Ink;
+                arCamera.backgroundColor = CameraFallback;
             }
-            if (save.pendingCapture == null && GuideViewer.ShouldShow(resourceId)) guide = new GuideViewer(resourceId, withStart: true);
+            if (save.pendingCapture == null && GuideViewer.ShouldShow(resourceId)) guideOpen = true;
         }
 
         private void Start()
@@ -294,7 +275,7 @@ namespace EnerGo
                 if (usingGyro)
                 {
                     arCamera.clearFlags = CameraClearFlags.SolidColor;
-                    arCamera.backgroundColor = EnerGoUI.Ink;
+                    arCamera.backgroundColor = CameraFallback;
                 }
                 else
                 {
@@ -303,20 +284,9 @@ namespace EnerGo
             }
         }
 
-        private void CreateSolidTextures()
-        {
-            if (texWhite == null)
-            {
-                texWhite = new Texture2D(2, 2);
-                texWhite.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
-                texWhite.Apply();
-            }
-        }
-
         private void OnDestroy()
         {
             if (target != null) Destroy(target);
-            if (texWhite != null) Destroy(texWhite);
             if (SFXManager.Instance != null) // manager outlives the scene
             {
                 SFXManager.Instance.StopMatahari();
@@ -417,7 +387,7 @@ namespace EnerGo
 
             // 3. Target Spawning
             bool canSpawn = (isUsingGyro || ARSession.state == ARSessionState.SessionTracking);
-            if (EnerGoProgress.Current.pendingCapture == null && guide == null && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime && compass.ReadyToPlace)
+            if (EnerGoProgress.Current.pendingCapture == null && !guideOpen && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime && compass.ReadyToPlace)
             {
                 // Place the first target in view so sensor-mode users see an immediate response.
                 // A failed gold pan hides the next deposit somewhere around the player instead of in front.
@@ -471,7 +441,7 @@ namespace EnerGo
             }
         }
 
-        private float QuizTimeLeft() => Mathf.Max(0f, QuizSecondsPerQuestion - (Time.time - quizShownAt));
+        private float QuizTimeLeftNow() => Mathf.Max(0f, QuizSecondsPerQuestion - (Time.time - quizShownAt));
 
         private void UpdateGyroCamera()
         {
@@ -514,7 +484,7 @@ namespace EnerGo
 
         private void HandleInputs()
         {
-            if (guide != null) return; // the overlay handles its own taps
+            if (guideOpen) return; // the overlay handles its own taps
             // ── When quiz card is showing, route input to card swipe ──
             if (EnerGoProgress.Current.pendingCapture != null
                 && EnerGoProgress.Current.pendingCapture.state == "awaiting-analysis")
@@ -572,7 +542,8 @@ namespace EnerGo
         {
             if (cardFlicking) return; // ignore input while card is animating off
 
-            float scale = HudScale;
+            // The card offset is in panel units, so the swipe threshold is the same distance on every phone.
+            float scale = Screen.width / CaptureScreens.PanelWidth;
 
             // ── TOUCH ──
             foreach (var touch in EnhancedTouch.activeTouches)
@@ -648,7 +619,7 @@ namespace EnerGo
         private void CommitOrReturnCard()
         {
             // Commit answer: slide kanan = true (BENAR), swipe kiri = false (SALAH)
-            if (Mathf.Abs(cardOffset.x) >= SwipeThreshold) CommitAnswer(cardOffset.x > 0f);
+            if (CaptureScreens.PastThreshold(cardOffset.x)) CommitAnswer(cardOffset.x > 0f);
             else cardReturning = true;
         }
 
@@ -682,7 +653,6 @@ namespace EnerGo
                 isDraggingCard = false;
                 cardReturning = false;
                 cardOffset = new Vector2(answer ? 4f : -4f, 0f);
-                EnerGoUI.BlockTaps(0.35f); // the feedback card draws this frame; its button must not take this touch
                 CommitAnswer(answer);
                 return true;
             }
@@ -783,12 +753,7 @@ namespace EnerGo
             touches++;
 
             // Ignore taps on UI top or bottom regions
-            float scale = HudScale;
-            float guiY = (Screen.height - screenPosition.y) / scale;
-            if (guiY < 128f || guiY > (Screen.height / scale - 70f))
-            {
-                return false;
-            }
+            if (OverHudBand(screenPosition)) return false;
 
             if (target == null || arCamera == null)
             {
@@ -1286,86 +1251,6 @@ namespace EnerGo
             radius = Mathf.Min(sw * 0.4f, 160f);
         }
 
-        // Dots round the pan show the circle to tilt along: one runs ahead until the player is swirling,
-        // and the big one shows where the phone is tipped right now.
-        private void DrawGoldGuide(Vector2 c, float R)
-        {
-            float ring = R * 1.12f;
-            Rect Dot(float deg, float r)
-            {
-                float a = deg * Mathf.Deg2Rad;
-                return new Rect(c.x + Mathf.Cos(a) * ring - r, c.y - Mathf.Sin(a) * ring - r, r * 2f, r * 2f);
-            }
-            bool swirling = Mathf.Abs(goldSwirl) >= DulangMath.MinSwirl && goldTiltMag >= DulangMath.MinTilt;
-            var paper = EnerGoUI.Alpha(EnerGoUI.Paper, swirling ? 0.35f : 0.8f);
-            for (int i = 0; i < 16; i++) { var d = Dot(i * 22.5f, 2.5f); EnerGoUI.DrawPanel(d, paper, Color.clear, 2.5f); }
-            if (!swirling)
-            {
-                var lead = Dot(Time.time * 90f, 6f);
-                EnerGoUI.DrawPanel(lead, EnerGoUI.Paper, EnerGoUI.Ink, 6f, 1.5f);
-            }
-            if (goldTiltMag >= DulangMath.MinTilt * 0.5f)
-            {
-                var now = Dot(Mathf.Atan2(goldTilt.y, goldTilt.x) * Mathf.Rad2Deg, 9f);
-                EnerGoUI.DrawPanel(now, goldRough ? EnerGoUI.Danger : swirling ? HudOk : EnerGoUI.Orange, EnerGoUI.Ink, 9f, 2f);
-            }
-        }
-
-        // Overlays on the 3D pan: gold count, tilt guide, spirit level, countdown, MULAI! and the fail card.
-        private void DrawGoldPan(float sw, float sh)
-        {
-            GoldPanRect(sw, sh, out Vector2 c, out float R);
-            Rect Circle(Vector2 p, float r) => new Rect(p.x - r, p.y - r, r * 2f, r * 2f);
-            var mint = HudOk;
-
-            // The pan itself, its water, sand and gold are the 3D Dulang (ARCapturePrototype.Dulang.cs); this draws the overlays.
-
-            if (goldPhase == GoldPhase.Panning) DrawGoldGuide(c, R);
-            if (goldPhase >= GoldPhase.Panning)
-            {
-                DrawHudPill(new Rect(c.x - 70f, c.y - R - 50f, 140f, 40f), $"EMAS {GoldLeft()}/{GoldPieces}", Color.white);
-            }
-
-            var big = EnerGoUI.Title(60, Color.white);
-            if (goldPhase == GoldPhase.Leveling)
-            {
-                // Spirit level: centre the bubble in the ring.
-                bool flat = goldFlatHold > 0f;
-                float ringR = R * 0.2f;
-                EnerGoUI.DrawPanel(Circle(c, ringR), new Color(0f, 0f, 0f, 0.25f), flat ? mint : new Color(1f, 1f, 1f, 0.8f), ringR, 2.5f);
-                Vector2 b = Vector2.ClampMagnitude(goldBubble * R * 1.6f, R * 0.7f);
-                EnerGoUI.DrawPanel(Circle(c + b, 11f), new Color(1f, 1f, 1f, 0.85f), flat ? mint : Color.white, 11f, 2f);
-            }
-            else if (goldPhase == GoldPhase.Countdown)
-            {
-                int n = Mathf.Clamp(Mathf.CeilToInt(GoldCountdownSec - (Time.time - goldPhaseAt)), 1, 3);
-                var card = new Rect(c.x - 100f, c.y - 62f, 200f, 132f);
-                EnerGoUI.DrawCard(card);
-                EnerGoUI.DrawRibbon(card, "SIAP?", ButtonKind.Orange);
-                EnerGoUI.DrawStrokedLabel(new Rect(card.x, card.y + 34f, card.width, 80f), n.ToString(), big, EnerGoUI.M(3f), EnerGoUI.M(3f));
-            }
-            else if (goldPhase == GoldPhase.Panning && Time.time - goldPhaseAt < 0.8f)
-            {
-                GUI.color = new Color(1f, 1f, 1f, 1f - (Time.time - goldPhaseAt) / 0.8f);
-                EnerGoUI.DrawStrokedLabel(new Rect(c.x - 150f, c.y - 40f, 300f, 80f), "MULAI!", big, EnerGoUI.M(3f), EnerGoUI.M(3f));
-                GUI.color = Color.white;
-            }
-            else if (goldPhase == GoldPhase.Failed)
-            {
-                InitCardStyles();
-                float w = Mathf.Min(340f, sw * 0.86f);
-                var card = new Rect(c.x - w * 0.5f, c.y - 90f, w, 196f);
-                EnerGoUI.DrawCard(card);
-                EnerGoUI.DrawRibbon(card, "EMAS TERBUANG!", ButtonKind.Bad);
-                GUI.Label(new Rect(card.x + 18f, card.y + 46f, card.width - 36f, 56f), "Gerakanmu terlalu kencang, emasnya tumpah dari dulang.", styleCardHint);
-                if (DrawPrimaryBtn(new Rect(card.x + 18f, card.yMax - 78f, card.width - 36f, 60f), "CARI ENDAPAN BARU"))
-                {
-                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                    RetryGoldAtNewDeposit();
-                }
-            }
-        }
-
         // World point at this capture's bearing (plus a yaw offset), tilted by pitch, `dist` metres from the camera.
         private Vector3 AtBearing(float yawOffsetDeg, float pitchDeg, float dist) =>
             arCamera.transform.position + compass.Direction(captureBearing + yawOffsetDeg, pitchDeg) * dist;
@@ -1552,604 +1437,164 @@ namespace EnerGo
             return any;
         }
 
-        private void InitStyles()
+        // State and actions for CaptureView.
+        public CaptureScreen CurrentScreen => CaptureScreens.For(EnerGoProgress.Current.pendingCapture != null, EnerGoProgress.Current.pendingCapture?.state);
+        public bool GuideOpen => guideOpen;
+        public bool HasARSession => FindFirstObjectByType<ARSession>() != null;
+        public string ResourceId => resourceId;
+        public string BackLabel => ExploreSession.PendingSpawnId != null ? "‹ RADAR" : "‹ LOBBY";
+        public string ModeLabel => isUsingGyro ? (attitudeSensor != null || angularGyro != null ? "SENSOR 360" : "DRAG 360") : "ARCORE";
+        public string ResourceUnitsLabel => EnerGoProgress.Current.Get(resourceId).Total + " UNIT";
+        public float LastHitTime => lastHitTime;
+        public Vector2 LastHitScreenPos => lastHitScreenPos;
+
+        public void BackFromCapture()
         {
-            if (stylesInitialized && styleHeaderTag != null) return;
-
-            styleHeaderTag = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 10,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Sun }
-            };
-
-            styleHeaderVal = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 14,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.white }
-            };
-
-            styleGoldVal = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 14,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.white }
-            };
-
-            styleRadarAlert = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 15,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.OrangeTop }
-            };
-
-            styleRadarLocked = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 15,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.OkTop }
-            };
-
-            styleTapsCounter = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 13,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleLeft,
-                normal = { textColor = Color.white }
-            };
-
-            styleBtnText = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 12,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Ink }
-            };
-
-            styleBtnWarn = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 12,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.OrangeLip }
-            };
-
-            styleStatusSub = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 12,
-                fontStyle = FontStyle.Normal,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(1f, 1f, 1f, 0.85f) }
-            };
-
-            EnerGoUI.ApplyFont(styleHeaderTag, styleHeaderVal, styleGoldVal, styleRadarAlert, styleRadarLocked,
-                styleTapsCounter, styleBtnText, styleBtnWarn, styleStatusSub);
-            stylesInitialized = true;
-        }
-
-        private void OnGUI()
-        {
-            InitStyles();
-
-            if (texWhite == null) CreateSolidTextures();
-
-            var prevMatrix = GUI.matrix;
-            var prevColor = GUI.color;
-
-            float scale = HudScale;
-            GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
-
-            float sw = Screen.width / scale;
-            float sh = Screen.height / scale;
-
-            float safeTop = EnerGoUI.SafeTop(scale);
-
-            // --- 1. TOP TELEMETRY BAR ---
-            float pillH = 50f;
-
-            // Return to Lobby Button (Left)
-            var lobbyRect = new Rect(14f, safeTop, 90f, pillH);
+            if (EnerGoProgress.Current.pendingCapture != null) return;
             bool fromRadar = ExploreSession.PendingSpawnId != null;
-            if (EnerGoProgress.Current.pendingCapture == null && DrawBtn(lobbyRect, fromRadar ? "‹  RADAR" : "‹  LOBBY", styleBtnText))
-            {
-                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
-                ExploreSession.PendingSpawnId = null; // leaving without catching: the spawn stays on the radar
-                SceneManager.LoadScene(fromRadar ? "ExploreScene" : "LobbyScene");
-                return;
-            }
-
-            // Mode Indicator / Switcher (Center)
-            string modeName = isUsingGyro ? (attitudeSensor != null || angularGyro != null ? "SENSOR 360" : "DRAG 360") : "ARCORE";
-            float modeW = 160f;
-            var modeRect = new Rect((sw - modeW) * 0.5f, safeTop, modeW, pillH);
-            bool hasARSession = FindFirstObjectByType<ARSession>() != null;
-            if (!hasARSession) DrawPill(modeRect, "MODE TANPA ARCORE", modeName, styleHeaderTag, styleHeaderVal);
-            if (EnerGoProgress.Current.pendingCapture == null && hasARSession && DrawBtn(modeRect, modeName, isUsingGyro ? styleBtnWarn : styleBtnText))
-            {
-                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                // Toggle mode manually
-                ApplyTrackingModeState(!isUsingGyro);
-                if (target != null) Destroy(target);
-                target = null;
-                uraniumPhase = UraniumPhase.None;
-                oilPhase = OilPhase.None;
-                nextSpawnTime = Time.time + 0.3f;
-                feedback = isUsingGyro ? "BERALIH KE SENSOR 360" : "BERALIH KE ARCORE";
-            }
-
-            // Resource Badge (Right)
-            float oreW = 105f;
-            var oreRect = new Rect(sw - 14f - oreW, safeTop, oreW, pillH);
-            DrawPill(oreRect, ResourceIds.Name(resourceId).ToUpperInvariant(), $"{EnerGoProgress.Current.Get(resourceId).Total} UNIT", styleHeaderTag, styleGoldVal);
-
-            if (guide == null)
-            {
-            if (resourceId == ResourceIds.Sun && target != null && EnerGoProgress.Current.pendingCapture == null) DrawSunReticle(sw, sh);
-            if (resourceId == ResourceIds.Coal && target != null && EnerGoProgress.Current.pendingCapture == null) DrawCoalPips(scale);
-            if (goldPanning && EnerGoProgress.Current.pendingCapture == null) DrawGoldPan(sw, sh);
-            if (uraniumPhase != UraniumPhase.None && EnerGoProgress.Current.pendingCapture == null) DrawUraniumOverlay(sw, sh);
-            if (oilPhase != OilPhase.None && EnerGoProgress.Current.pendingCapture == null) DrawOilOverlay(sw, sh);
-
-            // --- 2. RADAR & TARGET DIRECTION HUD ---
-            DrawRadarHUD(sw, safeTop + pillH + 10f);
-            if (EnerGoProgress.Current.pendingCapture == null) DrawCompassStrip(sw, safeTop + pillH + 10f + 72f);
-            }
-
-            // --- 3. BOTTOM CONTROL BAR ---
-            float botY = sh - 52f;
-            float botBtnW = Mathf.Min(260f, sw - 32f);
-            var resetRect = new Rect((sw - botBtnW) * 0.5f, botY, botBtnW, 40f);
-
-            string resetLabel = "MUNCULKAN ULANG TARGET";
-            if (guide == null && EnerGoProgress.Current.pendingCapture == null && DrawBtn(resetRect, resetLabel, styleBtnText))
-            {
-                if (target != null) Destroy(target);
-                target = null;
-                uraniumPhase = UraniumPhase.None;
-                oilPhase = OilPhase.None;
-                lookPitch = 0f;
-                lookYaw = 0f;
-                if (arCamera != null) arCamera.transform.localRotation = Quaternion.identity;
-                nextSpawnTime = Time.time + 0.2f;
-                feedback = resourceId == ResourceIds.Sun ? "CARI CAHAYA DI DEPAN" : "IKUTI PITA KOMPAS";
-            }
-
-            // Hit Spark Ripple
-            if (Time.time - lastHitTime < 0.35f)
-            {
-                // Expanding, fading ring where the finger landed.
-                float t = (Time.time - lastHitTime) / 0.35f;
-                Vector2 hpos = new Vector2(lastHitScreenPos.x, Screen.height - lastHitScreenPos.y) / scale;
-                float r = Mathf.Lerp(12f, 34f, t);
-                EnerGoUI.DrawPanel(new Rect(hpos.x - r, hpos.y - r, r * 2f, r * 2f), Color.clear, EnerGoUI.Alpha(EnerGoUI.Orange, 1f - t), r, 3f);
-            }
-
-            if (guide != null && guide.Draw(sw, sh, scale) == GuideViewer.Result.Start)
-            {
-                guide = null;
-                nextSpawnTime = Time.time; // the mini-game (and the sun timer) starts now
-            }
-            if (EnerGoProgress.Current.pendingCapture != null) DrawAnalysis(sw, sh);
-            GUI.color = prevColor;
-            GUI.matrix = prevMatrix;
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
+            ExploreSession.PendingSpawnId = null; // leaving without catching: the spawn stays on the radar
+            SceneManager.LoadScene(fromRadar ? "ExploreScene" : "LobbyScene");
         }
 
-        private void InitCardStyles()
+        public void ToggleTrackingMode()
         {
-            if (cardStylesInit) return;
-            styleCardStatement = EnerGoUI.Text(20, true, EnerGoUI.Ink, TextAnchor.MiddleCenter, wrap: true);
-            styleCardHint = EnerGoUI.Text(16, false, EnerGoUI.Muted, TextAnchor.UpperCenter, wrap: true);
-            styleChip = EnerGoUI.Text(14, true, EnerGoUI.Ink);
-            cardStylesInit = true;
+            if (EnerGoProgress.Current.pendingCapture != null) return;
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+            ApplyTrackingModeState(!isUsingGyro);
+            if (target != null) Destroy(target);
+            target = null;
+            uraniumPhase = UraniumPhase.None;
+            oilPhase = OilPhase.None;
+            nextSpawnTime = Time.time + 0.3f;
+            feedback = isUsingGyro ? "BERALIH KE SENSOR 360" : "BERALIH KE ARCORE";
+        }
+
+        public void RespawnTarget()
+        {
+            if (guideOpen || EnerGoProgress.Current.pendingCapture != null) return;
+            if (target != null) Destroy(target);
+            target = null;
+            uraniumPhase = UraniumPhase.None;
+            oilPhase = OilPhase.None;
+            lookPitch = 0f;
+            lookYaw = 0f;
+            if (arCamera != null) arCamera.transform.localRotation = Quaternion.identity;
+            nextSpawnTime = Time.time + 0.2f;
+            feedback = resourceId == ResourceIds.Sun ? "CARI CAHAYA DI DEPAN" : "IKUTI PITA KOMPAS";
+        }
+
+        public void FinishGuide(bool dontRemind)
+        {
+            if (dontRemind) { PlayerPrefs.SetInt(GuideViewer.SkipKey(resourceId), 1); PlayerPrefs.Save(); }
+            guideOpen = false;
+            nextSpawnTime = Time.time; // the mini-game (and the sun timer) starts now
         }
 
         // Right/wrong per question of the current capture, filled in as each feedback card shows (null = not seen).
         private string quizMarksSession;
         private readonly bool?[] quizMarks = new bool?[8];
-        private GUIStyle styleChip;
 
         // ✕ (false, left) and ✓ (true, right) under the quiz card, in GUI units.
         private Rect QuizButtonRect(bool answer, float sw, float sh)
         {
-            float h = EnerGoUI.M(56f) * 0.75f, gap = 16f, w = (Mathf.Min(sw - 40f, 420f) - gap) * 0.5f;
+            float h = 67.2f, gap = 16f, w = (Mathf.Min(sw - 40f, 420f) - gap) * 0.5f;
             float x0 = (sw - w * 2f - gap) * 0.5f;
-            return new Rect(answer ? x0 + w + gap : x0, sh - EnerGoUI.SafeBottom(HudScale) - h, w, h);
+            return new Rect(answer ? x0 + w + gap : x0, sh - UiLayout.SafeBottom(Screen.safeArea.yMin, HudScale) - h, w, h);
         }
 
-        // Rounded white chip; returns its width. Measure-only when `draw` is false.
-        private float DrawChip(float x, float y, string text, string icon, bool draw = true)
+        // State and actions for the quiz screens.
+        public CaptureSession QuizSession => EnerGoProgress.Current.pendingCapture;
+        public QuestionDefinition QuizQuestion => QuizSession == null ? null : QuizBank.Find(QuizSession.questionId, QuizSession.resourceId);
+        public float QuizTimeLeft => QuizTimeLeftNow();
+        public float QuizSeconds => QuizSecondsPerQuestion;
+        public Vector2 CardOffset => cardOffset;
+        public float SecondsSinceFeedback => Time.time - resultShownAt;
+        public Rect AnswerButtonRect(bool answer) => QuizButtonRect(answer, UnityEngine.Screen.width / HudScale, UnityEngine.Screen.height / HudScale);
+        public float GuiToPanel(float panelWidth) => HudScale * panelWidth / UnityEngine.Screen.width;
+
+        public bool AnswerButtonHeld(bool answer)
         {
-            float iconW = icon != null ? 22f : 0f, h = 30f;
-            float w = styleChip.CalcSize(new GUIContent(text)).x + iconW + 22f;
-            if (!draw) return w;
-            var r = new Rect(x, y, w, h);
-            EnerGoUI.DrawPanel(new Rect(r.x, r.y + 3f, r.width, r.height), EnerGoUI.Ink, Color.clear, 10f);
-            EnerGoUI.DrawPanel(r, Color.white, EnerGoUI.Ink, 10f, 2.5f);
-            if (icon != null) EnerGoUI.DrawIcon(new Rect(r.x + 9f, r.y + 5f, 20f, 20f), icon);
-            GUI.Label(new Rect(r.x + 9f + iconW, r.y, w - 18f - iconW, h), text, styleChip);
-            return w;
+            Vector2? p = PointerScreen();
+            if (p == null || cardFlicking) return false;
+            return AnswerButtonRect(answer).Contains(new Vector2(p.Value.x, UnityEngine.Screen.height - p.Value.y) / HudScale);
         }
 
-        // A centred row of chips, wrapping onto a second line when it is wider than `maxW`. Returns the bottom edge.
-        private float DrawChipRow(float cx, float y, float maxW, string[] texts, string[] icons)
+        public bool?[] ReadQuizMarks()
         {
-            const float gap = 8f, rowH = 38f;
-            int start = 0;
-            while (start < texts.Length)
-            {
-                float rowW = 0f; int end = start;
-                while (end < texts.Length)
-                {
-                    float cw = DrawChip(0, 0, texts[end], icons?[end], false);
-                    if (end > start && rowW + gap + cw > maxW) break;
-                    rowW += (end > start ? gap : 0f) + cw; end++;
-                }
-                float x = cx - rowW * 0.5f;
-                for (int i = start; i < end; i++) x += DrawChip(x, y, texts[i], icons?[i]) + gap;
-                y += rowH; start = end;
-            }
-            return y;
-        }
-
-        // Three progress dots (current = Sun, right = Ok ✓, wrong = Bad ✕) and the SOAL n/3 pill.
-        private void DrawQuizTop(CaptureSession session, float sw, float top)
-        {
-            const float d = 30f, gap = 8f;
-            for (int i = 0; i < session.QuestionCount && i < quizMarks.Length; i++)
-            {
-                var r = new Rect(20f + i * (d + gap), top + 8f, d, d);
-                bool? mark = quizMarks[i];
-                bool current = i == session.questionIndex && session.state == "awaiting-analysis";
-                Color fill = mark == true ? EnerGoUI.Success : mark == false ? EnerGoUI.Danger : current ? EnerGoUI.Sun : EnerGoUI.DarkTop;
-                EnerGoUI.DrawPanel(r, fill, EnerGoUI.Ink, d * 0.5f, 3f);
-                if (mark != null) EnerGoUI.DrawIcon(new Rect(r.x + 7f, r.y + 7f, d - 14f, d - 14f), mark.Value ? "check" : "cross");
-            }
-            DrawHudPill(new Rect(sw - 20f - 130f, top, 130f, 46f), "SOAL " + (Mathf.Min(session.questionIndex + 1, session.QuestionCount)) + "/" + session.QuestionCount, EnerGoUI.Sun);
-        }
-
-        private void DrawAnalysis(float sw, float sh)
-        {
-            InitCardStyles();
-
-            var session  = EnerGoProgress.Current.pendingCapture;
-            var question = QuizBank.Find(session.questionId, session.resourceId);
-            if (question == null) return;
-
+            var session = QuizSession;
+            if (session == null) return quizMarks;
             if (quizMarksSession != session.sessionId)
             {
                 quizMarksSession = session.sessionId;
                 for (int i = 0; i < quizMarks.Length; i++) quizMarks[i] = null;
             }
             if (session.state != "awaiting-analysis" && session.questionIndex < quizMarks.Length) quizMarks[session.questionIndex] = session.correct;
-
-            EnerGoUI.DrawWorld(sw, sh, 0.45f);
-            float top = EnerGoUI.SafeTop(HudScale);
-            DrawQuizTop(session, sw, top);
-
-            float w = Mathf.Min(sw - 40f, 400f), x = (sw - w) * 0.5f;
-            float pad = 22f, resW = w - pad * 2f;
-            string icon = EnerGoUI.ResourceIcon(session.resourceId);
-
-            // ── FEEDBACK after each answer: right/wrong + the explanation ──
-            if (session.state == "feedback")
-            {
-                float explainH = styleCardHint.CalcHeight(new GUIContent(question.explanation), resW);
-                float cardH = 48f + 34f + 12f + 64f + 12f + explainH + (session.correct ? 46f : 0f) + 22f + 64f + pad;
-                float y = Mathf.Max(top + 80f, (sh - cardH) * 0.5f);
-                var card = new Rect(x, y, w, cardH);
-                EnerGoUI.DrawCard(card);
-                EnerGoUI.DrawRibbon(card, session.correct ? "BENAR!" : session.timedOut ? "WAKTU HABIS" : "SALAH", session.correct ? ButtonKind.Ok : ButtonKind.Bad);
-
-                float cy2 = y + 48f;
-                string verdict = question.correctAnswer ? "<color=#2F8F24>BENAR</color>" : "<color=#D42A45>SALAH</color>";
-                DrawChipRow(card.center.x, cy2, resW, new[] { "Pernyataan ini " + verdict }, null);
-                cy2 += 34f + 12f;
-                EnerGoUI.DrawIcon(new Rect(card.center.x - 32f, cy2, 64f, 64f), icon);
-                cy2 += 64f + 12f;
-                GUI.Label(new Rect(x + pad, cy2, resW, explainH), question.explanation, styleCardHint);
-                cy2 += explainH;
-                if (session.correct) { DrawChipRow(card.center.x, cy2 + 14f, resW, new[] { "+1 unit" }, new[] { icon }); cy2 += 46f; }
-                cy2 += 22f;
-
-                // A wrong answer holds the button briefly so the explanation actually gets read.
-                float held = session.correct ? 1f : Mathf.Clamp01((Time.time - resultShownAt) / 2f);
-                string next = session.IsLastQuestion ? "LIHAT HASIL" : "SOAL BERIKUTNYA";
-                var btn = new Rect(x + pad, cy2, resW, 64f);
-                if (held >= 1f && DrawPrimaryBtn(btn, next))
-                {
-                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                    if (EnerGoProgress.NextQuestion())
-                    {
-                        cardOffset    = Vector2.zero;
-                        cardFlicking  = false;
-                        cardReturning = false;
-                        isDraggingCard = false;
-                    }
-                }
-                else if (held < 1f)
-                {
-                    var face = EnerGoUI.DrawButton(btn, ButtonKind.Off);
-                    EnerGoUI.DrawPanel(new Rect(face.x + 4f, face.y + 4f, (face.width - 8f) * held, face.height - 8f), new Color(1f, 1f, 1f, 0.45f), Color.clear, 12f);
-                    EnerGoUI.ButtonLabel(face, "BACA DULU...", 20, ButtonKind.Off);
-                }
-
-                if (!string.IsNullOrEmpty(EnerGoProgress.Error))
-                    GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, styleCardHint);
-                return;
-            }
-
-            // ── FINAL RESULT after the last question ──
-            if (session.state == "result")
-            {
-                int count = session.QuestionCount;
-                // Saves from the 1-question version have no correctCount; their single answer is in `correct`.
-                int right = session.questionIds != null && session.questionIds.Length > 0 ? session.correctCount : (session.correct ? 1 : 0);
-                bool pure = right == count;
-                string message = pure ? "Sempurna! Semua jawaban tepat."
-                    : right == 0 ? "Belum ada yang tepat. Coba lagi di tangkapan berikutnya."
-                    : "Bagus! Jawab semua dengan tepat untuk hasil Murni.";
-                float msgH = styleCardHint.CalcHeight(new GUIContent(message), resW);
-                string[] chips = { "Dasar +1", "Kuis +" + right, MiniGameName(session.resourceId) + " " + EnerGoProgress.GradeFor(session.performanceBonus) + " +" + session.performanceBonus };
-                float cardH = 46f + 60f + 46f + 60f + 84f + msgH + 20f + 64f + pad;
-                float y = Mathf.Max(top + 128f, (sh - cardH) * 0.5f + 30f);
-                var card = new Rect(x, y, w, cardH);
-
-                EnerGoUI.DrawStrokedLabel(new Rect(0, y - 122f, sw, 56f), UiLayout.ResultTitle(right, count), EnerGoUI.Title(46, Color.white), EnerGoUI.M(3f), EnerGoUI.M(4f));
-                EnerGoUI.DrawCard(card);
-                EnerGoUI.DrawRibbon(card, "HASIL ANALISIS", ButtonKind.Orange);
-
-                float cy2 = y + 46f;
-                int stars = UiLayout.Stars(right);
-                for (int i = 0; i < 3; i++)
-                {
-                    float s = i == 1 ? 60f : 46f;
-                    float sx = card.center.x + (i - 1) * 58f - s * 0.5f;
-                    EnerGoUI.DrawIcon(new Rect(sx, cy2 + (i == 1 ? 0f : 12f), s, s), i < stars ? "star" : "star_empty");
-                }
-                cy2 += 60f;
-                GUI.Label(new Rect(x, cy2, w, 46f), right + "/" + count + " BENAR", EnerGoUI.Title(36, EnerGoUI.Ink));
-                cy2 += 46f;
-
-                // Reward: icon, a big stroked +N, the quality chip.
-                string plus = "+" + session.rewardQuantity;
-                var plusStyle = EnerGoUI.Title(40, Color.white, TextAnchor.MiddleLeft);
-                string quality = pure ? "Murni" : "Normal";
-                float plusW = plusStyle.CalcSize(new GUIContent(plus)).x, qW = DrawChip(0, 0, quality, null, false);
-                float rowW = 50f + 10f + plusW + 12f + qW, rx = card.center.x - rowW * 0.5f;
-                EnerGoUI.DrawIcon(new Rect(rx, cy2 + 5f, 50f, 50f), icon);
-                EnerGoUI.DrawStrokedLabel(new Rect(rx + 60f, cy2, plusW + 8f, 60f), plus, plusStyle, EnerGoUI.M(2.5f), EnerGoUI.M(2f));
-                DrawChip(rx + 60f + plusW + 12f, cy2 + 15f, quality, null);
-                cy2 += 60f + 8f;
-
-                // Where the units came from: 1 base + 1 per correct answer + the mini-game bonus.
-                cy2 = DrawChipRow(card.center.x, cy2, resW, chips, null) + 8f;
-                GUI.Label(new Rect(x + pad, cy2, resW, msgH), message, styleCardHint);
-                cy2 += msgH + 20f;
-
-                bool backToRadar = !string.IsNullOrEmpty(session.spawnId);
-                if (DrawPrimaryBtn(new Rect(x + pad, cy2, resW, 64f), backToRadar ? "LANJUT BERBURU" : "LANJUT KE LOBBY"))
-                {
-                    if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                    if (EnerGoProgress.ClearResult())
-                    {
-                        cardOffset   = Vector2.zero;
-                        cardFlicking = false;
-                        cardReturning = false;
-                        SceneManager.LoadScene(backToRadar ? "ExploreScene" : "LobbyScene");
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(EnerGoProgress.Error))
-                    GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, styleCardHint);
-                return;
-            }
-
-            // ── SWIPE CARD QUIZ ───────────────────────────────────────────
-            if (cardFlicking && Mathf.Abs(cardOffset.x) > sw * 1.1f)
-            {
-                // Card has fully left the screen – stop animating
-                cardFlicking  = false;
-                cardOffset    = Vector2.zero;
-                cardReturning = false;
-                return;
-            }
-
-            // Title: BENAR ATAU SALAH?, never tilted.
-            var tWhite = EnerGoUI.Title(34, Color.white, TextAnchor.MiddleLeft);
-            var tOrange = EnerGoUI.Title(34, EnerGoUI.TitleOrange, TextAnchor.MiddleLeft);
-            float w1 = tWhite.CalcSize(new GUIContent("BENAR ")).x, w2 = tOrange.CalcSize(new GUIContent("ATAU ")).x, w3 = tWhite.CalcSize(new GUIContent("SALAH?")).x;
-            float tx = (sw - w1 - w2 - w3) * 0.5f, ty = top + 62f;
-            EnerGoUI.DrawStrokedLabel(new Rect(tx, ty, w1 + 4f, 46f), "BENAR ", tWhite, EnerGoUI.M(2.5f), EnerGoUI.M(3f));
-            EnerGoUI.DrawStrokedLabel(new Rect(tx + w1, ty, w2 + 4f, 46f), "ATAU ", tOrange, EnerGoUI.M(2.5f), EnerGoUI.M(3f));
-            EnerGoUI.DrawStrokedLabel(new Rect(tx + w1 + w2, ty, w3 + 4f, 46f), "SALAH?", tWhite, EnerGoUI.M(2.5f), EnerGoUI.M(3f));
-
-            // Answer buttons: the same answer path as a swipe (input is read in HandleCardSwipeInput).
-            for (int i = 0; i < 2; i++)
-            {
-                bool answer = i == 1;
-                var br = QuizButtonRect(answer, sw, sh);
-                var kind = answer ? ButtonKind.Ok : ButtonKind.Bad;
-                var face = EnerGoUI.DrawButton(br, kind, !cardFlicking && EnerGoUI.IsHeld(br, HudScale));
-                float iconS = face.height * 0.42f;
-                var label = EnerGoUI.Title(24, Color.white, TextAnchor.MiddleLeft);
-                string text = answer ? "BENAR" : "SALAH";
-                float lw = label.CalcSize(new GUIContent(text)).x, gx = face.center.x - (iconS + 8f + lw) * 0.5f;
-                EnerGoUI.DrawIcon(new Rect(gx, face.center.y - iconS * 0.5f, iconS, iconS), answer ? "check" : "cross");
-                EnerGoUI.DrawStrokedLabel(new Rect(gx + iconS + 8f, face.y, lw + 6f, face.height - 2f), text, label, EnerGoUI.M(2f), EnerGoUI.M(1.5f));
-            }
-
-            // Card dimensions: between the title and the answer buttons.
-            float btnTop = QuizButtonRect(true, sw, sh).y;
-            float cw = Mathf.Min(sw - 40f, 400f);
-            float ch = Mathf.Min(btnTop - 36f - (ty + 66f), 440f);
-            float baseX = (sw - cw) * 0.5f, baseY = ty + 66f + (btnTop - 36f - (ty + 66f) - ch) * 0.5f;
-
-            // The next card peeking out behind: the only resting tilt on this screen.
-            var stackMatrix = GUI.matrix;
-            GUIUtility.RotateAroundPivot(3f, new Vector2(baseX + cw * 0.5f, baseY + ch * 0.5f));
-            EnerGoUI.DrawPanel(new Rect(baseX + 8f, baseY + 10f, cw - 16f, ch), EnerGoUI.Ink, Color.clear, EnerGoUI.M(24f));
-            EnerGoUI.DrawPanel(new Rect(baseX + 8f, baseY + 4f, cw - 16f, ch - 4f), EnerGoUI.PaperBot, EnerGoUI.Ink, EnerGoUI.M(24f), EnerGoUI.M(5f));
-            GUI.matrix = stackMatrix;
-
-            // Screen edge tints toward the side the card is going.
-            float swipeRatio = Mathf.Clamp01(Mathf.Abs(cardOffset.x) / SwipeThreshold);
-            if (Mathf.Abs(cardOffset.x) > 4f)
-            {
-                bool right = cardOffset.x > 0f;
-                Color edge = EnerGoUI.Alpha(right ? EnerGoUI.Success : EnerGoUI.Danger, 0.35f * swipeRatio);
-                EnerGoUI.DrawPanel(new Rect(right ? sw * 0.5f : 0f, 0f, sw * 0.5f, sh), edge, Color.clear, 0f);
-            }
-
-            float cx = baseX + cardOffset.x;
-            float cy = baseY + cardOffset.y;
-
-            // Rotation while dragged (clamped to ±18°)
-            float rotDeg = Mathf.Clamp(cardOffset.x * 0.08f, -18f, 18f);
-            var prevMatrix = GUI.matrix;
-            GUIUtility.RotateAroundPivot(rotDeg, new Vector2(cx + cw * 0.5f, cy + ch * 0.5f));
-
-            var cardRect = new Rect(cx, cy, cw, ch);
-            Color? border = Mathf.Abs(cardOffset.x) < 4f ? (Color?)null
-                : Color.Lerp(EnerGoUI.Ink, cardOffset.x > 0f ? EnerGoUI.Success : EnerGoUI.Danger, swipeRatio);
-            EnerGoUI.DrawCard(cardRect, -1f, border);
-
-            // ── Timer: clock, bar and seconds; turns red for the last 5 s ──
-            float innerX = cx + pad, innerW = cw - pad * 2f;
-            float left = QuizTimeLeft();
-            bool hurry = left <= 5f;
-            EnerGoUI.DrawIcon(new Rect(innerX, cy + 20f, 26f, 26f), "clock");
-            EnerGoUI.DrawBar(new Rect(innerX + 34f, cy + 24f, innerW - 34f - 40f, 18f), left / QuizSecondsPerQuestion,
-                hurry ? EnerGoUI.BadTop : EnerGoUI.OrangeTop, hurry ? EnerGoUI.BadBot : EnerGoUI.OrangeBot);
-            GUI.Label(new Rect(innerX + innerW - 34f, cy + 18f, 34f, 30f), Mathf.CeilToInt(left).ToString(), EnerGoUI.Title(22, hurry ? EnerGoUI.Danger : EnerGoUI.Ink));
-
-            // ── Resource icon and statement ──
-            float iconSize = Mathf.Min(EnerGoUI.M(74f) * 0.75f, ch * 0.24f);
-            EnerGoUI.DrawIcon(new Rect(cx + cw * 0.5f - iconSize * 0.5f, cy + 66f, iconSize, iconSize), icon);
-            float stTop = cy + 66f + iconSize + 12f;
-            GUI.Label(new Rect(innerX, stTop, innerW, cy + ch - 22f - stTop), question.statement, styleCardStatement);
-
-            // ── BENAR / SALAH stamp while dragged ──
-            if (Mathf.Abs(cardOffset.x) > 4f)
-            {
-                bool right = cardOffset.x > 0f;
-                Color sc = right ? EnerGoUI.Success : EnerGoUI.Danger;
-                var stampStyle = EnerGoUI.Title(36, sc); // fixed colour: Title() caches per colour, fade with GUI.color
-                var prevTint = GUI.color;
-                GUI.color = new Color(1f, 1f, 1f, swipeRatio);
-                string st = right ? "BENAR" : "SALAH";
-                float sw2 = stampStyle.CalcSize(new GUIContent(st)).x + 28f;
-                var sr = new Rect(right ? cx + 20f : cx + cw - 20f - sw2, cy + 56f, sw2, 56f);
-                GUIUtility.RotateAroundPivot(right ? -14f : 14f, sr.center);
-                EnerGoUI.DrawPanel(sr, new Color(1f, 1f, 1f, 0.8f), sc, 12f, 5f);
-                GUI.Label(sr, st, stampStyle);
-                GUI.color = prevTint;
-            }
-
-            GUI.matrix = prevMatrix;
-
-            if (!string.IsNullOrEmpty(EnerGoProgress.Error))
-            {
-                GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, styleCardHint);
-            }
+            return quizMarks;
         }
 
-        private static readonly Color HudFill = EnerGoUI.PillBg;
-        private static readonly Color HudOutline = EnerGoUI.Ink;
-        private static readonly Color HudWarn = EnerGoUI.Orange;
-        private static readonly Color HudOk = EnerGoUI.Success;
-
-        private void DrawRadarHUD(float sw, float hudY)
+        public void NextQuizQuestion()
         {
-            float hudW = sw - 32f;
-            float hudX = 16f;
-            Color accent = HudOutline;
-            string line1 = null, line2 = null;
-            GUIStyle style1 = styleStatusSub;
-            bool locked = false;
-            if (uraniumPhase != UraniumPhase.None) { DrawUraniumHud(hudX, hudY, hudW); return; }
-            if (oilPhase != OilPhase.None) { DrawOilHud(hudX, hudY, hudW); return; }
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+            if (!EnerGoProgress.NextQuestion()) return;
+            cardOffset = Vector2.zero;
+            cardFlicking = false;
+            cardReturning = false;
+            isDraggingCard = false;
+        }
+
+        public void FinishQuizResult()
+        {
+            var session = QuizSession;
+            if (session == null) return;
+            bool backToRadar = !string.IsNullOrEmpty(session.spawnId);
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+            if (!EnerGoProgress.ClearResult()) return;
+            cardOffset = Vector2.zero;
+            cardFlicking = false;
+            cardReturning = false;
+            SceneManager.LoadScene(backToRadar ? "ExploreScene" : "LobbyScene");
+        }
+
+        // Where the units came from: 1 base + 1 per correct answer + the mini-game bonus.
+        public string[] ResultChips(CaptureSession session, int right) => new[] { "Dasar +1", "Kuis +" + right, MiniGameName(session.resourceId) + " " + EnerGoProgress.GradeFor(session.performanceBonus) + " +" + session.performanceBonus };
+
+        // What the status box says right now.
+        public HudStatus ReadHud()
+        {
+            if (uraniumPhase != UraniumPhase.None) return ReadUraniumHud();
+            if (oilPhase != OilPhase.None) return ReadOilHud();
 
             if (goldPanning)
             {
-                bool warn = GoldWarning();
-                line1 = goldPhase == GoldPhase.Leveling ? "LETAKKAN HP MENDATAR"
+                string line = goldPhase == GoldPhase.Leveling ? "LETAKKAN HP MENDATAR"
                     : goldPhase == GoldPhase.Countdown ? "SIAP-SIAP MENDULANG"
                     : goldPhase == GoldPhase.Done ? "EMAS TERPISAH DARI PASIR!"
                     : goldPhase == GoldPhase.Failed ? "EMAS TERBUANG!"
                     : goldRough ? "TERLALU KENCANG! EMAS BISA TUMPAH" : "MIRINGKAN HP BERPUTAR PELAN";
-                style1 = warn ? styleRadarAlert : styleRadarLocked;
-                accent = warn ? HudWarn : HudOk;
-                locked = true;
-            }
-            else if (target != null && arCamera != null)
-            {
-                Vector3 toTarget = RadarTargetPosition() - arCamera.transform.position;
-                Vector3 flatToTarget = new Vector3(toTarget.x, 0, toTarget.z).normalized;
-                Vector3 flatCamFwd = new Vector3(arCamera.transform.forward.x, 0, arCamera.transform.forward.z).normalized;
-
-                float signedAngle = Vector3.SignedAngle(flatCamFwd, flatToTarget, Vector3.up);
-                int deg = Mathf.RoundToInt(Mathf.Abs(signedAngle));
-
-                // Is target roughly within view frustum?
-                if (resourceId == ResourceIds.Sun && Mathf.Abs(signedAngle) > 28f)
-                {
-                    line1 = signedAngle < 0 ? $"‹  PUTAR KE KIRI  {deg}°" : $"PUTAR KE KANAN  {deg}°  ›";
-                    line2 = "SISA " + Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft())) + " DTK";
-                    style1 = styleRadarAlert;
-                    accent = HudWarn;
-                }
-                else if (resourceId == ResourceIds.Sun)
-                {
-                    int left = Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft()));
-                    line1 = (sunInside ? "CAHAYA TERKUNCI" : "ARAHKAN KE CAHAYA") + " · SISA " + left + " DTK";
-                    bool hurry = left <= 5 || !sunInside;
-                    style1 = hurry ? styleRadarAlert : styleRadarLocked;
-                    accent = hurry ? HudWarn : HudOk;
-                    locked = true;
-                }
-                else if (resourceId == ResourceIds.Coal)
-                {
-                    line1 = "PECAHKAN BATU BARA · KETUK BONGKAHNYA";
-                    style1 = styleRadarLocked;
-                    accent = HudOk;
-                    locked = true;
-                }
-                else
-                {
-                    line1 = "ENDAPAN EMAS DITEMUKAN";
-                    line2 = "Ketuk endapannya untuk menyendok pasir";
-                    style1 = styleRadarLocked;
-                    accent = HudOk;
-                }
-            }
-            else
-            {
-                line1 = feedback;
-            }
-
-            bool twoLines = line2 != null || locked;
-            var box = new Rect(hudX, hudY, hudW, twoLines ? 64f : 42f);
-            DrawHudBox(box, accent == HudOutline ? (Color?)null : accent);
-
-            GUI.Label(new Rect(hudX + 10, hudY + (twoLines ? 8f : 11f), hudW - 20, 20), line1, style1);
-            if (line2 != null) GUI.Label(new Rect(hudX + 10, hudY + 34, hudW - 20, 18), line2, styleStatusSub);
-            var mint = HudOk;
-            if (locked && resourceId == ResourceIds.Sun)
-                DrawHudBar(hudX + 20f, hudY + 36f, hudW - 40f, sunProgress, sunInside ? mint : HudWarn, Mathf.FloorToInt(sunProgress * 100f) + "%");
-            else if (locked && goldPanning)
-            {
                 // While levelling the bar shows how long the phone has been held flat.
                 float v = goldPhase == GoldPhase.Leveling ? goldFlatHold / GoldFlatHoldSec : goldProgress;
-                DrawHudBar(hudX + 20f, hudY + 36f, hudW - 40f, v, GoldWarning() ? HudWarn : mint, Mathf.FloorToInt(Mathf.Clamp01(v) * 100f) + "%");
+                string label = Mathf.FloorToInt(Mathf.Clamp01(v) * 100f) + "%";
+                return goldPhase == GoldPhase.Failed ? HudStatus.Failed(line, v, label) : HudStatus.WithBar(line, GoldWarning(), v, label);
             }
-            else if (locked && resourceId == ResourceIds.Coal)
-                DrawHudBar(hudX + 20f, hudY + 36f, hudW - 40f, CoalHitProgress(), mint, CoalBroken() + "/" + coalTotal);
+            if (target == null || arCamera == null) return HudStatus.Plain(feedback);
+
+            Vector3 toTarget = RadarTargetPosition() - arCamera.transform.position;
+            Vector3 flatToTarget = new Vector3(toTarget.x, 0, toTarget.z).normalized;
+            Vector3 flatCamFwd = new Vector3(arCamera.transform.forward.x, 0, arCamera.transform.forward.z).normalized;
+            float signedAngle = Vector3.SignedAngle(flatCamFwd, flatToTarget, Vector3.up);
+            int deg = Mathf.RoundToInt(Mathf.Abs(signedAngle));
+
+            if (resourceId == ResourceIds.Sun && Mathf.Abs(signedAngle) > 28f)
+                return HudStatus.Text(signedAngle < 0 ? $"‹  PUTAR KE KIRI  {deg}°" : $"PUTAR KE KANAN  {deg}°  ›", true, "SISA " + Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft())) + " DTK");
+            if (resourceId == ResourceIds.Sun)
+            {
+                int left = Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft()));
+                return HudStatus.WithBar((sunInside ? "CAHAYA TERKUNCI" : "ARAHKAN KE CAHAYA") + " · SISA " + left + " DTK", left <= 5 || !sunInside, sunProgress, Mathf.FloorToInt(sunProgress * 100f) + "%");
+            }
+            if (resourceId == ResourceIds.Coal)
+                return HudStatus.WithBar("PECAHKAN BATU BARA · KETUK BONGKAHNYA", false, CoalHitProgress(), CoalBroken() + "/" + coalTotal);
+            return HudStatus.Text("ENDAPAN EMAS DITEMUKAN", false, "Ketuk endapannya untuk menyendok pasir");
         }
 
         // Fraction of all pickaxe hits needed for the whole coal field.
@@ -2160,38 +1605,24 @@ namespace EnerGo
             return total > 0 ? (float)done / total : 0f;
         }
 
-        private GUIStyle stripLabelStyle;
-
-        // HUD compass: ticks every 15°, U/TL/T/... every 45°, the view direction in the centre, and the SDA marker
-        // (a dot, or for uranium only a rough green sector). Off-strip markers show "‹ 75°" / "75° ›" at the edge.
-        private void DrawCompassStrip(float sw, float y)
+        // The compass ruler: the view direction and the SDA, as a dot, an edge marker, or for uranium only a rough sector.
+        public EnerGo.UI.PitaKompas.State ReadCompassStrip()
         {
-            if (compass == null || arCamera == null) return;
-            if (stripLabelStyle == null) stripLabelStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
-            var r = new Rect(16f, y, sw - 32f, 34f);
-            DrawHudBox(r);
+            var st = new EnerGo.UI.PitaKompas.State();
+            if (compass == null || arCamera == null) return st;
             float half = CompassMath.StripHalfSpanDeg, heading = compass.HeadingDeg;
-            float X(float x01) => r.center.x + x01 * (r.width * 0.5f - 14f);
-
-            if (!compass.HasCompass)
-                GUI.Label(new Rect(r.x, r.y, r.width, r.height), "KOMPAS TIDAK TERSEDIA", stripLabelStyle);
-            else
-                for (int d = 0; d < 360; d += 15)
-                {
-                    float x01 = CompassMath.StripX(d, heading, half);
-                    if (Mathf.Abs(x01) > 1f) continue;
-                    if (d % 45 == 0) GUI.Label(new Rect(X(x01) - 16f, r.y + 2f, 32f, r.height - 4f), CompassMath.DirectionLabel(d), stripLabelStyle);
-                    else EnerGoUI.DrawPanel(new Rect(X(x01) - 1f, r.y + 12f, 2f, 10f), new Color(1f, 1f, 1f, 0.5f), Color.clear, 1f);
-                }
-
+            st.HasCompass = compass.HasCompass;
+            st.Heading = heading;
+            st.Half = half;
             if (resourceId == ResourceIds.Uranium)
             {
                 if (uraniumPhase == UraniumPhase.Search) // fragments are found with the RAD meter, not the strip
                 {
                     float c = CompassMath.StripX(captureBearing, heading, half), w = CompassMath.UraniumSectorHalfDeg / half;
-                    float lo = Mathf.Max(-1f, c - w), hi = Mathf.Min(1f, c + w);
-                    if (hi > lo) EnerGoUI.DrawPanel(new Rect(X(lo), r.y + 4f, X(hi) - X(lo), r.height - 8f), EnerGoUI.Alpha(EnerGoUI.Success, 0.3f), Color.clear, 6f);
-                    else StripEdge(r, c, Mathf.Abs(Mathf.DeltaAngle(heading, captureBearing)) - CompassMath.UraniumSectorHalfDeg);
+                    st.Lo01 = Mathf.Max(-1f, c - w);
+                    st.Hi01 = Mathf.Min(1f, c + w);
+                    st.ShowSector = st.Hi01 > st.Lo01;
+                    if (!st.ShowSector) { st.EdgeSide = c < 0f ? -1 : 1; st.EdgeDeg = Mathf.RoundToInt(Mathf.Abs(Mathf.DeltaAngle(heading, captureBearing)) - CompassMath.UraniumSectorHalfDeg); }
                 }
             }
             else if (resourceId != ResourceIds.Sun && target != null)
@@ -2199,119 +1630,24 @@ namespace EnerGo
                 Vector3 to = RadarTargetPosition() - arCamera.transform.position;
                 float bearing = CompassMath.CameraHeading(Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, compass.OffsetDeg);
                 float x01 = CompassMath.StripX(bearing, heading, half);
-                if (Mathf.Abs(x01) <= 1f) EnerGoUI.DrawPanel(new Rect(X(x01) - 6f, r.center.y - 6f, 12f, 12f), EnerGoUI.Orange, EnerGoUI.Ink, 6f, 1.5f);
-                else StripEdge(r, x01, Mathf.Abs(Mathf.DeltaAngle(heading, bearing)));
+                st.ShowDot = Mathf.Abs(x01) <= 1f;
+                st.Dot01 = x01;
+                if (!st.ShowDot) { st.EdgeSide = x01 < 0f ? -1 : 1; st.EdgeDeg = Mathf.RoundToInt(Mathf.Abs(Mathf.DeltaAngle(heading, bearing))); }
             }
-            if (compass.HasCompass) EnerGoUI.DrawPanel(new Rect(r.center.x - 1.5f, r.y + 3f, 3f, r.height - 6f), EnerGoUI.Sun, Color.clear, 1.5f); // view direction
-        }
-
-        private void StripEdge(Rect r, float x01, float deg)
-        {
-            string t = x01 < 0f ? "‹ " + Mathf.RoundToInt(deg) + "°" : Mathf.RoundToInt(deg) + "° ›";
-            var cell = x01 < 0f ? new Rect(r.x + 4f, r.y, 64f, r.height) : new Rect(r.xMax - 68f, r.y, 64f, r.height);
-            EnerGoUI.DrawPanel(new Rect(cell.x, r.y + 5f, cell.width, r.height - 10f), EnerGoUI.Orange, Color.clear, 8f);
-            GUI.Label(cell, t, stripLabelStyle);
-        }
-
-        // Horizontal progress bar with a short label (percentage or count) on the right.
-        private void DrawHudBar(float x, float y, float w, float progress, Color fillCol, string label)
-        {
-            float labelW = 48f;
-            var track = new Rect(x, y, w - labelW - 8f, 18f);
-            if (fillCol == HudOk) EnerGoUI.DrawBar(track, progress, EnerGoUI.OkTop, EnerGoUI.OkBot);
-            else if (fillCol == HudWarn) EnerGoUI.DrawBar(track, progress, EnerGoUI.OrangeTop, EnerGoUI.OrangeBot);
-            else EnerGoUI.DrawBar(track, progress, fillCol);
-            EnerGoUI.DrawStrokedLabel(new Rect(track.xMax + 8f, y - 1f, labelW, 20f), label, EnerGoUI.Title(16, Color.white, TextAnchor.MiddleLeft), 1.5f);
-        }
-
-        // Dark rounded box with an Ink outline: the base for every HUD panel over the camera.
-        // `accent` (warn/ok) draws a thin coloured ring just inside the outline.
-        private static void DrawHudBox(Rect r, Color? accent = null)
-        {
-            float rad = Mathf.Min(EnerGoUI.M(16f), r.height * 0.5f), w = EnerGoUI.M(2.5f);
-            EnerGoUI.DrawPanel(r, HudFill, Color.clear, rad);
-            if (accent != null)
-                EnerGoUI.DrawPanel(new Rect(r.x + w, r.y + w, r.width - w * 2f, r.height - w * 2f), Color.clear, accent.Value, rad - w, 2.5f);
-            EnerGoUI.DrawPanel(r, Color.clear, EnerGoUI.Ink, rad, w);
-        }
-
-        // One-line pill over the camera; the text shrinks to fit instead of clipping.
-        private void DrawHudPill(Rect r, string text, Color textColor)
-        {
-            var inner = EnerGoUI.DrawPill(r);
-            var style = EnerGoUI.Title(Mathf.RoundToInt(r.height * 0.42f), textColor);
-            int fit = EnerGoUI.FitSize(style, text, inner.width, 11);
-            GUI.Label(inner, text, fit == style.fontSize ? style : EnerGoUI.Title(fit, textColor));
-        }
-
-        // Remaining-hit pips floating above each coal lump: filled = hits landed.
-        private void DrawCoalPips(float scale)
-        {
-            var done = EnerGoUI.Orange;
-            const float size = 9f, gap = 4f;
-            foreach (var lump in coalLumps)
-            {
-                if (lump.root == null) continue;
-                Vector3 sp = arCamera.WorldToScreenPoint(lump.root.position + Vector3.up * lump.size * 0.75f);
-                if (sp.z <= arCamera.nearClipPlane) continue;
-                float cx = sp.x / scale, y = (Screen.height - sp.y) / scale - size;
-                float x = cx - (lump.required * size + (lump.required - 1) * gap) * 0.5f;
-                for (int i = 0; i < lump.required; i++)
-                {
-                    bool hit = i < lump.hits;
-                    EnerGoUI.DrawPanel(new Rect(x + i * (size + gap), y, size, size),
-                        hit ? done : EnerGoUI.Alpha(EnerGoUI.Paper, 0.9f), hit ? done : EnerGoUI.Ink, 3f);
-                }
-            }
-        }
-
-        // Fixed aiming ring in the middle of the screen: a dotted white ring with Ink edges; Sun glow while the light is inside.
-        private void DrawSunReticle(float sw, float sh)
-        {
-            float r = ReticleRadius * (sunInside ? 1f + 0.04f * Mathf.Sin(Time.time * 8f) : 1f);
-            var c = new Vector2(sw * 0.5f, sh * 0.5f);
-            if (sunInside) EnerGoUI.DrawPanel(new Rect(c.x - r, c.y - r, r * 2f, r * 2f), EnerGoUI.Alpha(EnerGoUI.Sun, 0.35f), Color.clear, r);
-            Color dot = sunInside ? EnerGoUI.Sun : Color.white;
-            const int dots = 28;
-            const float d = 8f;
-            for (int i = 0; i < dots; i++)
-            {
-                float a = i * Mathf.PI * 2f / dots;
-                var p = c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
-                EnerGoUI.DrawPanel(new Rect(p.x - d * 0.5f, p.y - d * 0.5f, d, d), dot, EnerGoUI.Ink, d * 0.5f, 2f);
-            }
-            // Small centre dot to aim with
-            EnerGoUI.DrawPanel(new Rect(c.x - 5f, c.y - 5f, 10f, 10f), dot, EnerGoUI.Ink, 5f, 2f);
+            return st;
         }
 
 
-        // Dark pill with a small Sun tag over a white value.
-        private void DrawPill(Rect rect, string tag, string val, GUIStyle sTag, GUIStyle sVal)
+        // Touches behind the header and bottom button never reach the game. Panel units, like the HUD itself.
+        private static bool OverHudBand(Vector2 screenPosition)
         {
-            var inner = EnerGoUI.DrawPill(rect);
-            GUI.Label(new Rect(inner.x, rect.y + 5f, inner.width, 15f), tag, sTag);
-            var v = EnerGoUI.Title(17, Color.white);
-            int fit = EnerGoUI.FitSize(v, val, inner.width, 11);
-            GUI.Label(new Rect(inner.x, rect.y + 19f, inner.width, rect.height - 23f), val, fit == v.fontSize ? v : EnerGoUI.Title(fit, Color.white));
-        }
-
-        // Small Paper button with an Ink Lilita label (lobby/radar back, mode switch, respawn).
-        private bool DrawBtn(Rect rect, string text, GUIStyle style)
-        {
-            var face = EnerGoUI.DrawButton(rect, ButtonKind.Paper, EnerGoUI.IsHeld(rect, HudScale));
-            EnerGoUI.ButtonLabel(face, text, 16, ButtonKind.Paper);
-            return ButtonHit(rect);
+            float k = CaptureScreens.PanelWidth / Screen.width;
+            var safe = Screen.safeArea;
+            return HudTapZones.Blocks((Screen.height - screenPosition.y) * k, Screen.height * k, (Screen.height - safe.yMax) * k, safe.yMin * k);
         }
 
         private static string MiniGameName(string id) =>
             id == ResourceIds.Sun ? "Ekstraksi" : id == ResourceIds.Coal ? "Tambang" : id == ResourceIds.Uranium ? "Pemburu Geiger" : id == ResourceIds.Oil ? "Bor & Pompa" : "Dulang";
 
-        private bool DrawPrimaryBtn(Rect rect, string text)
-        {
-            EnerGoUI.ButtonLabel(EnerGoUI.DrawPrimaryButton(rect, EnerGoUI.IsHeld(rect, HudScale)), text, 20, ButtonKind.Orange);
-            return ButtonHit(rect);
-        }
-
-        private bool ButtonHit(Rect rect) => EnerGoUI.TapHit(rect, HudScale);
     }
 }

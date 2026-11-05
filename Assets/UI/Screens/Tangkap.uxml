@@ -1,0 +1,40 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+    <!-- Capture screens (docs/design-system/components/HudTangkap, LayarTangkapA, LayarTangkapB). Values are set by CaptureView. -->
+    <ui:Template name="KartuPanduan" src="project://database/Assets/UI/Screens/KartuPanduan.uxml" />
+    <ui:Template name="Kuis" src="project://database/Assets/UI/Screens/Kuis.uxml" />
+    <ui:Template name="Overlay" src="project://database/Assets/UI/Screens/Overlay.uxml" />
+    <Style src="project://database/Assets/UI/Theme.uss" />
+    <Style src="project://database/Assets/UI/Components.uss" />
+    <Style src="project://database/Assets/UI/Screens/Layar.uss" />
+    <ui:VisualElement name="lapis-hud" class="eg-layar eg-aman" picking-mode="Ignore">
+        <ui:VisualElement class="eg-baris tangkap__header" picking-mode="Ignore">
+            <ui:Button name="btn-kembali" class="eg-btn eg-btn--kecil eg-btn--kertas" text="‹ LOBBY" />
+            <ui:Button name="btn-mode" class="eg-btn eg-btn--kecil eg-btn--info tangkap__mode" text="ARCORE" />
+            <ui:VisualElement class="eg-pil eg-pil--laut tangkap__mode-pil" picking-mode="Ignore"><ui:Label name="pil-mode" text="TANPA ARCORE" /></ui:VisualElement>
+            <ui:VisualElement name="pil-sda" class="eg-pil eg-pil--data" picking-mode="Ignore">
+                <ui:VisualElement name="pil-sda-ikon" class="eg-pil__ikon" picking-mode="Ignore" />
+                <ui:Label name="pil-sda-teks" text="0" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="kotak-status" class="status" picking-mode="Ignore">
+            <ui:VisualElement class="eg-baris" picking-mode="Ignore">
+                <ui:Label name="status-tag" class="status__tag" text="AMAN" />
+                <ui:Label name="status-teks" class="status__teks" text="" />
+            </ui:VisualElement>
+            <ui:Label name="status-sub" class="status__sub" text="" />
+            <ui:VisualElement class="eg-baris status__bar-baris" picking-mode="Ignore">
+                <ui:VisualElement name="status-bar" class="eg-bar eg-bar--tipis eg-isi" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:Label name="status-angka" class="eg-data-tebal status__angka" text="0%" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <eg:PitaKompas name="pita-kompas" class="pita" />
+        <ui:VisualElement class="eg-isi" picking-mode="Ignore" />
+        <ui:Button name="btn-ulang" class="eg-btn eg-btn--kecil eg-btn--kertas eg-btn--penuh" text="MUNCULKAN ULANG TARGET" />
+    </ui:VisualElement>
+    <ui:Instance template="Overlay" class="eg-lapis" picking-mode="Ignore" />
+    <ui:VisualElement name="riak" class="tangkap__riak" picking-mode="Ignore" />
+    <ui:Instance template="Kuis" class="eg-lapis" picking-mode="Ignore" />
+    <ui:VisualElement name="lapis-panduan" class="eg-lapis" picking-mode="Ignore">
+        <ui:Instance template="KartuPanduan" class="eg-lapis" />
+    </ui:VisualElement>
+</ui:UXML>
