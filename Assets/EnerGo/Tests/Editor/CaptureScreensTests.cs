@@ -54,6 +54,13 @@ namespace EnerGo.Tests
         }
 
         [Test]
+        public void AnswerChipUsesOnlyLettersTheFontHas()
+        {
+            Assert.AreEqual("Pernyataan ini BENAR", CaptureScreens.AnswerChip(true));
+            Assert.AreEqual("Pernyataan ini SALAH", CaptureScreens.AnswerChip(false));
+        }
+
+        [Test]
         public void PumpRingShrinksFromLastStrokeToTheTarget()
         {
             Assert.AreEqual(2.6f, CaptureScreens.PumpRingScale(0f, 1.2f), 0.001f);

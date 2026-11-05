@@ -753,8 +753,7 @@ namespace EnerGo
             touches++;
 
             // Ignore taps on UI top or bottom regions
-            float scale = HudScale;
-            if (HudTapZones.Blocks((Screen.height - screenPosition.y) / scale, Screen.height / scale)) return false;
+            if (OverHudBand(screenPosition)) return false;
 
             if (target == null || arCamera == null)
             {
@@ -1638,6 +1637,14 @@ namespace EnerGo
             return st;
         }
 
+
+        // Touches behind the header and bottom button never reach the game. Panel units, like the HUD itself.
+        private static bool OverHudBand(Vector2 screenPosition)
+        {
+            float k = CaptureScreens.PanelWidth / Screen.width;
+            var safe = Screen.safeArea;
+            return HudTapZones.Blocks((Screen.height - screenPosition.y) * k, Screen.height * k, (Screen.height - safe.yMax) * k, safe.yMin * k);
+        }
 
         private static string MiniGameName(string id) =>
             id == ResourceIds.Sun ? "Ekstraksi" : id == ResourceIds.Coal ? "Tambang" : id == ResourceIds.Uranium ? "Pemburu Geiger" : id == ResourceIds.Oil ? "Bor & Pompa" : "Dulang";

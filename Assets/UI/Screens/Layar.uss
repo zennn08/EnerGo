@@ -112,7 +112,8 @@
 .pita__label--utara { color: var(--stempel); }
 .pita__tepi { position: absolute; top: 12px; -unity-font-definition: var(--font-data-bold); font-size: 14px; color: var(--oranye-tua); background-color: var(--kertas-200); padding: 2px 6px; margin: 0; }
 .pita__mati { position: absolute; left: 0; right: 0; top: 0; bottom: 0; -unity-text-align: middle-center; -unity-font-definition: var(--font-data-bold); font-size: 13px; color: var(--tinta-pudar); margin: 0; }
-.panduan__ingatkan { display: none; margin-bottom: 12px; align-items: center; }
+.panduan__ingatkan, .panduan__ingatkan:hover, .panduan__ingatkan:active { background-color: rgba(0, 0, 0, 0); border-width: 0; padding: 0; margin: 0 0 12px 0; align-items: center; }
+.panduan__ingatkan { display: none; }
 .panduan__centang { width: 26px; height: 26px; margin-right: 10px; background-color: var(--kertas-200); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: 6px; }
 .panduan__centang.is-nyala { background-color: var(--hutan); background-image: url("project://database/Assets/UI/Icons/centang.svg"); }
 
@@ -205,3 +206,6 @@
 .overlay__dosis { align-items: center; }
 .overlay__dosis-hitung { margin: 0 0 0 10px; padding: 0; color: var(--tinta); font-size: 14px; }
 .overlay__isi-panas { background-color: var(--stempel); }
+.kuis__chip-ikon { width: 22px; height: 22px; margin-right: 4px; align-self: center; }
+.kuis__chip-ikon--benar { background-image: url("project://database/Assets/UI/Icons/centang.svg"); -unity-background-image-tint-color: var(--hutan); }
+.kuis__chip-ikon--salah { background-image: url("project://database/Assets/UI/Icons/silang.svg"); -unity-background-image-tint-color: var(--stempel); }

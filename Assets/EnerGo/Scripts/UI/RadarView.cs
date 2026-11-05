@@ -61,7 +61,6 @@ namespace EnerGo.UI
             Show(kartuTarget, running);
             Show(kartuTunggu, !running && !failed);
             Show(lapisGps, failed && controller.SafetySeen);
-            lapisGps.pickingMode = failed ? PickingMode.Position : PickingMode.Ignore;
             Show(lapisAman, !controller.SafetySeen);
             disk.EnableInClassList("radar__pudar", failed);
 

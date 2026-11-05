@@ -32,7 +32,7 @@
 
             <ui:VisualElement name="kartu-balik" class="eg-kartu kuis__balik" picking-mode="Ignore">
                 <ui:Label name="balik-selotip" class="eg-selotip" text="BENAR!" />
-                <ui:VisualElement class="eg-tengah" picking-mode="Ignore"><ui:Label name="balik-jawab" class="kuis__chip" text="" /></ui:VisualElement>
+                <ui:VisualElement class="eg-tengah" picking-mode="Ignore"><ui:VisualElement name="balik-jawab-ikon" class="kuis__chip-ikon" picking-mode="Ignore" /><ui:Label name="balik-jawab" class="kuis__chip kuis__chip--ikon" text="" /></ui:VisualElement>
                 <ui:VisualElement name="balik-ikon" class="kuis__ikon" picking-mode="Ignore" />
                 <ui:Label name="balik-teks" class="eg-isi-teks kuis__penjelasan" text="" />
                 <ui:VisualElement class="eg-tengah" picking-mode="Ignore"><ui:Label name="balik-unit" class="kuis__chip kuis__chip--oker" text="+1 unit" /></ui:VisualElement>

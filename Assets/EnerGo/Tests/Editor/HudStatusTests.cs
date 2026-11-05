@@ -5,6 +5,16 @@ namespace EnerGo.Tests
     public class HudStatusTests
     {
         [Test]
+        public void TapBandsGrowWithTheSafeArea()
+        {
+            Assert.IsFalse(HudTapZones.Blocks(700f, 800f));
+            Assert.IsTrue(HudTapZones.Blocks(700f, 800f, 0f, 40f));   // button pushed up by a gesture bar
+            Assert.IsFalse(HudTapZones.Blocks(689f, 800f, 0f, 40f));
+            Assert.IsTrue(HudTapZones.Blocks(140f, 800f, 20f, 0f));   // header pushed down by a cutout
+            Assert.IsFalse(HudTapZones.Blocks(148f, 800f, 20f, 0f));
+        }
+
+        [Test]
         public void TagFollowsWarning()
         {
             Assert.AreEqual("AMAN", HudStatus.Tags(false));

@@ -40,6 +40,17 @@ namespace EnerGo.Tests
                 "kartu-panduan", "panduan-ingatkan", "panduan-centang", "btn-panduan-tutup", "btn-panduan-utama");
 
         [Test]
+        public void GuideReminderIsAButtonSoItDoesNotFlipThePage() =>
+            Assert.IsNotNull(Clone("Assets/UI/Screens/KartuPanduan.uxml").Q<UnityEngine.UIElements.Button>("panduan-ingatkan"));
+
+        [Test]
+        public void FeedbackChipHasAnIconElement() => AssertNames(Clone("Assets/UI/Screens/Kuis.uxml"), "balik-jawab-ikon");
+
+        [Test]
+        public void TrendPillUsesTheFontThatHasArrows() =>
+            Assert.IsTrue(Clone("Assets/UI/Screens/Overlay.uxml").Q("rad-tren").ClassListContains("eg-pil--angka"));
+
+        [Test]
         public void OverlayHasEveryNamedElement() =>
             AssertNames(Clone("Assets/UI/Screens/Overlay.uxml"),
                 "bidik", "bidik-persen", "dulang-pil", "dulang-waterpass", "dulang-hitung", "dulang-mulai", "kartu-terbuang", "btn-endapan-baru",

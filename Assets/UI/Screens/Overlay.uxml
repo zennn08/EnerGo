@@ -59,7 +59,7 @@
                     </ui:VisualElement>
                     <ui:VisualElement name="rad-bar" class="eg-bar eg-bar--tebal" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi overlay__isi-uranium" picking-mode="Ignore" /></ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Label name="rad-tren" class="eg-pil overlay__pil overlay__pil--kecil overlay__tren" picking-mode="Ignore" text="SINYAL MENGUAT" />
+                <ui:Label name="rad-tren" class="eg-pil eg-pil--angka overlay__pil overlay__pil--kecil overlay__tren" picking-mode="Ignore" text="SINYAL MENGUAT" />
                 <ui:VisualElement name="dosis-baris" class="eg-kartu overlay__bawah eg-baris overlay__dosis" picking-mode="Ignore">
                     <ui:Label class="eg-data-tebal overlay__meter-nama" picking-mode="Ignore" text="DOSIS" />
                     <ui:VisualElement name="dosis-bar" class="eg-bar eg-isi" picking-mode="Ignore"><ui:VisualElement class="eg-bar__isi eg-isi--oker" picking-mode="Ignore" /></ui:VisualElement>

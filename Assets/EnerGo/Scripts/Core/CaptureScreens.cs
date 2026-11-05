@@ -32,6 +32,9 @@ namespace EnerGo
 
         public static bool GaugeWarn(float value, float limit) => value > limit;
 
+        // No check or cross marks in the text: no project font has them, the chip shows an icon instead.
+        public static string AnswerChip(bool statementIsTrue) => statementIsTrue ? "Pernyataan ini BENAR" : "Pernyataan ini SALAH";
+
         public static string ResultMessage(int right, int count) => right == count ? "Sempurna! Semua jawaban tepat."
             : right == 0 ? "Belum ada yang tepat. Coba lagi di tangkapan berikutnya."
             : "Bagus! Jawab semua dengan tepat untuk hasil Murni.";

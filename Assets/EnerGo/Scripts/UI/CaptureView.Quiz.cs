@@ -7,7 +7,7 @@ namespace EnerGo.UI
     // (one answer path), so those buttons ignore the pointer here and only show where to press.
     public partial class CaptureView
     {
-        private VisualElement lapisKuis, penanda, kuisSoal, kartuSoal, kartuBalik, kuisHasil, soalWaktuIsi, soalIkon, balikIkon, hasilIkon, hasilBintang, hasilRincian, pendarKiri, pendarKanan, lanjutIsi;
+        private VisualElement lapisKuis, penanda, kuisSoal, kartuSoal, kartuBalik, kuisHasil, soalWaktuIsi, soalIkon, balikIkon, balikJawabIkon, hasilIkon, hasilBintang, hasilRincian, pendarKiri, pendarKanan, lanjutIsi;
         private Label pilSoal, soalDetik, soalTeks, cap, balikSelotip, balikJawab, balikTeks, balikUnit, hasilJudul, hasilSkor, hasilPlus, hasilMutu, hasilPesan, kuisError;
         private Button btnBenar, btnSalah, btnLanjut, btnSelesai;
         private readonly VisualElement[] marks = new VisualElement[8];
@@ -24,6 +24,7 @@ namespace EnerGo.UI
             soalWaktuIsi = root.Q("soal-waktu").Q(className: "eg-bar__isi");
             soalIkon = root.Q("soal-ikon");
             balikIkon = root.Q("balik-ikon");
+            balikJawabIkon = root.Q("balik-jawab-ikon");
             hasilIkon = root.Q("hasil-ikon");
             hasilBintang = root.Q("hasil-bintang");
             hasilRincian = root.Q("hasil-rincian");
@@ -162,7 +163,9 @@ namespace EnerGo.UI
             balikSelotip.text = session.correct ? "BENAR!" : session.timedOut ? "WAKTU HABIS" : "SALAH";
             balikSelotip.EnableInClassList("eg-selotip--hijau", session.correct);
             balikSelotip.EnableInClassList("eg-selotip--merah", !session.correct);
-            balikJawab.text = question.correctAnswer ? "✓ Pernyataan ini BENAR" : "✕ Pernyataan ini SALAH";
+            balikJawab.text = CaptureScreens.AnswerChip(question.correctAnswer);
+            balikJawabIkon.EnableInClassList("kuis__chip-ikon--benar", question.correctAnswer);
+            balikJawabIkon.EnableInClassList("kuis__chip-ikon--salah", !question.correctAnswer);
             balikJawab.EnableInClassList("kuis__chip--benar", question.correctAnswer);
             balikJawab.EnableInClassList("kuis__chip--salah", !question.correctAnswer);
             balikTeks.text = question.explanation;

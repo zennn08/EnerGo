@@ -100,8 +100,7 @@ namespace EnerGo
             if (Keyboard.current != null && Keyboard.current.spaceKey.isPressed) return true;
             Vector2? p = PointerScreen();
             if (p == null) return false;
-            float guiY = (Screen.height - p.Value.y) / HudScale;
-            return guiY >= 128f && guiY <= Screen.height / HudScale - 70f;
+            return !OverHudBand(p.Value);
         }
 
         private void UpdateOil()

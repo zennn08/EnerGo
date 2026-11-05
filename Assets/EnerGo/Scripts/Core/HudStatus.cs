@@ -27,6 +27,8 @@ namespace EnerGo
     {
         const float TopBand = 128f, BottomBand = 70f;
 
-        public static bool Blocks(float y, float panelHeight) => y < TopBand || y > panelHeight - BottomBand;
+        // The header and bottom button move with the safe area (see SafeArea), so the bands do too.
+        public static bool Blocks(float y, float panelHeight, float topInset = 0f, float bottomInset = 0f) =>
+            y < TopBand + topInset || y > panelHeight - BottomBand - bottomInset;
     }
 }
