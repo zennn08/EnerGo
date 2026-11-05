@@ -65,18 +65,18 @@ namespace EnerGo
             borLowered = borShakeNow = borSpin = borChipCarry = 0f;
             borBubbleAmp = 0.004f;
             borSplashed = false;
-            borChips = MakeBorParticles("Serpihan", PrimitiveType.Cube, -0.9f, particleMat);
-            borBubbles = MakeBorParticles("Gelembung", PrimitiveType.Sphere, 0f, particleMat);
-            borDrops = MakeBorParticles("Tetesan", PrimitiveType.Sphere, -0.9f, particleMat);
+            borChips = MakeBorParticles(bor, "Serpihan", PrimitiveType.Cube, -0.9f, particleMat);
+            borBubbles = MakeBorParticles(bor, "Gelembung", PrimitiveType.Sphere, 0f, particleMat);
+            borDrops = MakeBorParticles(bor, "Tetesan", PrimitiveType.Sphere, -0.9f, particleMat);
             return true;
         }
 
-        // Emitted by hand with per-particle colour and speed; local space so they stay with the diorama as the phone moves.
-        private ParticleSystem MakeBorParticles(string name, PrimitiveType shape, float force, Material mat)
+        // Emitted by hand with per-particle colour and speed; local space so they stay with their parent as the phone moves.
+        private ParticleSystem MakeBorParticles(Transform parent, string name, PrimitiveType shape, float force, Material mat)
         {
             var go = new GameObject(name);
             go.SetActive(false);
-            go.transform.SetParent(bor, false);
+            go.transform.SetParent(parent, false);
             var ps = go.AddComponent<ParticleSystem>();
             var main = ps.main;
             main.playOnAwake = false;

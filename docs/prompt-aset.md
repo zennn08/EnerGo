@@ -88,6 +88,8 @@ Ada 12 file model untuk build sekarang ditambah 2 untuk Desa Teknik. Kirim satu 
 | Penampang pengeboran | `sda_bor.fbx` | 1 × 1 m | ≤ 2.000 |
 | Bijih uranium | `sda_uranium_bijih.fbx` | 0,4 m | ≤ 600 |
 | Serpihan uranium | `sda_uranium_serpihan.fbx` | 0,12 m | ≤ 150 |
+| Wadah timbal dan tutup | `sda_uranium_wadah.fbx` | 0,3 m | ≤ 800 |
+| Pecahan bijih (4 bagian) | `sda_uranium_pecah.fbx` | 0,4 m | ≤ 300 |
 | Rumah desa (direncanakan) | `desa_rumah.fbx` | 3 m | ≤ 1.500 |
 | Pembangkit (direncanakan) | `desa_pembangkit.fbx` | 6 m | ≤ 3.000 |
 
@@ -192,6 +194,7 @@ Pengaturan di Unity setelah file masuk ke `Assets/Models/`:
 Catatan untuk aset bergerak:
 
 - **Penampang pengeboran**: enam lapisan `sda_bor_*` masing-masing berasal dari titik atasnya dan ditebalkan lewat skala Y sesuai data sumur (`BorPose`). Teksturnya di `Art/bor/` (salinan di `Resources/Oil/`), dibuat dengan skrip, bukan dilukis. Pipa dan lubang bor panjangnya 1 m lalu diskalakan. Serpihan dan semburan adalah partikel di kode (`partikel_bor`), bukan aset. Koleksi `pratinjau_bor` di file blend hanya pratinjau.
+- **Uranium**: bijih muncul dan bergetar 0,55 detik saat ditemukan, lalu diganti `sda_uranium_pecah`; waktunya di `UraniumVisual`. Di file blend pecahan bernama `prev_u_pecah_*`, dibuat dari bijih dengan sisi potong `mat_uranium_nyala`. Wadah menempel di kiri bawah kamera. Kristal dan serpihan memakai URP/Unlit supaya selalu menyala; batu dan wadah URP/Lit.
 - **Pompa angguk**: gerak dihitung `PompaPose` dari sudut engkol, jadi semua bagian sinkron: engkol berputar, batang belakang (`sda_pompa_pitman`) panjangnya tetap, lengan berayun pada sumbu Z model, batang pompa (`sda_pompa_tali`) naik-turun, kabel (`sda_pompa_kabel`) memanjang lewat skala Y. Tiap tekan dan lepas jari memutar engkol setengah putaran. Kepala kuda ada di sisi −X model di Unity. Saat mengekspor: objek induk `sda_pompa` dilepas dulu dari bagian-bagiannya, atau outline ikut terputar 90° di Unity.
 - **Batu bara**: empat tahap jadi empat child di satu prefab; script mengaktifkan satu child sesuai jumlah ketukan.
 - **Keping emas**: 4 besar dan 14 kecil diletakkan oleh script di atas `sda_dulang_pasir`, jadi cukup dua prefab keping.

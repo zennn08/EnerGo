@@ -19,6 +19,7 @@ namespace EnerGo
         private void LateUpdate()
         {
             UpdateBorDiorama();
+            UpdateUraniumVisual();
             bool show = goldPanning && arCamera != null && EnerGoProgress.Current.pendingCapture == null;
             if (!show) { if (dulang != null) { Destroy(dulang.gameObject); dulang = null; } return; }
             if (dulang == null && !BuildDulang()) return;
