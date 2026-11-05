@@ -115,3 +115,53 @@
 .panduan__ingatkan { display: none; margin-bottom: 12px; align-items: center; }
 .panduan__centang { width: 26px; height: 26px; margin-right: 10px; background-color: var(--kertas-200); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: 6px; }
 .panduan__centang.is-nyala { background-color: var(--hutan); background-image: url("project://database/Assets/UI/Icons/centang.svg"); }
+
+/* Quiz (LayarKuis, KartuSoal, KartuUmpanBalik) */
+.kuis__atas { justify-content: space-between; margin-bottom: 8px; }
+.kuis__tanda { width: 26px; height: 26px; border-radius: 13px; border-width: var(--garis-tinta); border-color: var(--tinta); background-color: var(--kertas-300); margin-right: 8px; }
+.kuis__tanda.is-kini { background-color: var(--oker); }
+.kuis__tanda.is-benar { background-color: var(--hutan); }
+.kuis__tanda.is-salah { background-color: var(--stempel); }
+.kuis__isi { flex-grow: 1; padding-bottom: 88px; }
+.kuis__judul { font-size: 34px; -unity-text-align: middle-center; margin: 6px 0 14px 0; }
+.kuis__tumpuk { flex-grow: 1; justify-content: center; }
+.kuis__belakang { position: absolute; left: 8px; right: 8px; top: 4px; bottom: 0; rotate: 2deg; background-color: var(--kertas-200); }
+.kuis__kartu { flex-grow: 1; padding: 16px 20px 20px 20px; }
+.kuis__kartu--benar { border-color: var(--hutan); }
+.kuis__kartu--salah { border-color: var(--stempel); }
+.kuis__jam { width: 26px; height: 26px; margin-right: 8px; background-image: url("project://database/Assets/UI/Icons/jam.svg"); }
+.kuis__detik { width: 34px; margin: 0; padding: 0; font-size: 18px; -unity-text-align: middle-right; }
+.kuis__detik--buru { color: var(--stempel); }
+.kuis__ikon { width: 56px; height: 56px; align-self: center; margin: 12px 0; }
+.kuis__teks { flex-grow: 1; -unity-font-definition: var(--font-isi-bold); font-size: 20px; color: var(--tinta); -unity-text-align: middle-center; white-space: normal; margin: 0; padding: 0; }
+.kuis__cap { position: absolute; top: 56px; -unity-font-definition: var(--font-judul); font-size: 32px; padding: 6px 14px; margin: 0; border-width: 4px; border-radius: 10px; background-color: rgba(251, 246, 234, 0.8); }
+.kuis__cap--benar { color: var(--hutan); border-color: var(--hutan); }
+.kuis__cap--salah { color: var(--stempel); border-color: var(--stempel); }
+.kuis__cap--kiri { left: 20px; }
+.kuis__cap--kanan { right: 20px; }
+.kuis__pendar { position: absolute; top: 0; bottom: 0; width: 50%; opacity: 0; }
+.kuis__pendar--kiri { left: 0; background-color: var(--stempel); }
+.kuis__pendar--kanan { right: 0; background-color: var(--hutan); }
+.kuis__jawab { position: absolute; font-size: 22px; min-height: 0; }
+.kuis__jawab.is-tekan { border-bottom-width: 2px; translate: 0 3px; }
+.kuis__balik { margin-top: auto; margin-bottom: auto; padding: 36px 20px 18px 20px; }
+.kuis__chip { align-self: center; flex-shrink: 0; padding: 4px 12px; margin: 3px 4px; background-color: var(--kertas-100); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: 10px; -unity-font-definition: var(--font-isi-bold); font-size: 14px; color: var(--tinta); white-space: nowrap; }
+.kuis__chip--benar { background-color: var(--hutan-muda); border-color: var(--hutan); }
+.kuis__chip--salah { background-color: var(--stempel-muda); border-color: var(--stempel); }
+.kuis__chip--oker { background-color: var(--oker); }
+.kuis__penjelasan { -unity-text-align: middle-center; white-space: normal; margin: 6px 0 10px 0; }
+.kuis__tombol { margin-top: 8px; }
+.kuis__tahan { position: absolute; left: 0; top: 0; bottom: 0; background-color: rgba(31, 42, 54, 0.15); }
+.kuis__hasil { flex-grow: 1; justify-content: center; }
+.kuis__judul-hasil { font-size: 44px; -unity-text-align: middle-center; margin-bottom: 26px; }
+.kuis__hasil .kuis__balik { margin-top: 0; margin-bottom: 0; }
+.kuis__bintang { align-items: flex-end; margin-bottom: 4px; }
+.kuis__bintang-satu { width: 44px; height: 44px; margin: 0 6px; background-image: url("project://database/Assets/UI/Icons/bintang.svg"); }
+.kuis__bintang-satu--besar { width: 60px; height: 60px; }
+.kuis__bintang-satu.is-kosong { background-image: url("project://database/Assets/UI/Icons/bintang-kosong.svg"); }
+.kuis__skor { -unity-text-align: middle-center; margin: 4px 0; }
+.kuis__hadiah { align-items: center; margin: 2px 0 6px 0; }
+.kuis__hadiah-ikon { width: 48px; height: 48px; margin-right: 8px; }
+.kuis__plus { font-size: 38px; margin: 0 10px 0 0; padding: 0; }
+.kuis__rincian { flex-direction: row; flex-wrap: wrap; justify-content: center; margin-bottom: 4px; }
+.kuis__error { position: absolute; left: 16px; right: 16px; bottom: 8px; color: var(--stempel); -unity-text-align: middle-center; white-space: normal; }

@@ -40,6 +40,14 @@ namespace EnerGo.Tests
                 "kartu-panduan", "panduan-ingatkan", "panduan-centang", "btn-panduan-tutup", "btn-panduan-utama");
 
         [Test]
+        public void QuizHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Kuis.uxml"),
+                "lapis-kuis", "kuis-penanda", "pil-soal", "kuis-soal", "kartu-soal", "soal-waktu", "soal-detik", "soal-ikon", "soal-teks", "cap-jawab",
+                "btn-benar", "btn-salah", "kartu-balik", "balik-selotip", "balik-jawab", "balik-ikon", "balik-teks", "balik-unit", "btn-lanjut", "lanjut-isi",
+                "kuis-hasil", "hasil-judul", "kartu-hasil", "hasil-bintang", "hasil-skor", "hasil-ikon", "hasil-plus", "hasil-mutu", "hasil-rincian", "hasil-pesan",
+                "btn-selesai-hasil", "kuis-error", "kuis-pendar-kiri", "kuis-pendar-kanan");
+
+        [Test]
         public void SceneRootHasEveryLayer() =>
             AssertNames(Clone("Assets/UI/Screens/LobbyScene.uxml"),
                 "lapis-splash", "lapis-lobby", "lapis-sheet", "lapis-panduan", "lapis-transisi");
