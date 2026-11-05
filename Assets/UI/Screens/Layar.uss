@@ -1,0 +1,63 @@
+/* Screen layouts for LobbyScene, positions from docs/design-system/components/LayarAwal and LayarSheet previews (480 x 800). */
+.eg-lapis { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.eg-layar { position: absolute; left: 0; top: 0; right: 0; bottom: 0; flex-direction: column; padding: 28px 16px 24px 16px; }
+
+/* Lobby */
+.lobby__judul { font-size: 60px; margin: 12px 0 22px 0; }
+.lobby__koleksi { padding: 28px 8px 16px 8px; margin-bottom: 12px; }
+.lobby__tiles { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+.lobby__tiles .eg-tile { margin: 7px 5px; }
+.lobby__mode { min-height: 32px; font-size: 13px; align-self: center; margin-bottom: 12px; }
+.lobby__dock { flex-direction: row; justify-content: space-around; margin-top: auto; }
+
+/* Sheets: paper card rising from the bottom over the shared curtain (LayarSheet preview) */
+.eg-sheet {
+    position: absolute; left: 12px; right: 12px; bottom: -16px; padding: 36px 20px 40px 20px;
+    border-radius: 24px 24px 0 0; border-bottom-width: 0;
+    translate: 0 100%; transition-property: translate; transition-duration: 0.25s; transition-timing-function: ease-out;
+}
+.eg-sheet.is-terbuka { translate: 0 0; }
+.sheet--latihan { padding: 36px 16px 40px 16px; }
+.sheet__sub { -unity-text-align: middle-center; font-size: 16px; margin-bottom: 18px; }
+.sheet__grid { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+.sheet__grid .eg-tile { margin: 8px 4px; }
+.sheet__mulai { margin-top: 28px; }
+.sheet__tombol { margin-top: 20px; }
+.sheet__tombol .eg-btn { margin-top: 7px; margin-bottom: 7px; }
+.sheet__tombol #btn-reset { font-size: 18px; }
+.sheet__reset-bar { margin: -4px 8px 4px 8px; }
+.sheet__ikon-suara { width: 32px; height: 32px; background-image: url("project://database/Assets/UI/Icons/suara.svg"); }
+.sheet__persen { width: 48px; -unity-text-align: middle-right; }
+.sheet__notice { -unity-text-align: middle-center; margin-top: 6px; }
+
+/* Guide card, read mode (LayarSheet preview, third frame) */
+.panduan__layar { justify-content: center; }
+.panduan__kartu { padding: 34px 20px 20px 20px; }
+.panduan__garis { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.panduan__langkah { -unity-text-align: middle-center; font-size: 14px; color: var(--tinta-pudar); }
+.panduan__bingkai {
+    height: 170px; margin: 12px 0; align-items: center; justify-content: center;
+    background-color: var(--kertas-300); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: 12px;
+}
+.panduan__ilustrasi { width: 96px; height: 96px; }
+.panduan__isi { margin: 6px 0 14px 0; }
+.panduan__titik { margin-bottom: 16px; }
+.panduan__titik-kini { width: 24px; height: 10px; border-radius: 5px; background-color: var(--tinta); margin: 0 4px; }
+.panduan__titik-lain { width: 10px; height: 10px; border-radius: 5px; background-color: var(--kertas-300); border-width: var(--garis-tinta); border-color: var(--tinta); margin: 0 4px; }
+.panduan__utama { margin-left: var(--space-3); }
+
+/* Splash */
+.splash { align-items: center; justify-content: center; }
+.splash__kartu { padding: 28px 28px 22px 28px; align-items: center; }
+.splash__tanda { width: 128px; height: 128px; background-image: url("project://database/Assets/UI/Logo/energo-mark.svg"); }
+.splash__wordmark { -unity-font-definition: var(--font-judul); font-size: 72px; letter-spacing: -2.16px; margin-top: 12px; color: var(--tinta); -unity-text-align: middle-center; }
+.splash__tagline { font-size: 16px; color: var(--tinta-pudar); margin-top: 10px; -unity-text-align: middle-center; }
+.splash__bawah { position: absolute; left: 56px; right: 56px; bottom: 64px; }
+.splash__ajakan { margin-top: 18px; -unity-text-align: middle-center; }
+
+/* Transisi */
+.transisi { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: var(--tinta); align-items: center; justify-content: center; }
+.transisi__tanda { width: 120px; height: 120px; background-image: url("project://database/Assets/UI/Logo/energo-mark.svg"); margin-bottom: 24px; }
+.transisi__teks { -unity-font-definition: var(--font-data-bold); font-size: 18px; color: var(--kertas-100); margin-bottom: 24px; }
+.transisi__bar { width: 200px; border-color: var(--kertas-100); }
+.transisi__isi { border-color: var(--kertas-100); }

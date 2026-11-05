@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+    <!-- Guide card, read mode (LayarSheet preview, third frame, with TUTUP instead of LEWATI and no checkbox). -->
+    <ui:VisualElement class="eg-redup" />
+    <ui:VisualElement class="eg-layar eg-aman panduan__layar" picking-mode="Ignore">
+        <ui:VisualElement name="kartu-panduan" class="eg-kartu panduan__kartu">
+            <eg:GarisKertas class="panduan__garis" />
+            <ui:Label name="panduan-selotip" class="eg-selotip" text="EMAS" />
+            <ui:Label name="panduan-langkah" class="eg-data-tebal panduan__langkah" text="LANGKAH 1/3" />
+            <ui:VisualElement class="panduan__bingkai">
+                <ui:VisualElement name="panduan-ilustrasi" class="panduan__ilustrasi" />
+            </ui:VisualElement>
+            <ui:Label name="panduan-judul" class="eg-judul-kartu" text="Judul" />
+            <ui:Label name="panduan-isi" class="eg-isi-teks panduan__isi" text="Isi" />
+            <ui:VisualElement name="panduan-titik" class="eg-tengah panduan__titik" />
+            <ui:VisualElement class="eg-baris">
+                <ui:Button name="btn-panduan-tutup" class="eg-btn eg-btn--kecil eg-btn--kertas" text="TUTUP" />
+                <ui:Button name="btn-panduan-utama" class="eg-btn eg-btn--utama eg-isi panduan__utama" text="LANJUT" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -312,18 +312,18 @@ namespace EnerGo
                     label = uraniumCollected + "/" + UraniumMath.FragmentCount;
                     break;
             }
-            EnerGoUI.DrawCard(new Rect(x, y, w, 64f), EnerGoUI.Radius, warn ? HudWarn : HudOk, 2f);
+            DrawHudBox(new Rect(x, y, w, 64f), warn ? HudWarn : HudOk);
             GUI.Label(new Rect(x + 10f, y + 8f, w - 20f, 20f), line, warn ? styleRadarAlert : styleRadarLocked);
             DrawHudBar(x + 20f, y + 36f, w - 40f, bar, warn ? HudWarn : HudOk, label);
         }
 
-        // Small light pill with centred Ink text, kept 8 px inside the screen edges; readable over the camera feed.
+        // Small dark pill with centred white text, kept 8 px inside the screen edges; readable over the camera feed.
         private void DrawHudTag(float cx, float y, float w, string text, float sw)
         {
             if (hudTagStyle == null)
                 hudTagStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
-            var r = new Rect(Mathf.Clamp(cx - w * 0.5f, 8f, sw - 8f - w), y, w, 22f);
-            EnerGoUI.DrawPanel(r, HudFill, HudOutline, 11f, 1.5f);
+            var r = new Rect(Mathf.Clamp(cx - w * 0.5f, 8f, sw - 8f - w), y, w, 26f);
+            EnerGoUI.DrawPill(r);
             GUI.Label(r, text, hudTagStyle);
         }
         private GUIStyle hudTagStyle;
@@ -341,31 +341,30 @@ namespace EnerGo
             if (uraniumRadStyle == null) uraniumRadStyle = new GUIStyle(styleRadarLocked) { fontSize = 26, alignment = TextAnchor.MiddleCenter };
             float mw = Mathf.Min(sw - 64f, 300f);
             var m = new Rect((sw - mw) * 0.5f, sh - 176f, mw, 64f);
-            EnerGoUI.DrawCard(m, EnerGoUI.Radius, near ? HudOk : HudOutline, 2f);
+            DrawHudBox(m, near ? HudOk : (Color?)null);
             GUI.Label(new Rect(m.x, m.y + 4f, mw, 30f), "RAD " + uraniumMeter, uraniumRadStyle);
             Color heat = Color.Lerp(EnerGoUI.Muted, UraniumGlow, uraniumMeter / 100f);
-            EnerGoUI.DrawBar(new Rect(m.x + 16f, m.y + 38f, mw - 32f, 10f), uraniumMeter / 100f, heat);
+            EnerGoUI.DrawBar(new Rect(m.x + 16f, m.y + 38f, mw - 32f, 14f), uraniumMeter / 100f, heat);
             string trend = uraniumTrend > 0 ? "SINYAL MENGUAT" : uraniumTrend < 0 ? "SINYAL MELEMAH" : "";
             if (trend.Length > 0) DrawHudTag(sw * 0.5f, m.yMax + 4f, 160f, trend, sw);
             if (uraniumPhase == UraniumPhase.Search) return;
 
             // JEPIT: round button; the inner disc grows with the grip.
             UraniumGripRect(sw, sh, out Rect btn);
-            EnerGoUI.DrawPanel(btn, uraniumGripHeld ? EnerGoUI.Orange : HudFill, EnerGoUI.Ink, btn.width * 0.5f, 2.5f);
+            var face = EnerGoUI.DrawButton(btn, uraniumGripHeld ? ButtonKind.Orange : ButtonKind.Dark, uraniumGripHeld);
             if (uraniumGrip > 0f)
             {
-                float gr = btn.width * 0.5f * uraniumGrip;
-                EnerGoUI.DrawPanel(new Rect(btn.center.x - gr, btn.center.y - gr, gr * 2f, gr * 2f), EnerGoUI.Alpha(UraniumGlow, 0.8f), Color.clear, gr);
+                float gr = face.width * 0.42f * uraniumGrip;
+                EnerGoUI.DrawPanel(new Rect(face.center.x - gr, face.center.y - gr, gr * 2f, gr * 2f), EnerGoUI.Alpha(UraniumGlow, 0.8f), Color.clear, gr);
             }
-            if (hudTagStyle == null) hudTagStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
-            GUI.Label(btn, "JEPIT", hudTagStyle);
+            EnerGoUI.ButtonLabel(face, "JEPIT", 20, ButtonKind.Dark);
 
             float dw = Mathf.Min(sw - 64f, 320f);
             var dose = new Rect((sw - dw) * 0.5f, sh - 104f, dw, 34f);
             bool high = uraniumDose > 0.75f;
-            EnerGoUI.DrawCard(dose, EnerGoUI.Radius, high ? HudWarn : HudOutline, 2f);
+            DrawHudBox(dose, high ? HudWarn : (Color?)null);
             GUI.Label(new Rect(dose.x + 10f, dose.y + 8f, 60f, 18f), "DOSIS", styleTapsCounter);
-            EnerGoUI.DrawBar(new Rect(dose.x + 70f, dose.y + 11f, dw - 84f, 12f), uraniumDose, high ? EnerGoUI.Danger : EnerGoUI.Orange);
+            EnerGoUI.DrawBar(new Rect(dose.x + 70f, dose.y + 8f, dw - 84f, 18f), uraniumDose, high ? EnerGoUI.BadTop : EnerGoUI.OrangeTop, high ? EnerGoUI.BadBot : EnerGoUI.OrangeBot);
         }
     }
 }

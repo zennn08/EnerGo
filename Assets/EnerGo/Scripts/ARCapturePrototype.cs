@@ -81,7 +81,9 @@ namespace EnerGo
         private float quizShownAt;
         private string quizShownKey;
         private const float FinishDelay = 0.6f;         // let the last break / gold reveal play before the quiz opens
-        private static readonly float[] CoalStageFit = { 1f, 0.95f, 0.9f, 0.8f }; // stage models are flatter piles
+        // Fit of the longest side per break stage. Stages 3-4 are low, wide piles, so their longest side is the width:
+        // fitting them larger keeps them about as wide as the lump they came from instead of shrinking away.
+        private static readonly float[] CoalStageFit = { 1f, 0.95f, 1.2f, 1.3f };
         private class CoalLump
         {
             public Transform root;
@@ -91,6 +93,15 @@ namespace EnerGo
         }
         private readonly List<CoalLump> coalLumps = new List<CoalLump>();
         private GameObject[] coalStageModels;
+        private GameObject coalChipModel, pickaxeModel; // Resources/Coal/serpihan, Resources/Coal/pickaxe (both optional)
+        private Transform pickaxe;                       // swings in from the lower right on every hit
+        private float pickSwingAt = -10f;
+        private Vector3 pickTarget;
+        private const float PickSwingSec = 0.26f, PickScale = 0.55f; // 0.74 m model -> ~0.4 m in hand
+        private const float PickImpactSec = 0.07f;                    // when the head lands; hit feedback waits for it
+        // The two sharp ends of the pick head in model space (measured in Art/energo_gaya.blend, sda_pickaxe):
+        // 0.26 m either side of the handle, 0.64 m above the grip.
+        private static readonly Vector3[] PickTips = { new Vector3(0.26f, 0.64f, 0f), new Vector3(-0.26f, 0.64f, 0f) };
         private Light coalLight;
         private int coalTotal;
         private float finishAt = -1f; // shared by coal and gold: when to open the quiz
@@ -179,8 +190,6 @@ namespace EnerGo
         private const float SwipeThreshold   = 90f;        // pixels (scaled) to commit
         private const float FlickSpeed       = 2800f;      // pixels/sec exit speed
         private const float ReturnSmoothing  = 12f;        // lerp speed for snap-back
-        private GUIStyle styleSwipeBenar;
-        private GUIStyle styleSwipeSalah;
         private GUIStyle styleCardStatement;
         private GUIStyle styleCardHint;
         private bool cardStylesInit = false;
@@ -192,7 +201,6 @@ namespace EnerGo
 
         // UI Textures
         private Texture2D texWhite;
-        private Texture2D texPill;
 
         // Styles
         private GUIStyle styleHeaderTag;
@@ -247,7 +255,6 @@ namespace EnerGo
             captureBearing = ExploreSession.PendingSpawnId != null && ExploreSession.PendingBearingDeg.HasValue
                 ? ExploreSession.PendingBearingDeg.Value : Random.Range(0f, 360f);
 
-            LoadTextures();
             CreateSolidTextures();
 
             // Set camera background fallback color
@@ -343,11 +350,6 @@ namespace EnerGo
                     arCamera.clearFlags = CameraClearFlags.Depth;
                 }
             }
-        }
-
-        private void LoadTextures()
-        {
-            texPill = Resources.Load<Texture2D>("UI/pill_badge");
         }
 
         private void CreateSolidTextures()
@@ -473,6 +475,7 @@ namespace EnerGo
             }
 
             compass.TargetPlaced = target != null; // CompassAnchor runs in LateUpdate, after this
+            AnimatePickaxe();
 
             // 4. Idle Target Animation
             if (target != null)
@@ -626,6 +629,7 @@ namespace EnerGo
             {
                 if (touch.phase == UnityEngine.InputSystem.TouchPhase.Began && !isDraggingCard)
                 {
+                    if (TryAnswerButton(touch.screenPosition)) return;
                     isDraggingCard  = true;
                     cardReturning   = false;
                     cardDragStart   = touch.screenPosition;
@@ -652,6 +656,7 @@ namespace EnerGo
             {
                 if (Mouse.current.leftButton.wasPressedThisFrame && !isDraggingCard)
                 {
+                    if (TryAnswerButton(Mouse.current.position.ReadValue())) return;
                     isDraggingCard  = true;
                     cardReturning   = false;
                     cardDragStart   = Mouse.current.position.ReadValue();
@@ -692,32 +697,46 @@ namespace EnerGo
 
         private void CommitOrReturnCard()
         {
-            if (Mathf.Abs(cardOffset.x) >= SwipeThreshold)
+            // Commit answer: slide kanan = true (BENAR), swipe kiri = false (SALAH)
+            if (Mathf.Abs(cardOffset.x) >= SwipeThreshold) CommitAnswer(cardOffset.x > 0f);
+            else cardReturning = true;
+        }
+
+        // One answer, from a swipe or from the ✕/✓ buttons.
+        private void CommitAnswer(bool answer)
+        {
+            cardFlicking = true;
+            if (!EnerGoProgress.Answer(answer)) return;
+            var session = EnerGoProgress.Current.pendingCapture;
+            if (session != null)
             {
-                // Commit answer: slide kanan = true (BENAR), swipe kiri = false (SALAH)
-                bool answer = cardOffset.x > 0f;
-                cardFlicking = true;
-                // Slight delay via coroutine is not available in OnGUI; we'll
-                // commit immediately and let the flick animation play for one frame.
-                if (EnerGoProgress.Answer(answer))
+                Haptics.Pulse(session.correct ? 30 : 200);
+                if (SFXManager.Instance != null)
                 {
-                    var session = EnerGoProgress.Current.pendingCapture;
-                    if (session != null)
-                    {
-                        Haptics.Pulse(session.correct ? 30 : 200);
-                        if (SFXManager.Instance != null)
-                        {
-                            if (session.correct) SFXManager.Instance.PlayQuizBenar();
-                            else SFXManager.Instance.PlayQuizSalah();
-                        }
-                    }
-                    resultShownAt = Time.time;
+                    if (session.correct) SFXManager.Instance.PlayQuizBenar();
+                    else SFXManager.Instance.PlayQuizSalah();
                 }
             }
-            else
+            resultShownAt = Time.time;
+        }
+
+        // A press on ✕/✓ answers right away and flies the card out; it never starts a drag.
+        private bool TryAnswerButton(Vector2 screenPos)
+        {
+            float scale = HudScale, sw = Screen.width / scale, sh = Screen.height / scale;
+            var p = new Vector2(screenPos.x / scale, (Screen.height - screenPos.y) / scale);
+            for (int i = 0; i < 2; i++)
             {
-                cardReturning = true;
+                bool answer = i == 1;
+                if (!QuizButtonRect(answer, sw, sh).Contains(p)) continue;
+                isDraggingCard = false;
+                cardReturning = false;
+                cardOffset = new Vector2(answer ? 4f : -4f, 0f);
+                EnerGoUI.BlockTaps(0.35f); // the feedback card draws this frame; its button must not take this touch
+                CommitAnswer(answer);
+                return true;
             }
+            return false;
         }
 
         // Drift the sun around its spawn direction and fill/drain the bar depending on the reticle.
@@ -856,6 +875,8 @@ namespace EnerGo
             {
                 coalStageModels = new GameObject[4];
                 for (int i = 0; i < 4; i++) coalStageModels[i] = Resources.Load<GameObject>("Coal/bara_" + (i + 1));
+                coalChipModel = Resources.Load<GameObject>("Coal/serpihan");
+                pickaxeModel = Resources.Load<GameObject>("Coal/pickaxe");
             }
             if (System.Array.IndexOf(coalStageModels, null) >= 0)
             {
@@ -942,29 +963,61 @@ namespace EnerGo
             best.hits++;
             lastHitTime = Time.time;
             lastHitScreenPos = screenPosition;
+            pickSwingAt = Time.time;
+            pickTarget = best.root.position;
+            // The count (and the score) change on the tap; what the player sees, hears and feels waits for the
+            // pickaxe head to land, so the swing and the hit read as one blow.
+            var lumpHit = best;
             if (best.hits < best.required)
             {
-                if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraPukul();
-                Haptics.Pulse(20);
-                SetCoalStage(best, CoalStage(best.hits, best.required));
-                best.shakeUntil = Time.time + 0.18f;
+                int stage = CoalStage(best.hits, best.required);
+                AtPickImpact(() =>
+                {
+                    if (lumpHit.root == null) return; // field respawned during the swing
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraPukul();
+                    Haptics.Pulse(20);
+                    SetCoalStage(lumpHit, stage);
+                    lumpHit.shakeUntil = Time.time + 0.18f;
+                });
                 return true;
             }
 
-            if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraHancur();
-            Haptics.Pulse(50);
-            SpawnCoalDebris(best);
-            Destroy(best.root.gameObject);
+            AtPickImpact(() =>
+            {
+                if (lumpHit.root == null) return;
+                if (SFXManager.Instance != null) SFXManager.Instance.PlayBaraHancur();
+                Haptics.Pulse(50);
+                SpawnCoalDebris(lumpHit);
+                Destroy(lumpHit.root.gameObject);
+            });
             if (CoalBroken() == coalTotal)
             {
                 int hits = 0;
                 foreach (var lump in coalLumps) hits += lump.required;
                 capturePerformance = SpeedScore(Time.time - coalStartedAt, hits * CoalParPerHit + coalTotal * CoalParPerLump);
                 finishAt = Time.time + FinishDelay;
-                Haptics.Pulse(120);
                 feedback = "SEMUA BATU BARA TERKUMPUL";
+                AtPickImpact(() => // after the last shatter has started, so the two sounds do not mask each other
+                {
+                    if (SFXManager.Instance != null) SFXManager.Instance.PlayTambangSelesai();
+                    Haptics.Pulse(120);
+                }, 0.25f);
             }
             return true;
+        }
+
+        // Run `action` when the pickaxe head lands (plus `extra`), or right away when there is no pickaxe model.
+        private void AtPickImpact(System.Action action, float extra = 0f)
+        {
+            float delay = (pickaxeModel != null ? PickImpactSec : 0f) + extra;
+            if (delay <= 0f) action();
+            else StartCoroutine(After(delay, action));
+        }
+
+        private static System.Collections.IEnumerator After(float seconds, System.Action action)
+        {
+            yield return new WaitForSeconds(seconds);
+            action();
         }
 
         private int CoalBroken()
@@ -974,15 +1027,20 @@ namespace EnerGo
             return n;
         }
 
-        // A few small chunks that burst out and fall, then clean themselves up.
+        // A few small coal chips that burst out and fall, then clean themselves up.
         private void SpawnCoalDebris(CoalLump lump)
         {
             var r = lump.visual != null ? lump.visual.GetComponentInChildren<Renderer>() : null;
             for (int i = 0; i < 8; i++)
             {
-                var chip = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                Destroy(chip.GetComponent<Collider>());
-                if (r != null) chip.GetComponent<Renderer>().sharedMaterial = r.sharedMaterial;
+                GameObject chip;
+                if (coalChipModel != null) chip = Instantiate(coalChipModel); // 1 m model, scaled below
+                else
+                {
+                    chip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    Destroy(chip.GetComponent<Collider>());
+                    if (r != null) chip.GetComponent<Renderer>().sharedMaterial = r.sharedMaterial;
+                }
                 chip.transform.position = lump.root.position + Random.insideUnitSphere * lump.size * 0.3f;
                 chip.transform.rotation = Random.rotation;
                 chip.transform.localScale = Vector3.one * lump.size * Random.Range(0.12f, 0.22f);
@@ -991,6 +1049,55 @@ namespace EnerGo
                 body.angularVelocity = Random.insideUnitSphere * 10f;
                 Destroy(chip, 0.9f);
             }
+        }
+
+        // First-person pickaxe: on each hit it appears raised at the lower right, chops down at the lump
+        // (the hit lands ~0.07 s in), recoils and drops out of view. Runs every frame, independent of the
+        // coal field, so it never stays on screen when the target is respawned.
+        private void AnimatePickaxe()
+        {
+            float t = Time.time - pickSwingAt;
+            bool swinging = resourceId == ResourceIds.Coal && arCamera != null && pickaxeModel != null && t < PickSwingSec;
+            if (!swinging)
+            {
+                if (pickaxe != null && pickaxe.gameObject.activeSelf) pickaxe.gameObject.SetActive(false);
+                return;
+            }
+            if (pickaxe == null)
+            {
+                pickaxe = Instantiate(pickaxeModel, arCamera.transform, false).transform;
+                pickaxe.localScale = Vector3.one * PickScale;
+            }
+            pickaxe.gameObject.SetActive(true);
+
+            // Everything in camera space: +Z forward, +Y up, +X right.
+            // At the hit the sharp tip of the pick, not the middle of the head, must sit on the line of sight to
+            // the lump: find the point on that ray one grip-to-tip length away, then turn the handle back by the
+            // fixed angle between handle and tip so the tip lands exactly there.
+            var grip = new Vector3(0.14f, -0.25f, 0.3f);
+            float tipLen = PickTips[0].magnitude * PickScale;
+            Vector3 ray = arCamera.transform.InverseTransformPoint(pickTarget).normalized;
+            float rg = Vector3.Dot(ray, grip), disc = rg * rg - grip.sqrMagnitude + tipLen * tipLen;
+            Vector3 hitPoint = disc > 0f ? ray * (rg + Mathf.Sqrt(disc)) : arCamera.transform.InverseTransformPoint(pickTarget);
+            Vector3 toTip = (hitPoint - grip).normalized;
+            Vector3 axis = Vector3.Cross(toTip, Vector3.up).normalized;
+            if (axis.sqrMagnitude < 0.01f) axis = Vector3.right;
+
+            const float RaisedDeg = 75f, StrikeAt = PickImpactSec, HoldUntil = 0.11f;
+            // The tip that leads the chop is the one that hits: the one pointing along the swing's motion.
+            var probe = Quaternion.LookRotation(axis, toTip);
+            Vector3 motion = toTip - Quaternion.AngleAxis(RaisedDeg, axis) * toTip;
+            Vector3 tip = Vector3.Dot(probe * PickTips[0], motion) >= Vector3.Dot(probe * PickTips[1], motion) ? PickTips[0] : PickTips[1];
+            float tipFromHandle = Vector3.SignedAngle(toTip, probe * tip, axis);
+            Vector3 aim = Quaternion.AngleAxis(-tipFromHandle, axis) * toTip; // handle direction at the hit
+            float angle, drop = 0f;
+            if (t < StrikeAt) { float k = t / StrikeAt; angle = RaisedDeg * (1f - k * k); }            // speeds up into the hit
+            else if (t < HoldUntil) angle = 6f * Mathf.Sin((t - StrikeAt) / (HoldUntil - StrikeAt) * Mathf.PI); // small recoil
+            else { float k = (t - HoldUntil) / (PickSwingSec - HoldUntil); angle = 25f * k; drop = 0.25f * k * k; } // out of view
+
+            Vector3 handle = Quaternion.AngleAxis(angle, axis) * aim;
+            pickaxe.localPosition = grip + Vector3.down * drop;
+            pickaxe.localRotation = Quaternion.LookRotation(axis, handle); // model: handle along +Y, head across X
         }
 
         private void UpdateCoal()
@@ -1263,12 +1370,10 @@ namespace EnerGo
 
             if (goldPhase >= GoldPhase.Panning)
             {
-                var pill = new Rect(c.x - 60f, c.y - R - 40f, 120f, 30f);
-                EnerGoUI.DrawCard(pill, 15f);
-                GUI.Label(pill, $"EMAS {GoldLeft()}/{GoldPieces}", styleGoldVal);
+                DrawHudPill(new Rect(c.x - 70f, c.y - R - 50f, 140f, 40f), $"EMAS {GoldLeft()}/{GoldPieces}", Color.white);
             }
 
-            var big = new GUIStyle(styleRadarLocked) { fontSize = 46, normal = { textColor = EnerGoUI.Orange } };
+            var big = EnerGoUI.Title(60, Color.white);
             if (goldPhase == GoldPhase.Leveling)
             {
                 // Spirit level: centre the bubble in the ring.
@@ -1281,28 +1386,26 @@ namespace EnerGo
             else if (goldPhase == GoldPhase.Countdown)
             {
                 int n = Mathf.Clamp(Mathf.CeilToInt(GoldCountdownSec - (Time.time - goldPhaseAt)), 1, 3);
-                var card = new Rect(c.x - 100f, c.y - 62f, 200f, 124f);
-                EnerGoUI.DrawCard(card, 16f, EnerGoUI.Orange, 2f);
-                GUI.Label(new Rect(card.x, card.y + 12f, card.width, 20f), "SIAP?", styleRadarLocked);
-                GUI.Label(new Rect(card.x, card.y + 36f, card.width, 70f), n.ToString(), big);
+                var card = new Rect(c.x - 100f, c.y - 62f, 200f, 132f);
+                EnerGoUI.DrawCard(card);
+                EnerGoUI.DrawRibbon(card, "SIAP?", ButtonKind.Orange);
+                EnerGoUI.DrawStrokedLabel(new Rect(card.x, card.y + 34f, card.width, 80f), n.ToString(), big, EnerGoUI.M(3f), EnerGoUI.M(3f));
             }
             else if (goldPhase == GoldPhase.Panning && Time.time - goldPhaseAt < 0.8f)
             {
                 GUI.color = new Color(1f, 1f, 1f, 1f - (Time.time - goldPhaseAt) / 0.8f);
-                GUI.Label(new Rect(c.x - 150f, c.y - 35f, 300f, 70f), "MULAI!", big);
+                EnerGoUI.DrawStrokedLabel(new Rect(c.x - 150f, c.y - 40f, 300f, 80f), "MULAI!", big, EnerGoUI.M(3f), EnerGoUI.M(3f));
                 GUI.color = Color.white;
             }
             else if (goldPhase == GoldPhase.Failed)
             {
-                var amber = EnerGoUI.Orange;
-                float w = Mathf.Min(300f, sw * 0.84f);
-                var card = new Rect(c.x - w * 0.5f, c.y - 90f, w, 180f);
-                EnerGoUI.DrawCard(card, 16f, amber, 2f);
-                var title = new GUIStyle(styleRadarAlert) { fontSize = 22 };
-                var body = new GUIStyle(styleStatusSub) { wordWrap = true };
-                GUI.Label(new Rect(card.x + 16f, card.y + 16f, card.width - 32f, 30f), "EMAS TERBUANG!", title);
-                GUI.Label(new Rect(card.x + 16f, card.y + 50f, card.width - 32f, 50f), "Gerakanmu terlalu kencang, emasnya tumpah dari dulang.", body);
-                if (DrawPrimaryBtn(new Rect(card.x + 16f, card.yMax - 62f, card.width - 32f, 48f), "CARI ENDAPAN BARU"))
+                InitCardStyles();
+                float w = Mathf.Min(340f, sw * 0.86f);
+                var card = new Rect(c.x - w * 0.5f, c.y - 90f, w, 196f);
+                EnerGoUI.DrawCard(card);
+                EnerGoUI.DrawRibbon(card, "EMAS TERBUANG!", ButtonKind.Bad);
+                GUI.Label(new Rect(card.x + 18f, card.y + 46f, card.width - 36f, 56f), "Gerakanmu terlalu kencang, emasnya tumpah dari dulang.", styleCardHint);
+                if (DrawPrimaryBtn(new Rect(card.x + 18f, card.yMax - 78f, card.width - 36f, 60f), "CARI ENDAPAN BARU"))
                 {
                     if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     RetryGoldAtNewDeposit();
@@ -1489,50 +1592,50 @@ namespace EnerGo
 
             styleHeaderTag = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 9,
+                fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Muted }
+                normal = { textColor = EnerGoUI.Sun }
             };
 
             styleHeaderVal = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 14,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Ink }
+                normal = { textColor = Color.white }
             };
 
             styleGoldVal = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 14,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Ink }
+                normal = { textColor = Color.white }
             };
 
             styleRadarAlert = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 15,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.OrangeLip }
+                normal = { textColor = EnerGoUI.OrangeTop }
             };
 
             styleRadarLocked = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 15,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Success }
+                normal = { textColor = EnerGoUI.OkTop }
             };
 
             styleTapsCounter = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 12,
+                fontSize = 13,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleLeft,
-                normal = { textColor = EnerGoUI.Ink }
+                normal = { textColor = Color.white }
             };
 
             styleBtnText = new GUIStyle(GUI.skin.label)
@@ -1553,10 +1656,10 @@ namespace EnerGo
 
             styleStatusSub = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 11,
+                fontSize = 12,
                 fontStyle = FontStyle.Normal,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = EnerGoUI.Muted }
+                normal = { textColor = new Color(1f, 1f, 1f, 0.85f) }
             };
 
             EnerGoUI.ApplyFont(styleHeaderTag, styleHeaderVal, styleGoldVal, styleRadarAlert, styleRadarLocked,
@@ -1568,7 +1671,6 @@ namespace EnerGo
         {
             InitStyles();
 
-            if (texPill == null) LoadTextures();
             if (texWhite == null) CreateSolidTextures();
 
             var prevMatrix = GUI.matrix;
@@ -1580,10 +1682,10 @@ namespace EnerGo
             float sw = Screen.width / scale;
             float sh = Screen.height / scale;
 
-            float safeTop = Mathf.Max(12f, (Screen.height - Screen.safeArea.yMax) / scale + 6f);
+            float safeTop = EnerGoUI.SafeTop(scale);
 
             // --- 1. TOP TELEMETRY BAR ---
-            float pillH = 44f;
+            float pillH = 50f;
 
             // Return to Lobby Button (Left)
             var lobbyRect = new Rect(14f, safeTop, 90f, pillH);
@@ -1675,40 +1777,74 @@ namespace EnerGo
         private void InitCardStyles()
         {
             if (cardStylesInit) return;
-            styleSwipeBenar = new GUIStyle(GUI.skin.label)
-            {
-                fontSize       = 28,
-                fontStyle      = FontStyle.Bold,
-                alignment      = TextAnchor.MiddleCenter,
-                wordWrap       = false,
-                normal         = { textColor = EnerGoUI.Success }
-            };
-            styleSwipeSalah = new GUIStyle(GUI.skin.label)
-            {
-                fontSize       = 28,
-                fontStyle      = FontStyle.Bold,
-                alignment      = TextAnchor.MiddleCenter,
-                wordWrap       = false,
-                normal         = { textColor = EnerGoUI.Danger }
-            };
-            styleCardStatement = new GUIStyle(GUI.skin.label)
-            {
-                fontSize       = 18,
-                fontStyle      = FontStyle.Bold,
-                alignment      = TextAnchor.MiddleCenter,
-                wordWrap       = true,
-                normal         = { textColor = EnerGoUI.Ink }
-            };
-            styleCardHint = new GUIStyle(GUI.skin.label)
-            {
-                fontSize       = 11,
-                fontStyle      = FontStyle.Normal,
-                alignment      = TextAnchor.MiddleCenter,
-                wordWrap       = false,
-                normal         = { textColor = EnerGoUI.Muted }
-            };
-            EnerGoUI.ApplyFont(styleSwipeBenar, styleSwipeSalah, styleCardStatement, styleCardHint);
+            styleCardStatement = EnerGoUI.Text(20, true, EnerGoUI.Ink, TextAnchor.MiddleCenter, wrap: true);
+            styleCardHint = EnerGoUI.Text(16, false, EnerGoUI.Muted, TextAnchor.UpperCenter, wrap: true);
+            styleChip = EnerGoUI.Text(14, true, EnerGoUI.Ink);
             cardStylesInit = true;
+        }
+
+        // Right/wrong per question of the current capture, filled in as each feedback card shows (null = not seen).
+        private string quizMarksSession;
+        private readonly bool?[] quizMarks = new bool?[8];
+        private GUIStyle styleChip;
+
+        // ✕ (false, left) and ✓ (true, right) under the quiz card, in GUI units.
+        private Rect QuizButtonRect(bool answer, float sw, float sh)
+        {
+            float h = EnerGoUI.M(56f) * 0.75f, gap = 16f, w = (Mathf.Min(sw - 40f, 420f) - gap) * 0.5f;
+            float x0 = (sw - w * 2f - gap) * 0.5f;
+            return new Rect(answer ? x0 + w + gap : x0, sh - EnerGoUI.SafeBottom(HudScale) - h, w, h);
+        }
+
+        // Rounded white chip; returns its width. Measure-only when `draw` is false.
+        private float DrawChip(float x, float y, string text, string icon, bool draw = true)
+        {
+            float iconW = icon != null ? 22f : 0f, h = 30f;
+            float w = styleChip.CalcSize(new GUIContent(text)).x + iconW + 22f;
+            if (!draw) return w;
+            var r = new Rect(x, y, w, h);
+            EnerGoUI.DrawPanel(new Rect(r.x, r.y + 3f, r.width, r.height), EnerGoUI.Ink, Color.clear, 10f);
+            EnerGoUI.DrawPanel(r, Color.white, EnerGoUI.Ink, 10f, 2.5f);
+            if (icon != null) EnerGoUI.DrawIcon(new Rect(r.x + 9f, r.y + 5f, 20f, 20f), icon);
+            GUI.Label(new Rect(r.x + 9f + iconW, r.y, w - 18f - iconW, h), text, styleChip);
+            return w;
+        }
+
+        // A centred row of chips, wrapping onto a second line when it is wider than `maxW`. Returns the bottom edge.
+        private float DrawChipRow(float cx, float y, float maxW, string[] texts, string[] icons)
+        {
+            const float gap = 8f, rowH = 38f;
+            int start = 0;
+            while (start < texts.Length)
+            {
+                float rowW = 0f; int end = start;
+                while (end < texts.Length)
+                {
+                    float cw = DrawChip(0, 0, texts[end], icons?[end], false);
+                    if (end > start && rowW + gap + cw > maxW) break;
+                    rowW += (end > start ? gap : 0f) + cw; end++;
+                }
+                float x = cx - rowW * 0.5f;
+                for (int i = start; i < end; i++) x += DrawChip(x, y, texts[i], icons?[i]) + gap;
+                y += rowH; start = end;
+            }
+            return y;
+        }
+
+        // Three progress dots (current = Sun, right = Ok ✓, wrong = Bad ✕) and the SOAL n/3 pill.
+        private void DrawQuizTop(CaptureSession session, float sw, float top)
+        {
+            const float d = 30f, gap = 8f;
+            for (int i = 0; i < session.QuestionCount && i < quizMarks.Length; i++)
+            {
+                var r = new Rect(20f + i * (d + gap), top + 8f, d, d);
+                bool? mark = quizMarks[i];
+                bool current = i == session.questionIndex && session.state == "awaiting-analysis";
+                Color fill = mark == true ? EnerGoUI.Success : mark == false ? EnerGoUI.Danger : current ? EnerGoUI.Sun : EnerGoUI.DarkTop;
+                EnerGoUI.DrawPanel(r, fill, EnerGoUI.Ink, d * 0.5f, 3f);
+                if (mark != null) EnerGoUI.DrawIcon(new Rect(r.x + 7f, r.y + 7f, d - 14f, d - 14f), mark.Value ? "check" : "cross");
+            }
+            DrawHudPill(new Rect(sw - 20f - 130f, top, 130f, 46f), "SOAL " + (Mathf.Min(session.questionIndex + 1, session.QuestionCount)) + "/" + session.QuestionCount, EnerGoUI.Sun);
         }
 
         private void DrawAnalysis(float sw, float sh)
@@ -1719,43 +1855,47 @@ namespace EnerGo
             var question = QuizBank.Find(session.questionId, session.resourceId);
             if (question == null) return;
 
-            // ── Dark full-screen backdrop ──────────────────────────────────
-            GUI.color = EnerGoUI.Cream;
-            GUI.DrawTexture(new Rect(0, 0, sw, sh), texWhite);
-            GUI.color = Color.white;
+            if (quizMarksSession != session.sessionId)
+            {
+                quizMarksSession = session.sessionId;
+                for (int i = 0; i < quizMarks.Length; i++) quizMarks[i] = null;
+            }
+            if (session.state != "awaiting-analysis" && session.questionIndex < quizMarks.Length) quizMarks[session.questionIndex] = session.correct;
 
-            var body    = new GUIStyle(styleStatusSub)   { alignment = TextAnchor.UpperLeft,  fontSize = 14, wordWrap = true, normal = { textColor = EnerGoUI.Ink } };
+            EnerGoUI.DrawWorld(sw, sh, 0.45f);
+            float top = EnerGoUI.SafeTop(HudScale);
+            DrawQuizTop(session, sw, top);
 
-            var mint  = EnerGoUI.Success;
-            var amber = EnerGoUI.Danger;
-            float w = Mathf.Min(sw - 40f, 360f), x = (sw - w) * 0.5f;
-            float pad = 20f, resW = w - pad * 2f;
-            var explain = new GUIStyle(body) { alignment = TextAnchor.UpperCenter };
+            float w = Mathf.Min(sw - 40f, 400f), x = (sw - w) * 0.5f;
+            float pad = 22f, resW = w - pad * 2f;
+            string icon = EnerGoUI.ResourceIcon(session.resourceId);
 
             // ── FEEDBACK after each answer: right/wrong + the explanation ──
             if (session.state == "feedback")
             {
-                float explainH = explain.CalcHeight(new GUIContent(question.explanation), resW);
-                float cardH = 16f + 18f + 40f + 22f + 16f + explainH + 20f + 48f + pad;
-                float y = (sh - cardH) * 0.5f;
-                Color col = session.correct ? mint : amber;
-                EnerGoUI.DrawCard(new Rect(x, y, w, cardH), 20f, col, 2.5f);
+                float explainH = styleCardHint.CalcHeight(new GUIContent(question.explanation), resW);
+                float cardH = 48f + 34f + 12f + 64f + 12f + explainH + (session.correct ? 46f : 0f) + 22f + 64f + pad;
+                float y = Mathf.Max(top + 80f, (sh - cardH) * 0.5f);
+                var card = new Rect(x, y, w, cardH);
+                EnerGoUI.DrawCard(card);
+                EnerGoUI.DrawRibbon(card, session.correct ? "BENAR!" : session.timedOut ? "WAKTU HABIS" : "SALAH", session.correct ? ButtonKind.Ok : ButtonKind.Bad);
 
-                float cy2 = y + 16f;
-                GUI.Label(new Rect(x + pad, cy2, resW, 18f), "SOAL " + (session.questionIndex + 1) + "/" + session.QuestionCount, styleHeaderTag);
-                cy2 += 18f;
-                var verdict = new GUIStyle(styleRadarLocked) { fontSize = 24, normal = { textColor = col } };
-                GUI.Label(new Rect(x + pad, cy2, resW, 40f), session.correct ? "BENAR!" : session.timedOut ? "WAKTU HABIS" : "SALAH", verdict);
-                cy2 += 40f;
-                GUI.Label(new Rect(x + pad, cy2, resW, 22f), "Pernyataan ini " + (question.correctAnswer ? "BENAR" : "SALAH"), styleStatusSub);
-                cy2 += 22f + 16f;
-                GUI.Label(new Rect(x + pad, cy2, resW, explainH), question.explanation, explain);
-                cy2 += explainH + 20f;
+                float cy2 = y + 48f;
+                string verdict = question.correctAnswer ? "<color=#2F8F24>BENAR</color>" : "<color=#D42A45>SALAH</color>";
+                DrawChipRow(card.center.x, cy2, resW, new[] { "Pernyataan ini " + verdict }, null);
+                cy2 += 34f + 12f;
+                EnerGoUI.DrawIcon(new Rect(card.center.x - 32f, cy2, 64f, 64f), icon);
+                cy2 += 64f + 12f;
+                GUI.Label(new Rect(x + pad, cy2, resW, explainH), question.explanation, styleCardHint);
+                cy2 += explainH;
+                if (session.correct) { DrawChipRow(card.center.x, cy2 + 14f, resW, new[] { "+1 unit" }, new[] { icon }); cy2 += 46f; }
+                cy2 += 22f;
 
                 // A wrong answer holds the button briefly so the explanation actually gets read.
-                bool canContinue = session.correct || Time.time - resultShownAt >= 2f;
+                float held = session.correct ? 1f : Mathf.Clamp01((Time.time - resultShownAt) / 2f);
                 string next = session.IsLastQuestion ? "LIHAT HASIL" : "SOAL BERIKUTNYA";
-                if (canContinue && DrawPrimaryBtn(new Rect(x + pad, cy2, resW, 52f), next))
+                var btn = new Rect(x + pad, cy2, resW, 64f);
+                if (held >= 1f && DrawPrimaryBtn(btn, next))
                 {
                     if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     if (EnerGoProgress.NextQuestion())
@@ -1766,11 +1906,15 @@ namespace EnerGo
                         isDraggingCard = false;
                     }
                 }
-                else if (!canContinue)
-                    GUI.Label(new Rect(x + pad, cy2, resW, 48f), "Baca penjelasan dulu...", styleStatusSub);
+                else if (held < 1f)
+                {
+                    var face = EnerGoUI.DrawButton(btn, ButtonKind.Off);
+                    EnerGoUI.DrawPanel(new Rect(face.x + 4f, face.y + 4f, (face.width - 8f) * held, face.height - 8f), new Color(1f, 1f, 1f, 0.45f), Color.clear, 12f);
+                    EnerGoUI.ButtonLabel(face, "BACA DULU...", 20, ButtonKind.Off);
+                }
 
                 if (!string.IsNullOrEmpty(EnerGoProgress.Error))
-                    GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, explain);
+                    GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, styleCardHint);
                 return;
             }
 
@@ -1784,30 +1928,46 @@ namespace EnerGo
                 string message = pure ? "Sempurna! Semua jawaban tepat."
                     : right == 0 ? "Belum ada yang tepat. Coba lagi di tangkapan berikutnya."
                     : "Bagus! Jawab semua dengan tepat untuk hasil Murni.";
-                float msgH = explain.CalcHeight(new GUIContent(message), resW);
-                float cardH = 16f + 18f + 44f + 22f + 22f + 16f + msgH + 20f + 52f + pad;
-                float y = (sh - cardH) * 0.5f;
-                Color col = pure ? mint : EnerGoUI.Orange;
-                EnerGoUI.DrawCard(new Rect(x, y, w, cardH), 20f, col, 2.5f);
+                float msgH = styleCardHint.CalcHeight(new GUIContent(message), resW);
+                string[] chips = { "Dasar +1", "Kuis +" + right, MiniGameName(session.resourceId) + " " + EnerGoProgress.GradeFor(session.performanceBonus) + " +" + session.performanceBonus };
+                float cardH = 46f + 60f + 46f + 60f + 84f + msgH + 20f + 64f + pad;
+                float y = Mathf.Max(top + 128f, (sh - cardH) * 0.5f + 30f);
+                var card = new Rect(x, y, w, cardH);
 
-                float cy2 = y + 16f;
-                GUI.Label(new Rect(x + pad, cy2, resW, 18f), "HASIL ANALISIS", styleHeaderTag);
-                cy2 += 18f;
-                var verdict = new GUIStyle(styleRadarLocked) { fontSize = 26, normal = { textColor = col } };
-                GUI.Label(new Rect(x + pad, cy2, resW, 44f), right + "/" + count + " BENAR", verdict);
-                cy2 += 44f;
-                GUI.Label(new Rect(x + pad, cy2, resW, 22f), "+" + session.rewardQuantity + " unit · Kualitas: " + (pure ? "Murni" : "Normal"), styleStatusSub);
-                cy2 += 22f;
+                EnerGoUI.DrawStrokedLabel(new Rect(0, y - 122f, sw, 56f), UiLayout.ResultTitle(right, count), EnerGoUI.Title(46, Color.white), EnerGoUI.M(3f), EnerGoUI.M(4f));
+                EnerGoUI.DrawCard(card);
+                EnerGoUI.DrawRibbon(card, "HASIL ANALISIS", ButtonKind.Orange);
+
+                float cy2 = y + 46f;
+                int stars = UiLayout.Stars(right);
+                for (int i = 0; i < 3; i++)
+                {
+                    float s = i == 1 ? 60f : 46f;
+                    float sx = card.center.x + (i - 1) * 58f - s * 0.5f;
+                    EnerGoUI.DrawIcon(new Rect(sx, cy2 + (i == 1 ? 0f : 12f), s, s), i < stars ? "star" : "star_empty");
+                }
+                cy2 += 60f;
+                GUI.Label(new Rect(x, cy2, w, 46f), right + "/" + count + " BENAR", EnerGoUI.Title(36, EnerGoUI.Ink));
+                cy2 += 46f;
+
+                // Reward: icon, a big stroked +N, the quality chip.
+                string plus = "+" + session.rewardQuantity;
+                var plusStyle = EnerGoUI.Title(40, Color.white, TextAnchor.MiddleLeft);
+                string quality = pure ? "Murni" : "Normal";
+                float plusW = plusStyle.CalcSize(new GUIContent(plus)).x, qW = DrawChip(0, 0, quality, null, false);
+                float rowW = 50f + 10f + plusW + 12f + qW, rx = card.center.x - rowW * 0.5f;
+                EnerGoUI.DrawIcon(new Rect(rx, cy2 + 5f, 50f, 50f), icon);
+                EnerGoUI.DrawStrokedLabel(new Rect(rx + 60f, cy2, plusW + 8f, 60f), plus, plusStyle, EnerGoUI.M(2.5f), EnerGoUI.M(2f));
+                DrawChip(rx + 60f + plusW + 12f, cy2 + 15f, quality, null);
+                cy2 += 60f + 8f;
+
                 // Where the units came from: 1 base + 1 per correct answer + the mini-game bonus.
-                GUI.Label(new Rect(x + pad, cy2, resW, 22f),
-                    "Dasar +1 · Kuis +" + right + " · " + MiniGameName(session.resourceId) + " " +
-                    EnerGoProgress.GradeFor(session.performanceBonus) + " +" + session.performanceBonus, new GUIStyle(styleHeaderTag) { fontSize = 12 });
-                cy2 += 22f + 16f;
-                GUI.Label(new Rect(x + pad, cy2, resW, msgH), message, explain);
+                cy2 = DrawChipRow(card.center.x, cy2, resW, chips, null) + 8f;
+                GUI.Label(new Rect(x + pad, cy2, resW, msgH), message, styleCardHint);
                 cy2 += msgH + 20f;
 
                 bool backToRadar = !string.IsNullOrEmpty(session.spawnId);
-                if (DrawPrimaryBtn(new Rect(x + pad, cy2, resW, 52f), backToRadar ? "LANJUT BERBURU" : "LANJUT KE LOBBY"))
+                if (DrawPrimaryBtn(new Rect(x + pad, cy2, resW, 64f), backToRadar ? "LANJUT BERBURU" : "LANJUT KE LOBBY"))
                 {
                     if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                     if (EnerGoProgress.ClearResult())
@@ -1820,7 +1980,7 @@ namespace EnerGo
                 }
 
                 if (!string.IsNullOrEmpty(EnerGoProgress.Error))
-                    GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, explain);
+                    GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, styleCardHint);
                 return;
             }
 
@@ -1834,86 +1994,107 @@ namespace EnerGo
                 return;
             }
 
-            // Card dimensions
-            float cw = Mathf.Min(sw - 40f, 360f);
-            float ch = Mathf.Min(sh * 0.55f, 320f);
-            float cx = (sw - cw) * 0.5f + cardOffset.x;
-            float cy = (sh - ch) * 0.5f + cardOffset.y;
+            // Title: BENAR ATAU SALAH?, never tilted.
+            var tWhite = EnerGoUI.Title(34, Color.white, TextAnchor.MiddleLeft);
+            var tOrange = EnerGoUI.Title(34, EnerGoUI.TitleOrange, TextAnchor.MiddleLeft);
+            float w1 = tWhite.CalcSize(new GUIContent("BENAR ")).x, w2 = tOrange.CalcSize(new GUIContent("ATAU ")).x, w3 = tWhite.CalcSize(new GUIContent("SALAH?")).x;
+            float tx = (sw - w1 - w2 - w3) * 0.5f, ty = top + 62f;
+            EnerGoUI.DrawStrokedLabel(new Rect(tx, ty, w1 + 4f, 46f), "BENAR ", tWhite, EnerGoUI.M(2.5f), EnerGoUI.M(3f));
+            EnerGoUI.DrawStrokedLabel(new Rect(tx + w1, ty, w2 + 4f, 46f), "ATAU ", tOrange, EnerGoUI.M(2.5f), EnerGoUI.M(3f));
+            EnerGoUI.DrawStrokedLabel(new Rect(tx + w1 + w2, ty, w3 + 4f, 46f), "SALAH?", tWhite, EnerGoUI.M(2.5f), EnerGoUI.M(3f));
 
-            // Rotation (clamped to ±18°)
-            float rotDeg = Mathf.Clamp(cardOffset.x * 0.08f, -18f, 18f);
-            float rotRad = rotDeg * Mathf.Deg2Rad;
+            // Answer buttons: the same answer path as a swipe (input is read in HandleCardSwipeInput).
+            for (int i = 0; i < 2; i++)
+            {
+                bool answer = i == 1;
+                var br = QuizButtonRect(answer, sw, sh);
+                var kind = answer ? ButtonKind.Ok : ButtonKind.Bad;
+                var face = EnerGoUI.DrawButton(br, kind, !cardFlicking && EnerGoUI.IsHeld(br, HudScale));
+                float iconS = face.height * 0.42f;
+                var label = EnerGoUI.Title(24, Color.white, TextAnchor.MiddleLeft);
+                string text = answer ? "BENAR" : "SALAH";
+                float lw = label.CalcSize(new GUIContent(text)).x, gx = face.center.x - (iconS + 8f + lw) * 0.5f;
+                EnerGoUI.DrawIcon(new Rect(gx, face.center.y - iconS * 0.5f, iconS, iconS), answer ? "check" : "cross");
+                EnerGoUI.DrawStrokedLabel(new Rect(gx + iconS + 8f, face.y, lw + 6f, face.height - 2f), text, label, EnerGoUI.M(2f), EnerGoUI.M(1.5f));
+            }
 
-            // Save matrix and apply rotation around card centre
-            var prevMatrix = GUI.matrix;
-            Vector2 pivot  = new Vector2(cx + cw * 0.5f, cy + ch * 0.5f);
-            GUIUtility.RotateAroundPivot(rotDeg, pivot);
+            // Card dimensions: between the title and the answer buttons.
+            float btnTop = QuizButtonRect(true, sw, sh).y;
+            float cw = Mathf.Min(sw - 40f, 400f);
+            float ch = Mathf.Min(btnTop - 36f - (ty + 66f), 440f);
+            float baseX = (sw - cw) * 0.5f, baseY = ty + 66f + (btnTop - 36f - (ty + 66f) - ch) * 0.5f;
 
-            // ── Card shadow ──
-            float shadowAlpha = 0.25f + Mathf.Abs(cardOffset.x) / sw * 0.25f;
-            EnerGoUI.DrawPanel(new Rect(cx + 4f, cy + 10f, cw, ch), EnerGoUI.Alpha(EnerGoUI.Ink, shadowAlpha * 0.4f), Color.clear, 20f);
+            // The next card peeking out behind: the only resting tilt on this screen.
+            var stackMatrix = GUI.matrix;
+            GUIUtility.RotateAroundPivot(3f, new Vector2(baseX + cw * 0.5f, baseY + ch * 0.5f));
+            EnerGoUI.DrawPanel(new Rect(baseX + 8f, baseY + 10f, cw - 16f, ch), EnerGoUI.Ink, Color.clear, EnerGoUI.M(24f));
+            EnerGoUI.DrawPanel(new Rect(baseX + 8f, baseY + 4f, cw - 16f, ch - 4f), EnerGoUI.PaperBot, EnerGoUI.Ink, EnerGoUI.M(24f), EnerGoUI.M(5f));
+            GUI.matrix = stackMatrix;
 
-            // ── Card face ── border tint changes with swipe direction: right = BENAR (green), left = SALAH (red)
+            // Screen edge tints toward the side the card is going.
             float swipeRatio = Mathf.Clamp01(Mathf.Abs(cardOffset.x) / SwipeThreshold);
-            bool  goingRight = cardOffset.x > 0f;
-            Color borderCol  = Mathf.Abs(cardOffset.x) < 4f ? HudOutline : goingRight
-                ? Color.Lerp(HudOutline, EnerGoUI.Success, swipeRatio)
-                : Color.Lerp(HudOutline, EnerGoUI.Danger, swipeRatio);
-            EnerGoUI.DrawPanel(new Rect(cx, cy, cw, ch), EnerGoUI.Paper, borderCol, 20f, 2.5f);
+            if (Mathf.Abs(cardOffset.x) > 4f)
+            {
+                bool right = cardOffset.x > 0f;
+                Color edge = EnerGoUI.Alpha(right ? EnerGoUI.Success : EnerGoUI.Danger, 0.35f * swipeRatio);
+                EnerGoUI.DrawPanel(new Rect(right ? sw * 0.5f : 0f, 0f, sw * 0.5f, sh), edge, Color.clear, 0f);
+            }
 
-            // ── Resource tag ──
-            float innerX = cx + 16f;
-            float innerW = cw - 32f;
-            GUI.Label(new Rect(innerX, cy + 16f, innerW, 16f),
-                "ANALISIS · " + ResourceIds.Name(resourceId).ToUpperInvariant() + " · SOAL " + (session.questionIndex + 1) + "/" + session.QuestionCount, styleHeaderTag);
+            float cx = baseX + cardOffset.x;
+            float cy = baseY + cardOffset.y;
 
-            // ── Timer: bar + seconds, turns red for the last 5 s ──
+            // Rotation while dragged (clamped to ±18°)
+            float rotDeg = Mathf.Clamp(cardOffset.x * 0.08f, -18f, 18f);
+            var prevMatrix = GUI.matrix;
+            GUIUtility.RotateAroundPivot(rotDeg, new Vector2(cx + cw * 0.5f, cy + ch * 0.5f));
+
+            var cardRect = new Rect(cx, cy, cw, ch);
+            Color? border = Mathf.Abs(cardOffset.x) < 4f ? (Color?)null
+                : Color.Lerp(EnerGoUI.Ink, cardOffset.x > 0f ? EnerGoUI.Success : EnerGoUI.Danger, swipeRatio);
+            EnerGoUI.DrawCard(cardRect, -1f, border);
+
+            // ── Timer: clock, bar and seconds; turns red for the last 5 s ──
+            float innerX = cx + pad, innerW = cw - pad * 2f;
             float left = QuizTimeLeft();
-            Color timerCol = left <= 5f ? EnerGoUI.Danger : EnerGoUI.Orange;
-            EnerGoUI.DrawBar(new Rect(innerX, cy + 42f, innerW - 44f, 8f), left / QuizSecondsPerQuestion, timerCol);
-            styleTapsCounter.normal.textColor = timerCol;
-            GUI.Label(new Rect(innerX + innerW - 36f, cy + 36f, 36f, 20f), Mathf.CeilToInt(left) + " dtk", styleTapsCounter);
-            styleTapsCounter.normal.textColor = EnerGoUI.Ink;
+            bool hurry = left <= 5f;
+            EnerGoUI.DrawIcon(new Rect(innerX, cy + 20f, 26f, 26f), "clock");
+            EnerGoUI.DrawBar(new Rect(innerX + 34f, cy + 24f, innerW - 34f - 40f, 18f), left / QuizSecondsPerQuestion,
+                hurry ? EnerGoUI.BadTop : EnerGoUI.OrangeTop, hurry ? EnerGoUI.BadBot : EnerGoUI.OrangeBot);
+            GUI.Label(new Rect(innerX + innerW - 34f, cy + 18f, 34f, 30f), Mathf.CeilToInt(left).ToString(), EnerGoUI.Title(22, hurry ? EnerGoUI.Danger : EnerGoUI.Ink));
 
-            // ── Statement text ──
-            GUI.Label(new Rect(innerX, cy + 60f, innerW, ch - 136f), question.statement, styleCardStatement);
+            // ── Resource icon and statement ──
+            float iconSize = Mathf.Min(EnerGoUI.M(74f) * 0.75f, ch * 0.24f);
+            EnerGoUI.DrawIcon(new Rect(cx + cw * 0.5f - iconSize * 0.5f, cy + 66f, iconSize, iconSize), icon);
+            float stTop = cy + 66f + iconSize + 12f;
+            GUI.Label(new Rect(innerX, stTop, innerW, cy + ch - 22f - stTop), question.statement, styleCardStatement);
 
-            // ── Hint ──
-            GUI.Label(new Rect(innerX, cy + ch - 36f, innerW, 20f),
-                "‹  geser kiri: SALAH      geser kanan: BENAR  ›", styleCardHint);
+            // ── BENAR / SALAH stamp while dragged ──
+            if (Mathf.Abs(cardOffset.x) > 4f)
+            {
+                bool right = cardOffset.x > 0f;
+                Color sc = right ? EnerGoUI.Success : EnerGoUI.Danger;
+                var stampStyle = EnerGoUI.Title(36, sc); // fixed colour: Title() caches per colour, fade with GUI.color
+                var prevTint = GUI.color;
+                GUI.color = new Color(1f, 1f, 1f, swipeRatio);
+                string st = right ? "BENAR" : "SALAH";
+                float sw2 = stampStyle.CalcSize(new GUIContent(st)).x + 28f;
+                var sr = new Rect(right ? cx + 20f : cx + cw - 20f - sw2, cy + 56f, sw2, 56f);
+                GUIUtility.RotateAroundPivot(right ? -14f : 14f, sr.center);
+                EnerGoUI.DrawPanel(sr, new Color(1f, 1f, 1f, 0.8f), sc, 12f, 5f);
+                GUI.Label(sr, st, stampStyle);
+                GUI.color = prevTint;
+            }
 
             GUI.matrix = prevMatrix;
 
-            // ── SALAH overlay (left swipe) ──
-            if (cardOffset.x < -4f)
-            {
-                float a = Mathf.Clamp01(-cardOffset.x / SwipeThreshold);
-                Color salahCol = EnerGoUI.Alpha(EnerGoUI.Danger, a);
-                // Left badge
-                EnerGoUI.DrawPanel(new Rect(cx, cy, cw * 0.5f, ch), new Color(salahCol.r, salahCol.g, salahCol.b, a * 0.12f), Color.clear, 20f);
-                styleSwipeSalah.normal.textColor = salahCol;
-                GUI.Label(new Rect(cx + 8f, cy, cw * 0.45f, ch), "SALAH", styleSwipeSalah);
-            }
-
-            // ── BENAR overlay (right swipe) ──
-            if (cardOffset.x > 4f)
-            {
-                float a = Mathf.Clamp01(cardOffset.x / SwipeThreshold);
-                Color benarCol = EnerGoUI.Alpha(EnerGoUI.Success, a);
-                // Right badge
-                EnerGoUI.DrawPanel(new Rect(cx + cw * 0.5f, cy, cw * 0.5f, ch), new Color(benarCol.r, benarCol.g, benarCol.b, a * 0.12f), Color.clear, 20f);
-                styleSwipeBenar.normal.textColor = benarCol;
-                GUI.Label(new Rect(cx + cw * 0.55f, cy, cw * 0.45f, ch), "BENAR", styleSwipeBenar);
-            }
-
             if (!string.IsNullOrEmpty(EnerGoProgress.Error))
             {
-                GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, body);
+                GUI.Label(new Rect(x, sh - 80f, w, 60f), EnerGoProgress.Error, styleCardHint);
             }
         }
 
-        private static readonly Color HudFill = EnerGoUI.Alpha(EnerGoUI.Paper, 0.96f);
-        private static readonly Color HudOutline = EnerGoUI.Line;
+        private static readonly Color HudFill = EnerGoUI.PillBg;
+        private static readonly Color HudOutline = EnerGoUI.Ink;
         private static readonly Color HudWarn = EnerGoUI.Orange;
         private static readonly Color HudOk = EnerGoUI.Success;
 
@@ -1988,7 +2169,7 @@ namespace EnerGo
 
             bool twoLines = line2 != null || locked;
             var box = new Rect(hudX, hudY, hudW, twoLines ? 64f : 42f);
-            EnerGoUI.DrawCard(box, EnerGoUI.Radius, accent, 2f);
+            DrawHudBox(box, accent == HudOutline ? (Color?)null : accent);
 
             GUI.Label(new Rect(hudX + 10, hudY + (twoLines ? 8f : 11f), hudW - 20, 20), line1, style1);
             if (line2 != null) GUI.Label(new Rect(hudX + 10, hudY + 34, hudW - 20, 18), line2, styleStatusSub);
@@ -2022,7 +2203,7 @@ namespace EnerGo
             if (compass == null || arCamera == null) return;
             if (stripLabelStyle == null) stripLabelStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
             var r = new Rect(16f, y, sw - 32f, 34f);
-            EnerGoUI.DrawCard(r, EnerGoUI.Radius, HudOutline, 1.5f);
+            DrawHudBox(r);
             float half = CompassMath.StripHalfSpanDeg, heading = compass.HeadingDeg;
             float X(float x01) => r.center.x + x01 * (r.width * 0.5f - 14f);
 
@@ -2034,7 +2215,7 @@ namespace EnerGo
                     float x01 = CompassMath.StripX(d, heading, half);
                     if (Mathf.Abs(x01) > 1f) continue;
                     if (d % 45 == 0) GUI.Label(new Rect(X(x01) - 16f, r.y + 2f, 32f, r.height - 4f), CompassMath.DirectionLabel(d), stripLabelStyle);
-                    else EnerGoUI.DrawPanel(new Rect(X(x01) - 1f, r.y + 12f, 2f, 10f), EnerGoUI.Line, Color.clear, 1f);
+                    else EnerGoUI.DrawPanel(new Rect(X(x01) - 1f, r.y + 12f, 2f, 10f), new Color(1f, 1f, 1f, 0.5f), Color.clear, 1f);
                 }
 
             if (resourceId == ResourceIds.Uranium)
@@ -2055,7 +2236,7 @@ namespace EnerGo
                 if (Mathf.Abs(x01) <= 1f) EnerGoUI.DrawPanel(new Rect(X(x01) - 6f, r.center.y - 6f, 12f, 12f), EnerGoUI.Orange, EnerGoUI.Ink, 6f, 1.5f);
                 else StripEdge(r, x01, Mathf.Abs(Mathf.DeltaAngle(heading, bearing)));
             }
-            if (compass.HasCompass) EnerGoUI.DrawPanel(new Rect(r.center.x - 1f, r.y + 2f, 2f, r.height - 4f), EnerGoUI.Ink, Color.clear, 1f); // view direction
+            if (compass.HasCompass) EnerGoUI.DrawPanel(new Rect(r.center.x - 1.5f, r.y + 3f, 3f, r.height - 6f), EnerGoUI.Sun, Color.clear, 1.5f); // view direction
         }
 
         private void StripEdge(Rect r, float x01, float deg)
@@ -2069,10 +2250,32 @@ namespace EnerGo
         // Horizontal progress bar with a short label (percentage or count) on the right.
         private void DrawHudBar(float x, float y, float w, float progress, Color fillCol, string label)
         {
-            float labelW = 44f;
-            var track = new Rect(x, y + 3f, w - labelW - 8f, 12f);
-            EnerGoUI.DrawBar(track, progress, fillCol);
-            GUI.Label(new Rect(track.xMax + 8f, y, labelW, 18f), label, styleTapsCounter);
+            float labelW = 48f;
+            var track = new Rect(x, y, w - labelW - 8f, 18f);
+            if (fillCol == HudOk) EnerGoUI.DrawBar(track, progress, EnerGoUI.OkTop, EnerGoUI.OkBot);
+            else if (fillCol == HudWarn) EnerGoUI.DrawBar(track, progress, EnerGoUI.OrangeTop, EnerGoUI.OrangeBot);
+            else EnerGoUI.DrawBar(track, progress, fillCol);
+            EnerGoUI.DrawStrokedLabel(new Rect(track.xMax + 8f, y - 1f, labelW, 20f), label, EnerGoUI.Title(16, Color.white, TextAnchor.MiddleLeft), 1.5f);
+        }
+
+        // Dark rounded box with an Ink outline: the base for every HUD panel over the camera.
+        // `accent` (warn/ok) draws a thin coloured ring just inside the outline.
+        private static void DrawHudBox(Rect r, Color? accent = null)
+        {
+            float rad = Mathf.Min(EnerGoUI.M(16f), r.height * 0.5f), w = EnerGoUI.M(2.5f);
+            EnerGoUI.DrawPanel(r, HudFill, Color.clear, rad);
+            if (accent != null)
+                EnerGoUI.DrawPanel(new Rect(r.x + w, r.y + w, r.width - w * 2f, r.height - w * 2f), Color.clear, accent.Value, rad - w, 2.5f);
+            EnerGoUI.DrawPanel(r, Color.clear, EnerGoUI.Ink, rad, w);
+        }
+
+        // One-line pill over the camera; the text shrinks to fit instead of clipping.
+        private void DrawHudPill(Rect r, string text, Color textColor)
+        {
+            var inner = EnerGoUI.DrawPill(r);
+            var style = EnerGoUI.Title(Mathf.RoundToInt(r.height * 0.42f), textColor);
+            int fit = EnerGoUI.FitSize(style, text, inner.width, 11);
+            GUI.Label(inner, text, fit == style.fontSize ? style : EnerGoUI.Title(fit, textColor));
         }
 
         // Remaining-hit pips floating above each coal lump: filled = hits landed.
@@ -2096,49 +2299,50 @@ namespace EnerGo
             }
         }
 
-        // Fixed aiming ring in the middle of the screen; glows and pulses while the light is inside.
+        // Fixed aiming ring in the middle of the screen: a dotted white ring with Ink edges; Sun glow while the light is inside.
         private void DrawSunReticle(float sw, float sh)
         {
             float r = ReticleRadius * (sunInside ? 1f + 0.04f * Mathf.Sin(Time.time * 8f) : 1f);
-            var rect = new Rect(sw * 0.5f - r, sh * 0.5f - r, r * 2f, r * 2f);
-            Color ring = sunInside ? EnerGoUI.Orange : new Color(1f, 1f, 1f, 0.9f);
-            Color fill = sunInside ? EnerGoUI.Alpha(EnerGoUI.Orange, 0.14f) : new Color(1f, 1f, 1f, 0.05f);
-            EnerGoUI.DrawPanel(rect, fill, ring, r, 3f);
+            var c = new Vector2(sw * 0.5f, sh * 0.5f);
+            if (sunInside) EnerGoUI.DrawPanel(new Rect(c.x - r, c.y - r, r * 2f, r * 2f), EnerGoUI.Alpha(EnerGoUI.Sun, 0.35f), Color.clear, r);
+            Color dot = sunInside ? EnerGoUI.Sun : Color.white;
+            const int dots = 28;
+            const float d = 8f;
+            for (int i = 0; i < dots; i++)
+            {
+                float a = i * Mathf.PI * 2f / dots;
+                var p = c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+                EnerGoUI.DrawPanel(new Rect(p.x - d * 0.5f, p.y - d * 0.5f, d, d), dot, EnerGoUI.Ink, d * 0.5f, 2f);
+            }
             // Small centre dot to aim with
-            EnerGoUI.DrawPanel(new Rect(sw * 0.5f - 3f, sh * 0.5f - 3f, 6f, 6f), ring, Color.clear, 3f);
+            EnerGoUI.DrawPanel(new Rect(c.x - 5f, c.y - 5f, 10f, 10f), dot, EnerGoUI.Ink, 5f, 2f);
         }
 
 
+        // Dark pill with a small Sun tag over a white value.
         private void DrawPill(Rect rect, string tag, string val, GUIStyle sTag, GUIStyle sVal)
         {
-            EnerGoUI.DrawCard(rect);
-            GUI.Label(new Rect(rect.x + 6, rect.y + 5, rect.width - 12, 15), tag, sTag);
-            GUI.Label(new Rect(rect.x + 6, rect.y + 20, rect.width - 12, 20), val, sVal);
+            var inner = EnerGoUI.DrawPill(rect);
+            GUI.Label(new Rect(inner.x, rect.y + 5f, inner.width, 15f), tag, sTag);
+            var v = EnerGoUI.Title(17, Color.white);
+            int fit = EnerGoUI.FitSize(v, val, inner.width, 11);
+            GUI.Label(new Rect(inner.x, rect.y + 19f, inner.width, rect.height - 23f), val, fit == v.fontSize ? v : EnerGoUI.Title(fit, Color.white));
         }
 
+        // Small Paper button with an Ink Lilita label (lobby/radar back, mode switch, respawn).
         private bool DrawBtn(Rect rect, string text, GUIStyle style)
         {
-            bool isPressed = rect.Contains(Event.current.mousePosition) && Mouse.current != null && Mouse.current.leftButton.isPressed;
-
-            GUI.Label(EnerGoUI.DrawSecondaryButton(rect, isPressed), text, style);
-
-            if (ButtonHit(rect))
-            {
-                return true;
-            }
-
-            return false;
+            var face = EnerGoUI.DrawButton(rect, ButtonKind.Paper, EnerGoUI.IsHeld(rect, HudScale));
+            EnerGoUI.ButtonLabel(face, text, 16, ButtonKind.Paper);
+            return ButtonHit(rect);
         }
 
         private static string MiniGameName(string id) =>
             id == ResourceIds.Sun ? "Ekstraksi" : id == ResourceIds.Coal ? "Tambang" : id == ResourceIds.Uranium ? "Pemburu Geiger" : id == ResourceIds.Oil ? "Bor & Pompa" : "Dulang";
 
-        private GUIStyle stylePrimaryText;
-
         private bool DrawPrimaryBtn(Rect rect, string text)
         {
-            if (stylePrimaryText == null) stylePrimaryText = EnerGoUI.Text(16, true, EnerGoUI.Paper);
-            GUI.Label(EnerGoUI.DrawPrimaryButton(rect, EnerGoUI.IsHeld(rect, HudScale)), text, stylePrimaryText);
+            EnerGoUI.ButtonLabel(EnerGoUI.DrawPrimaryButton(rect, EnerGoUI.IsHeld(rect, HudScale)), text, 20, ButtonKind.Orange);
             return ButtonHit(rect);
         }
 

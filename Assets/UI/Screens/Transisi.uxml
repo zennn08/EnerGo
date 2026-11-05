@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Transition to the radar or the camera (LayarAwal preview, third frame). Animated by LobbyView. -->
+    <ui:VisualElement name="transisi" class="transisi">
+        <ui:VisualElement name="transisi-tanda" class="transisi__tanda" />
+        <ui:Label name="transisi-teks" class="transisi__teks" text="Menyalakan radar..." />
+        <ui:VisualElement name="transisi-bar" class="eg-bar eg-bar--tipis transisi__bar"><ui:VisualElement class="eg-bar__isi transisi__isi" /></ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

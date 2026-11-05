@@ -1,0 +1,84 @@
+/* EnerGo — Jurnal Ekspedisi. Generated from docs/design-system/tokens.json; names = token names. */
+:root {
+    /* color */
+    --kertas-100: #fbf6ea;
+    --kertas-200: #f3ead6;
+    --kertas-300: #e7d9ba;
+    --kraft-400: #cdb68a;
+    --garis-kertas: #d3c4a1;
+    --grid-peta: #b9cbd3;
+    --tinta: #1f2a36;
+    --tinta-pudar: #4a5361;
+    --tinta-samar: #6a6f76;
+    --oranye: #f07f3c;
+    --oranye-tua: #a6481a;
+    --oker: #e2a72e;
+    --stempel: #b5362b;
+    --stempel-muda: #f6d9d2;
+    --hutan: #2e7a47;
+    --hutan-muda: #d7ebd3;
+    --laut: #2f6e8f;
+    --laut-muda: #d3e6ee;
+    --peta-hijau: #a9c79a;
+    --peta-hijau-tua: #6e9b5e;
+    --peta-air: #9cc3d3;
+    --sda-matahari: #f2b33d;
+    --sda-matahari-muda: #fcebc2;
+    --sda-batubara: #4b4f58;
+    --sda-batubara-muda: #dcdde0;
+    --sda-emas: #c99a2e;
+    --sda-emas-muda: #f4e5bd;
+    --sda-minyak: #5b4bb5;
+    --sda-minyak-muda: #e0dcf4;
+    --sda-uranium: #4fa83a;
+    --sda-uranium-muda: #dcefd3;
+    --uranium-nyala: #39ff14;
+    --sda-acak: #b53a70;
+    --sda-acak-muda: #f5d8e5;
+    --lapis-tanah: #9c6b43;
+    --lapis-batuan: #a3a29b;
+    --lapis-penutup: #6b6a66;
+    --lapis-gas: #8a7fd0;
+    --lapis-minyak: #2b2420;
+    --lapis-air-asin: #4f8fb8;
+    --redup: rgba(31, 42, 54, 0.55);
+    /* spacing */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+    /* radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-pil: 999px;
+    /* stroke */
+    --garis-tipis: 1.5px;
+    --garis-tinta: 2px;
+    --garis-tebal: 3px;
+    /* opacity */
+    --opasitas-terkunci: 0.45;
+    --opasitas-kontur: 0.35;
+    /* ukuran */
+    --sentuh-min: 64px;
+    --tombol-tinggi: 64px;
+    --tombol-bulat: 80px;
+    --tombol-jepit: 120px;
+    --ikon-md: 32px;
+    --ikon-lg: 56px;
+    /* font (static instances, Assets/Fonts) */
+    --font-judul: url("project://database/Assets/Fonts/Bricolage-ExtraBold%20SDF.asset");
+    --font-judul-sempit: url("project://database/Assets/Fonts/Bricolage-ExtraBold-Sempit%20SDF.asset");
+    --font-isi: url("project://database/Assets/Fonts/Lexend-Regular%20SDF.asset");
+    --font-isi-tebal: url("project://database/Assets/Fonts/Lexend-SemiBold%20SDF.asset");
+    --font-isi-bold: url("project://database/Assets/Fonts/Lexend-Bold%20SDF.asset");
+    --font-data: url("project://database/Assets/Fonts/SpaceMono-Regular%20SDF.asset");
+    --font-data-bold: url("project://database/Assets/Fonts/SpaceMono-Bold%20SDF.asset");
+    --font-tulisan: url("project://database/Assets/Fonts/Caveat-SemiBold%20SDF.asset");
+    -unity-font-definition: var(--font-isi);
+    color: var(--tinta);
+}

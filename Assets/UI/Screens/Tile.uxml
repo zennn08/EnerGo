@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Specimen tile (docs/design-system/components/TileSpesimen). LobbyView fills number, icon, name, badge and state. -->
+    <ui:VisualElement class="eg-tile">
+        <ui:VisualElement class="eg-tile__cincin" />
+        <ui:Label class="eg-tile__no" text="No.00" />
+        <ui:VisualElement class="eg-tile__ikon" />
+        <ui:Label class="eg-tile__nama" text="Nama" />
+        <ui:Label class="eg-badge" text="0" />
+        <ui:VisualElement class="eg-tile__gembok" style="background-image: url(&quot;project://database/Assets/UI/Icons/gembok.svg&quot;);" />
+        <ui:Label class="eg-tile__dipilih" text="DIPILIH" />
+    </ui:VisualElement>
+</ui:UXML>

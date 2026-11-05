@@ -1,0 +1,185 @@
+/* EnerGo — Jurnal Ekspedisi, translated from docs/design-system/components/bundle.css.
+   USS has no box-shadow, clip-path, pseudo-elements, outline, gradients or text-transform:
+   - hard ink shadows and button lips are a thicker bottom border (bayang-tombol 4 -> 2+4, bayang-kartu 3 -> 2+3);
+   - toggle knob, tile ring, DIPILIH label and bar scale ticks are child elements the view adds;
+   - the map background is the PetaLatar element (Painter2D);
+   - copy that bundle.css upper-cases is written in capitals in UXML/code. */
+
+/* radius-pil (999) renders as a pointed lens in UI Toolkit, so pill shapes use half their height. */
+
+/* ---------- Teks ---------- */
+.eg-judul { -unity-font-definition: var(--font-judul); color: var(--tinta); }
+.eg-judul-layar { -unity-font-definition: var(--font-judul); font-size: 56px; letter-spacing: -1.12px; color: var(--tinta); -unity-text-align: middle-center; }
+.eg-judul-kartu { -unity-font-definition: var(--font-judul); font-size: 24px; color: var(--tinta); white-space: normal; }
+.eg-sorot { color: var(--oranye-tua); }
+.eg-isi-teks { font-size: 18px; white-space: normal; color: var(--tinta); }
+.eg-kecil { font-size: 15px; color: var(--tinta-pudar); white-space: normal; }
+.eg-data { -unity-font-definition: var(--font-data); }
+.eg-data-tebal { -unity-font-definition: var(--font-data-bold); font-size: 16px; }
+.eg-status__teks { -unity-font-definition: var(--font-isi-bold); font-size: 15px; letter-spacing: 0.6px; color: var(--tinta); }
+.eg-catatan { -unity-font-definition: var(--font-tulisan); font-size: 26px; color: var(--oranye-tua); }
+
+/* ---------- Tata letak ---------- */
+.eg-baris { flex-direction: row; align-items: center; }
+.eg-kolom { flex-direction: column; }
+.eg-tengah { flex-direction: row; align-items: center; justify-content: center; }
+.eg-isi { flex-grow: 1; }
+.eg-redup { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: var(--redup); }
+
+/* ---------- Latar peta ---------- */
+.eg-peta { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: var(--kertas-200); }
+
+/* ---------- Tombol ---------- */
+.eg-btn {
+    flex-direction: row; align-items: center; justify-content: center;
+    min-height: var(--tombol-tinggi); padding: 0 var(--space-6); margin: 0 0 4px 0;
+    -unity-font-definition: var(--font-judul); font-size: 22px; letter-spacing: 0.88px; -unity-text-align: middle-center;
+    color: var(--tinta); background-color: var(--kertas-100);
+    border-width: var(--garis-tinta); border-bottom-width: 6px; border-color: var(--tinta); border-radius: var(--radius-md);
+    transition-property: translate, border-bottom-width; transition-duration: 0.08s;
+}
+.eg-btn:hover { background-color: var(--kertas-100); }
+.eg-btn:active { translate: 0 3px; border-bottom-width: 3px; }
+.eg-btn--utama, .eg-btn--utama:hover { background-color: var(--oranye); }
+.eg-btn--oker, .eg-btn--oker:hover { background-color: var(--oker); }
+.eg-btn--ok, .eg-btn--ok:hover { background-color: var(--hutan); color: var(--kertas-100); }
+.eg-btn--bahaya, .eg-btn--bahaya:hover { background-color: var(--stempel); color: var(--kertas-100); }
+.eg-btn--info, .eg-btn--info:hover { background-color: var(--laut); color: var(--kertas-100); }
+.eg-btn--kertas, .eg-btn--kertas:hover { background-color: var(--kertas-100); }
+.eg-btn--teks-bahaya { color: var(--stempel); }
+.eg-btn--nonaktif, .eg-btn--nonaktif:hover, .eg-btn:disabled {
+    background-color: var(--kertas-300); color: var(--tinta-pudar); border-bottom-width: var(--garis-tinta); translate: 0 3px;
+}
+.eg-btn--besar { min-height: 80px; font-size: 30px; border-width: var(--garis-tebal); border-bottom-width: 7px; padding: 0 var(--space-8); }
+.eg-btn--besar:active { border-bottom-width: 4px; }
+.eg-btn--kecil { min-height: 44px; font-size: 16px; padding: 0 var(--space-3); border-bottom-width: 5px; }
+.eg-btn--penuh { width: 100%; }
+.eg-btn__ikon { width: var(--ikon-md); height: var(--ikon-md); margin-right: var(--space-2); }
+.eg-btn--besar .eg-btn__ikon { width: 40px; height: 40px; }
+.eg-btn--kecil .eg-btn__ikon { width: 20px; height: 20px; }
+.eg-btn__isi { position: absolute; left: 0; bottom: 0; height: 6px; background-color: var(--tinta); opacity: 0.35; }
+
+/* ---------- Tombol bulat (dock) ---------- */
+.eg-bulat { flex-direction: column; align-items: center; -unity-font-definition: var(--font-isi-tebal); font-size: 15px; color: var(--tinta); }
+.eg-bulat__tombol {
+    width: var(--tombol-bulat); height: var(--tombol-bulat); border-radius: 40px; margin: 0 0 6px 0; padding: 0;
+    align-items: center; justify-content: center;
+    background-color: var(--kertas-100); border-width: var(--garis-tinta); border-bottom-width: 6px; border-color: var(--tinta);
+    transition-property: translate, border-bottom-width; transition-duration: 0.08s;
+}
+.eg-bulat__tombol:hover { background-color: var(--kertas-100); }
+.eg-bulat__tombol:active { translate: 0 3px; border-bottom-width: 3px; }
+.eg-bulat--oker .eg-bulat__tombol, .eg-bulat--oker .eg-bulat__tombol:hover { background-color: var(--oker); }
+.eg-bulat--laut .eg-bulat__tombol, .eg-bulat--laut .eg-bulat__tombol:hover { background-color: var(--laut-muda); }
+.eg-bulat__ikon { width: 36px; height: 36px; }
+
+/* ---------- Kartu, selotip ---------- */
+.eg-kartu {
+    background-color: var(--kertas-100);
+    border-width: var(--garis-tinta); border-bottom-width: 5px; border-color: var(--tinta); border-radius: var(--radius-lg);
+    padding: var(--space-6) var(--space-4) var(--space-4) var(--space-4);
+}
+.eg-kartu--benar { background-color: var(--hutan-muda); }
+.eg-kartu--salah { background-color: var(--stempel-muda); }
+.eg-kartu__garis { position: absolute; left: 0; right: 0; height: 1px; background-color: var(--garis-kertas); }
+.eg-selotip {
+    position: absolute; top: -18px; align-self: center; rotate: -2deg;
+    background-color: var(--kraft-400); color: var(--tinta);
+    -unity-font-definition: var(--font-judul-sempit); font-size: 16px; letter-spacing: 2.24px;
+    padding: 9px 26px; white-space: nowrap; -unity-text-align: middle-center;
+}
+.eg-selotip--merah { background-color: var(--stempel); color: var(--kertas-100); }
+.eg-selotip--hijau { background-color: var(--hutan); color: var(--kertas-100); }
+
+/* ---------- Pil, badge ---------- */
+.eg-pil {
+    flex-direction: row; align-items: center; align-self: flex-start; min-height: 40px; padding: 0 var(--space-3);
+    background-color: var(--kertas-100); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: 20px;
+    -unity-font-definition: var(--font-isi-bold); font-size: 15px; letter-spacing: 0.9px; color: var(--tinta); white-space: nowrap;
+}
+.eg-pil__ikon { width: 24px; height: 24px; margin-right: var(--space-2); }
+.eg-pil--data { -unity-font-definition: var(--font-data); letter-spacing: 0; font-size: 14px; }
+.eg-pil--angka { -unity-font-definition: var(--font-data-bold); letter-spacing: 0; }
+.eg-pil--oker { background-color: var(--oker); }
+.eg-pil--laut { background-color: var(--laut-muda); }
+.eg-badge {
+    position: absolute; top: -10px; right: -10px; min-width: 32px; height: 32px; padding: 0 6px;
+    border-radius: 16px; background-color: var(--stempel); color: var(--kertas-100);
+    border-width: var(--garis-tinta); border-color: var(--tinta);
+    -unity-font-definition: var(--font-data-bold); font-size: 15px; -unity-text-align: middle-center;
+}
+
+/* ---------- Bar ukur ---------- */
+.eg-bar {
+    height: 18px; border-radius: 9px; overflow: hidden;
+    border-width: var(--garis-tinta); border-color: var(--tinta); background-color: var(--kertas-300);
+}
+.eg-bar--tipis { height: 12px; border-radius: 6px; }
+.eg-bar--tebal { height: 26px; border-radius: 13px; }
+.eg-bar__isi { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background-color: var(--oranye); border-right-width: var(--garis-tinta); border-color: var(--tinta); }
+.eg-bar__tik { position: absolute; top: 0; bottom: 0; width: 1.5px; background-color: rgba(31, 42, 54, 0.28); }
+
+/* ---------- Kontrol ---------- */
+.eg-baris-atur { flex-direction: row; align-items: center; padding: var(--space-3) 0; border-bottom-width: var(--garis-tipis); border-color: var(--garis-kertas); }
+.eg-baris-atur__teks { flex-grow: 1; flex-shrink: 1; margin-right: var(--space-4); }
+.eg-baris-atur__judul { -unity-font-definition: var(--font-isi-tebal); font-size: 18px; color: var(--tinta); }
+.eg-baris-atur__sub { font-size: 15px; color: var(--tinta-pudar); white-space: normal; }
+.eg-toggle {
+    width: 64px; height: 36px; flex-shrink: 0; border-radius: 18px;
+    border-width: var(--garis-tinta); border-color: var(--tinta); background-color: var(--kertas-300);
+}
+.eg-toggle.is-nyala { background-color: var(--hutan); }
+.eg-toggle__kenop {
+    position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 13px;
+    background-color: var(--kertas-100); border-width: var(--garis-tinta); border-color: var(--tinta);
+    align-items: center; justify-content: center; transition-property: left; transition-duration: 0.12s;
+}
+.eg-toggle.is-nyala .eg-toggle__kenop { left: 31px; }
+.eg-toggle__tanda { width: 14px; height: 14px; }
+.eg-slider { flex-grow: 1; height: 36px; margin: 0 var(--space-3); }
+.eg-slider .eg-bar { position: absolute; left: 0; right: 0; top: 9px; }
+.eg-slider__kenop {
+    position: absolute; top: 0; width: 36px; height: 36px; margin-left: -18px; border-radius: 18px;
+    background-color: var(--kertas-100); border-width: var(--garis-tinta); border-bottom-width: 5px; border-color: var(--tinta);
+}
+
+/* ---------- Tile spesimen ---------- */
+.eg-tile {
+    width: 132px; padding: 30px 8px 12px 8px; align-items: center;
+    background-color: var(--kertas-300); border-width: var(--garis-tinta); border-bottom-width: 4px; border-color: var(--tinta); border-radius: var(--radius-md);
+}
+.eg-tile--ringkas { width: 128px; padding: 24px 6px 10px 6px; }
+.eg-tile__ikon { width: var(--ikon-lg); height: var(--ikon-lg); margin-bottom: 8px; }
+.eg-tile--ringkas .eg-tile__ikon { width: 44px; height: 44px; margin-bottom: 4px; }
+.eg-tile__no { position: absolute; top: 7px; left: 9px; -unity-font-definition: var(--font-data); font-size: 12px; color: var(--tinta-pudar); }
+.eg-tile__nama { -unity-font-definition: var(--font-isi-tebal); font-size: 16px; color: var(--tinta); -unity-text-align: middle-center; }
+.eg-tile__cincin { display: none; position: absolute; left: -9px; top: -9px; right: -9px; bottom: -11px; border-width: var(--garis-tebal); border-color: var(--oranye); border-radius: 16px; }
+.eg-tile__dipilih {
+    display: none; position: absolute; bottom: -16px; align-self: center; rotate: -3deg; padding: 2px 8px;
+    background-color: var(--oranye); border-width: var(--garis-tipis); border-color: var(--tinta);
+    -unity-font-definition: var(--font-judul-sempit); font-size: 12px; letter-spacing: 1.2px; color: var(--tinta);
+}
+.eg-tile.is-terpilih .eg-tile__cincin, .eg-tile.is-terpilih .eg-tile__dipilih { display: flex; }
+.eg-tile__gembok { display: none; position: absolute; top: 34px; align-self: center; width: 40px; height: 40px; }
+.eg-tile.is-terkunci { border-bottom-width: var(--garis-tinta); }
+.eg-tile.is-terkunci > .eg-tile__ikon, .eg-tile.is-terkunci > .eg-tile__nama, .eg-tile.is-terkunci > .eg-tile__no, .eg-tile.is-terkunci > .eg-badge { opacity: var(--opasitas-terkunci); }
+.eg-tile.is-terkunci > .eg-tile__gembok { display: flex; }
+
+/* ---------- Warna lewat kelas (UXML inline style tidak bisa memakai var()) ---------- */
+.eg-muda--sun { background-color: var(--sda-matahari-muda); }
+.eg-muda--coal { background-color: var(--sda-batubara-muda); }
+.eg-muda--gold { background-color: var(--sda-emas-muda); }
+.eg-muda--oil { background-color: var(--sda-minyak-muda); }
+.eg-muda--uranium { background-color: var(--sda-uranium-muda); }
+.eg-muda--random { background-color: var(--sda-acak-muda); }
+.eg-isi--laut { background-color: var(--laut); }
+.eg-isi--stempel { background-color: var(--stempel); }
+.eg-isi--oranye { background-color: var(--oranye); }
+.eg-ikon--sun { background-image: url("project://database/Assets/UI/Icons/sda-matahari.svg"); }
+.eg-ikon--coal { background-image: url("project://database/Assets/UI/Icons/sda-batubara.svg"); }
+.eg-ikon--gold { background-image: url("project://database/Assets/UI/Icons/sda-emas.svg"); }
+.eg-ikon--oil { background-image: url("project://database/Assets/UI/Icons/sda-minyak.svg"); }
+.eg-ikon--uranium { background-image: url("project://database/Assets/UI/Icons/sda-uranium.svg"); }
+.eg-ikon--random { background-image: url("project://database/Assets/UI/Icons/sda-acak.svg"); }
+.eg-toggle__tanda { background-image: url("project://database/Assets/UI/Icons/silang.svg"); }
+.eg-toggle.is-nyala .eg-toggle__tanda { background-image: url("project://database/Assets/UI/Icons/centang.svg"); }

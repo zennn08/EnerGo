@@ -1,0 +1,34 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Sheet Pengaturan (docs/design-system/components/LayarSheet/preview.html, first frame). Texts and states set by LobbyView. -->
+    <ui:VisualElement name="sheet-pengaturan" class="eg-kartu eg-sheet">
+        <ui:Label class="eg-selotip" text="PENGATURAN" />
+        <ui:VisualElement name="atur-ar" class="eg-baris-atur">
+            <ui:VisualElement class="eg-baris-atur__teks">
+                <ui:Label class="eg-baris-atur__judul" text="Mode AR (ARCore)" />
+                <ui:Label name="atur-ar-sub" class="eg-baris-atur__sub" text="Mati: pakai Sensor 360 (giroskop)" />
+            </ui:VisualElement>
+            <ui:VisualElement class="eg-toggle"><ui:VisualElement class="eg-toggle__kenop"><ui:VisualElement class="eg-toggle__tanda" /></ui:VisualElement></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="eg-baris-atur">
+            <ui:VisualElement class="sheet__ikon-suara" />
+            <ui:VisualElement name="atur-volume" class="eg-slider">
+                <ui:VisualElement class="eg-bar"><ui:VisualElement class="eg-bar__isi eg-isi--laut" /></ui:VisualElement>
+                <ui:VisualElement class="eg-slider__kenop" />
+            </ui:VisualElement>
+            <ui:Label name="atur-volume-persen" class="eg-data-tebal sheet__persen" text="100%" />
+        </ui:VisualElement>
+        <ui:VisualElement name="atur-getar" class="eg-baris-atur">
+            <ui:VisualElement class="eg-baris-atur__teks">
+                <ui:Label class="eg-baris-atur__judul" text="Getaran" />
+                <ui:Label name="atur-getar-sub" class="eg-baris-atur__sub" text="HP bergetar saat main" />
+            </ui:VisualElement>
+            <ui:VisualElement class="eg-toggle"><ui:VisualElement class="eg-toggle__kenop"><ui:VisualElement class="eg-toggle__tanda" /></ui:VisualElement></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="sheet__tombol">
+            <ui:Button name="btn-ke-latihan" class="eg-btn eg-btn--info eg-btn--penuh" text="LATIHAN (TANPA GPS)" />
+            <ui:Button name="btn-reset" class="eg-btn eg-btn--kertas eg-btn--teks-bahaya eg-btn--penuh" text="RESET PROGRES" />
+            <ui:VisualElement name="reset-bar" class="eg-bar eg-bar--tipis sheet__reset-bar"><ui:VisualElement class="eg-bar__isi eg-isi--stempel" /></ui:VisualElement>
+            <ui:Button name="btn-selesai" class="eg-btn eg-btn--utama eg-btn--penuh" text="SELESAI" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

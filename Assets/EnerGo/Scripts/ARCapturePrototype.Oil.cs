@@ -218,7 +218,7 @@ namespace EnerGo
                 bar = oilDepth;
                 label = Mathf.RoundToInt(oilDepth * OilMath.DisplayDepthM) + "m";
             }
-            EnerGoUI.DrawCard(new Rect(x, y, w, 64f), EnerGoUI.Radius, warn ? HudWarn : HudOk, 2f);
+            DrawHudBox(new Rect(x, y, w, 64f), warn ? HudWarn : HudOk);
             GUI.Label(new Rect(x + 10f, y + 8f, w - 20f, 20f), line, warn ? styleRadarAlert : styleRadarLocked);
             DrawHudBar(x + 20f, y + 36f, w - 40f, bar, warn ? HudWarn : HudOk, label);
         }
@@ -279,9 +279,9 @@ namespace EnerGo
             float dw = Mathf.Min(sw - 64f, 320f);
             var pr = new Rect((sw - dw) * 0.5f, sh - 104f, dw, 34f);
             bool high = oilPumpPressure > 0.6f;
-            EnerGoUI.DrawCard(pr, EnerGoUI.Radius, high ? HudWarn : HudOutline, 2f);
+            DrawHudBox(pr, high ? HudWarn : (Color?)null);
             GUI.Label(new Rect(pr.x + 10f, pr.y + 8f, 70f, 18f), "TEKANAN", styleTapsCounter);
-            EnerGoUI.DrawBar(new Rect(pr.x + 80f, pr.y + 11f, dw - 94f, 12f), oilPumpPressure, high ? EnerGoUI.Danger : EnerGoUI.Orange);
+            EnerGoUI.DrawBar(new Rect(pr.x + 80f, pr.y + 8f, dw - 94f, 18f), oilPumpPressure, high ? EnerGoUI.BadTop : EnerGoUI.OrangeTop, high ? EnerGoUI.BadBot : EnerGoUI.OrangeBot);
         }
     }
 }

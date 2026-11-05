@@ -23,7 +23,7 @@ namespace EnerGo
         private readonly GuideBook.Card[] cards;
         private int page;
         private bool dontRemind;
-        private GUIStyle sTitle, sBody, sSmall, sButton, sButtonDark;
+        private GUIStyle sTitle, sBody, sSmall, sRemind;
 
         public GuideViewer(string resourceId, bool withStart)
         {
@@ -40,19 +40,20 @@ namespace EnerGo
                 sTitle = Text(20, true, Ink, TextAnchor.UpperLeft, true);
                 sBody = Text(15, false, Muted, TextAnchor.UpperLeft, true);
                 sSmall = Text(13, true, Ink, TextAnchor.MiddleLeft);
-                sButton = Text(16, true, Color.white);
-                sButtonDark = Text(15, true, Ink);
+                sRemind = Text(15, true, Color.white, TextAnchor.MiddleLeft);
             }
 
             GUI.color = Alpha(Ink, 0.55f);
             GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = Mathf.Min(sw - 40f, 400f), h = 330f, x = (sw - w) * 0.5f, y = Mathf.Max(70f, sh * 0.5f - h * 0.62f);
+            float w = Mathf.Min(sw - 40f, 400f), h = 358f, x = (sw - w) * 0.5f, y = Mathf.Max(100f, sh * 0.5f - h * 0.62f);
             var card = new Rect(x, y, w, h);
             DrawCard(card);
+            DrawRibbon(card, ResourceIds.Name(id).ToUpperInvariant(), ButtonKind.Orange);
             var c = cards[page];
-            GUI.Label(new Rect(x + 20f, y + 14f, w - 40f, 20f), ResourceIds.Name(id).ToUpperInvariant() + " · " + (page + 1) + "/" + cards.Length, sSmall);
+            y += 28f;
+            GUI.Label(new Rect(x + 20f, y + 14f, w - 40f, 20f), "LANGKAH " + (page + 1) + "/" + cards.Length, sSmall);
             DrawGuideArt(new Rect(x + 20f, y + 42f, w - 40f, 130f), c.Art);
             GUI.Label(new Rect(x + 20f, y + 186f, w - 40f, 52f), c.Title, sTitle);
             GUI.Label(new Rect(x + 20f, y + 240f, w - 40f, 66f), c.Body, sBody);
@@ -68,24 +69,23 @@ namespace EnerGo
             if (withStart)
             {
                 var row = new Rect(x, by, w, 30f);
-                DrawPanel(new Rect(x + 4f, by + 4f, 22f, 22f), Paper, Ink, 5f, 2f);
-                if (dontRemind) DrawPanel(new Rect(x + 9f, by + 9f, 12f, 12f), Orange, Color.clear, 3f);
-                GUI.color = Color.white;
-                GUI.Label(new Rect(x + 34f, by, w - 34f, 30f), "Jangan ingatkan lagi", Text(14, true, Paper, TextAnchor.MiddleLeft));
+                var box = DrawButton(new Rect(x + 2f, by, 30f, 30f), dontRemind ? ButtonKind.Ok : ButtonKind.Off);
+                if (dontRemind) DrawIcon(new Rect(box.x + 5f, box.y + 4f, box.width - 10f, box.width - 10f), "check");
+                DrawStrokedLabel(new Rect(x + 42f, by, w - 42f, 30f), "Jangan ingatkan lagi", sRemind, 1.5f);
                 if (TapHit(row, hudScale)) dontRemind = !dontRemind;
                 by += 40f;
             }
 
-            var main = new Rect(x, by, w, 56f);
+            var main = new Rect(x, by, w, 62f);
             string label = !withStart ? (last ? "TUTUP" : "LANJUT") : last ? "MULAI" : "LANJUT";
-            GUI.Label(DrawPrimaryButton(main, IsHeld(main, hudScale)), label, sButton);
+            ButtonLabel(DrawPrimaryButton(main, IsHeld(main, hudScale)), label, 24, ButtonKind.Orange);
             if (TapHit(main, hudScale))
             {
                 if (!last) page++;
                 else return Finish();
             }
-            var skip = new Rect(x + w * 0.5f - 70f, main.yMax + 8f, 140f, 40f);
-            GUI.Label(DrawSecondaryButton(skip, IsHeld(skip, hudScale)), withStart ? "LEWATI" : "TUTUP", sButtonDark);
+            var skip = new Rect(x + w * 0.5f - 80f, main.yMax + 10f, 160f, 48f);
+            ButtonLabel(DrawSecondaryButton(skip, IsHeld(skip, hudScale)), withStart ? "LEWATI" : "TUTUP", 18, ButtonKind.Paper);
             if (TapHit(skip, hudScale)) return Finish();
             return Result.None;
         }
@@ -100,7 +100,7 @@ namespace EnerGo
         // Simple shapes in the brand palette, one per guide step (placeholder art until the Blender pass).
         public static void DrawGuideArt(Rect r, GuideBook.Art art)
         {
-            DrawPanel(r, Cream, Line, 14f, 1.5f);
+            DrawPanel(r, Color.white, Line, 14f, 2f);
             Vector2 c = r.center;
             Rect Box(float cx, float cy, float w, float h) => new Rect(cx - w * 0.5f, cy - h * 0.5f, w, h);
             Rect Circle(float cx, float cy, float rad) => Box(cx, cy, rad * 2f, rad * 2f);

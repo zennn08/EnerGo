@@ -1,0 +1,374 @@
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#14213a;--sun:#ffc93c;--orange:#ff6b2c;--teal:#1e8fa6;--teal2:#36b8a8;--grass:#7bd36a;--grass2:#4fb35a;--sky:#7ff6ff;--berry:#ff3b5c;--purple:#6b5cff}
+  .vt{font-family:'Fredoka',sans-serif}
+  .phone,.sys{color:#fff}
+  .lil{font-family:'Lilita One',cursive;letter-spacing:.5px}
+  .st{-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink)}
+  .st-s{-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;text-shadow:0 3px 0 var(--ink)}
+  .gO{color:#ff9a1f}
+  .gC{color:#5fe6ff}
+
+  .row{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .phone{width:300px;height:640px;border-radius:36px;overflow:hidden;position:relative;border:7px solid #0b0f19;box-shadow:0 14px 34px rgba(0,0,0,.4)}
+  .cap{max-width:300px;margin:10px auto 0;font-size:14px;color:inherit;text-align:center}
+
+  /* world background like the reference: teal sky, isometric grass grid, tree clumps */
+  .world{position:absolute;inset:0;background:
+     radial-gradient(14px 12px at 30px 300px,#2f8f4a 98%,transparent),radial-gradient(16px 14px at 48px 292px,#3aa356 98%,transparent),
+     radial-gradient(16px 14px at 262px 330px,#2f8f4a 98%,transparent),radial-gradient(14px 12px at 246px 322px,#3aa356 98%,transparent),
+     radial-gradient(40px 22px at 250px 470px,#5fd0c6 96%,transparent),
+     repeating-linear-gradient(30deg,transparent 0 30px,rgba(255,255,255,.12) 30px 32px),
+     repeating-linear-gradient(-30deg,transparent 0 30px,rgba(255,255,255,.12) 30px 32px),
+     linear-gradient(transparent 230px,var(--grass) 231px,var(--grass2)),
+     linear-gradient(#155d78,var(--teal) 30%,var(--teal2))}
+  .world:after{content:"";position:absolute;left:-20px;right:-20px;top:212px;height:40px;border-radius:50%;background:#5ec96a;border-top:4px solid #3a9a4e}
+
+  .hud{position:absolute;top:16px;left:12px;right:12px;display:flex;justify-content:space-between;gap:6px;z-index:3}
+  .pill{background:rgba(10,22,40,.72);border:3px solid var(--ink);border-radius:22px;padding:3px 10px 3px 3px;display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+  .pill.plain{padding:4px 14px}
+  .badge{width:26px;height:26px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+  .badge svg{width:16px;height:16px}
+
+  .btn{border:5px solid var(--ink);border-radius:22px;box-shadow:0 7px 0 var(--ink),inset 0 -8px 0 rgba(0,0,0,.18),inset 0 6px 0 rgba(255,255,255,.45);display:grid;place-items:center;position:relative}
+  .btn.o{background:linear-gradient(#ffc04d,#ff6b2c)}
+  .btn.g{background:linear-gradient(#c6f58a,#45b83a)}
+  .btn.b{background:linear-gradient(#8ff3ff,#1aa4ff)}
+  .btn.p{background:linear-gradient(#ff9bd8,#d1409f)}
+  .btn.y{background:linear-gradient(#fff07a,#ffbe1a)}
+
+  .tile{border:4px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink),inset 0 -6px 0 rgba(0,0,0,.18),inset 0 4px 0 rgba(255,255,255,.35);position:relative;text-align:center;padding:8px 2px 6px}
+  .tile svg{width:42px;height:42px;display:block;margin:0 auto}
+  .tile .nm{font-size:12px;font-weight:700;margin-top:2px}
+  .cnt{position:absolute;top:-11px;right:-9px;background:var(--berry);border:3px solid var(--ink);border-radius:12px;font-size:12px;font-weight:700;padding:0 7px;color:#fff}
+
+  .dock{position:absolute;left:10px;right:10px;bottom:12px;height:66px;display:flex;justify-content:space-around;align-items:center;background:rgba(10,22,40,.72);border:4px solid var(--ink);border-radius:24px}
+  .dock .di{width:48px;height:48px;border-radius:15px;border:4px solid var(--ink);display:grid;place-items:center;box-shadow:0 4px 0 var(--ink),inset 0 4px 0 rgba(255,255,255,.4)}
+  .dock .di svg{width:24px;height:24px}
+
+  .sys{margin:30px auto 0;max-width:980px;background:#16203a;border:4px solid var(--ink);border-radius:24px;padding:20px 22px;color:#fff;font-family:'Fredoka',sans-serif}
+  .sys h3{margin:0 0 10px;font-family:'Lilita One';font-size:20px;letter-spacing:.5px;color:#fff}
+  .sw{display:flex;gap:10px;flex-wrap:wrap}
+  .sw div{width:104px;border:3px solid var(--ink);border-radius:14px;overflow:hidden;font-size:11px;background:#0e162a}
+  .sw b{display:block;height:44px}
+  .sw span{display:block;padding:5px 7px;line-height:1.3}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+</style>
+
+<!-- icon family: one chunky outlined set, 3px ink stroke, flat fill + one highlight -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-sun" viewBox="0 0 48 48"><g stroke="#14213a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 3v7M24 38v7M3 24h7M38 24h7M9 9l5 5M34 34l5 5M39 9l-5 5M14 34l-5 5" /><circle cx="24" cy="24" r="11" fill="#ffc93c"/></g><circle cx="20" cy="20" r="3.5" fill="#fff6c8"/></symbol>
+    <symbol id="i-coal" viewBox="0 0 48 48"><path d="M8 30l5-14 12-6 13 7 3 14-10 9H16z" fill="#4a4f5c" stroke="#14213a" stroke-width="3" stroke-linejoin="round"/><path d="M14 18l10-5 6 3-8 5z" fill="#8a909e"/></symbol>
+    <symbol id="i-gold" viewBox="0 0 48 48"><path d="M6 36l6-16h24l6 16z" fill="#ffc93c" stroke="#14213a" stroke-width="3" stroke-linejoin="round"/><path d="M12 20l3-8h18l3 8z" fill="#ffe27a" stroke="#14213a" stroke-width="3" stroke-linejoin="round"/><path d="M17 15h8" stroke="#fff" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-oil" viewBox="0 0 48 48"><path d="M24 4C24 4 10 20 10 30a14 14 0 0 0 28 0C38 20 24 4 24 4z" fill="#2d2440" stroke="#14213a" stroke-width="3" stroke-linejoin="round"/><path d="M17 29a7 7 0 0 0 5 7" stroke="#8f7bff" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="i-uran" viewBox="0 0 48 48"><path d="M24 4l17 10v20L24 44 7 34V14z" fill="#7be05a" stroke="#14213a" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="24" r="3.5" fill="#14213a"/><path d="M24 24l-5-9a10 10 0 0 1 10 0zM24 24l10 0a10 10 0 0 1-5 8.7zM24 24l-5 8.7A10 10 0 0 1 14 24z" fill="#14213a"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 48 48"><rect x="7" y="7" width="34" height="34" rx="9" fill="#fff" stroke="#14213a" stroke-width="3"/><g fill="#14213a"><circle cx="16" cy="16" r="3.4"/><circle cx="24" cy="24" r="3.4"/><circle cx="32" cy="32" r="3.4"/></g></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M14 2L4 14h7l-2 8 10-12h-7z" fill="#14213a"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.4 4.7L18.2 22 12 18l-6.2 4 1.6-7.7L2 9.6 9 9z" fill="#14213a"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9 5v-2l-2.4-.6-.7-1.7 1.3-2.1-1.4-1.4-2.1 1.3-1.7-.7L13 3h-2l-.6 2.4-1.7.7-2.1-1.3-1.4 1.4 1.3 2.1-.7 1.7L3 11v2l2.4.6.7 1.7-1.3 2.1 1.4 1.4 2.1-1.3 1.7.7L11 21h2l.6-2.4 1.7-.7 2.1 1.3 1.4-1.4-1.3-2.1.7-1.7z" fill="#fff"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 5c3-1 6-1 9 1 3-2 6-2 9-1v14c-3-1-6-1-9 1-3-2-6-2-9-1z" fill="#14213a"/></symbol>
+    <symbol id="i-comp" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#14213a" stroke-width="3"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="#14213a"/></symbol>
+    <symbol id="i-cup" viewBox="0 0 24 24"><path d="M6 3h12v5a6 6 0 0 1-12 0zM9 17h6v3H9zM11 14h2v3h-2z" fill="#14213a"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#14213a" stroke-width="3"/><circle cx="12" cy="12" r="3.5" fill="#14213a"/></symbol>
+  </defs>
+</svg>
+
+<div class="vt">
+<h2 style="color:inherit">Redesign v5: rasa game dari v2, judul tegak</h2>
+<p class="subtitle">Satu sistem visual untuk tiga layar: lobby, berburu di kamera AR, dan kuis. Ini akan jadi patokan semua aset. Ikon sudah satu keluarga (garis tinta tebal, isi rata, satu kilau), bukan emoji lagi.</p>
+
+<div class="row">
+
+  <!-- ===== LOBBY ===== -->
+  <div>
+    <div class="phone">
+      <div class="world"></div>
+      <div class="hud">
+        <div class="pill"><div class="badge" style="background:var(--sun)"><svg><use href="#i-bolt"/></svg></div>1.240</div>
+        <div class="pill"><div class="badge" style="background:var(--sky)"><svg><use href="#i-star"/></svg></div>Lv 7</div>
+        <div class="badge" style="width:36px;height:36px;background:#2b3a5a"><svg style="width:20px;height:20px"><use href="#i-gear"/></svg></div>
+      </div>
+      <div class="lil st" style="position:absolute;top:62px;width:100%;text-align:center;font-size:56px;line-height:.9;z-index:2"><span>ENER</span><span class="gO">GO!</span></div>
+      <div style="position:absolute;top:176px;width:100%;text-align:center;z-index:2"><span class="pill plain lil" style="display:inline-flex;font-size:15px;font-weight:400;color:var(--sun)">KOLEKSI ENERGIMU</span></div>
+
+      <div style="position:absolute;left:14px;right:14px;top:228px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px;z-index:2">
+        <div class="tile" style="background:linear-gradient(#fff0a0,#ffc93c)"><span class="cnt">12</span><svg><use href="#i-sun"/></svg><div class="nm st-s">Matahari</div></div>
+        <div class="tile" style="background:linear-gradient(#b9bfcc,#6b7180)"><span class="cnt">5</span><svg><use href="#i-coal"/></svg><div class="nm st-s">Batu Bara</div></div>
+        <div class="tile" style="background:linear-gradient(#ffe9a0,#f0b52a)"><span class="cnt">3</span><svg><use href="#i-gold"/></svg><div class="nm st-s">Emas</div></div>
+        <div class="tile" style="background:linear-gradient(#a99bff,#5a49d6)"><span class="cnt">2</span><svg><use href="#i-oil"/></svg><div class="nm st-s">Minyak</div></div>
+        <div class="tile" style="background:linear-gradient(#d6ff9c,#58c23a)"><svg><use href="#i-uran"/></svg><div class="nm st-s">Uranium</div></div>
+        <div class="tile" style="background:linear-gradient(#ffb3e0,#d1409f)"><svg><use href="#i-dice"/></svg><div class="nm st-s">Acak</div></div>
+      </div>
+
+      <div class="btn o lil st" style="position:absolute;left:28px;right:28px;bottom:100px;height:74px;font-size:34px;z-index:2">BERBURU!</div>
+
+      <div class="dock" style="z-index:2">
+        <div class="di" style="background:var(--sun)"><svg><use href="#i-book"/></svg></div>
+        <div class="di" style="background:var(--sky)"><svg><use href="#i-comp"/></svg></div>
+        <div class="di" style="background:#ff9a6b"><svg><use href="#i-cup"/></svg></div>
+        <div class="di" style="background:#c6f58a"><svg><use href="#i-target"/></svg></div>
+      </div>
+    </div>
+    <p class="cap"><b>Lobby.</b> Latar dunia isometrik seperti referensi. Kartu sumber daya jadi ubin empuk dengan angka koleksi, dan tombol utama besar di jangkauan jempol.</p>
+  </div>
+
+  <!-- ===== AR HUNT HUD ===== -->
+  <div>
+    <div class="phone" style="background:
+        radial-gradient(60px 120px at 230px 330px,#5d6b52 90%,transparent),
+        radial-gradient(90px 60px at 70px 520px,#7a8a63 90%,transparent),
+        linear-gradient(#a9c3d6 0 38%,#c8c0ad 38% 40%,#8e8676 40% 100%)">
+      <div style="position:absolute;inset:0;backdrop-filter:blur(2px);background:rgba(0,0,0,.08)"></div>
+      <div class="hud">
+        <div class="pill"><div class="badge" style="background:var(--sun)"><svg style="width:18px;height:18px"><use href="#i-sun"/></svg></div>Cari Matahari</div>
+        <div class="pill plain lil" style="font-weight:400;font-size:16px;color:var(--sun)">0:42</div>
+      </div>
+
+      <!-- target with glow and ring -->
+      <div style="position:absolute;left:50%;top:250px;transform:translateX(-50%);width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,201,60,.55),transparent 65%);display:grid;place-items:center">
+        <svg style="width:96px;height:96px;filter:drop-shadow(0 6px 0 rgba(20,33,58,.6))"><use href="#i-sun"/></svg>
+      </div>
+      <div style="position:absolute;left:50%;top:230px;transform:translateX(-50%);width:190px;height:190px;border-radius:50%;border:5px dashed #fff;box-shadow:0 0 0 4px var(--ink) inset"></div>
+      <div style="position:absolute;top:196px;width:100%;text-align:center"><span class="pill plain lil" style="display:inline-flex;font-size:15px;font-weight:400;color:#c6f58a">DALAM JANGKAUAN!</span></div>
+
+      <!-- energy meter -->
+      <div style="position:absolute;left:24px;right:24px;bottom:150px">
+        <div class="lil st-s" style="font-size:16px;margin-bottom:4px">ENERGI TERKUMPUL</div>
+        <div style="height:28px;border:4px solid var(--ink);border-radius:16px;background:#0e162a;overflow:hidden;box-shadow:0 4px 0 var(--ink)">
+          <div style="width:68%;height:100%;background:linear-gradient(#fff07a,#ff8a1a);box-shadow:inset 0 4px 0 rgba(255,255,255,.5)"></div>
+        </div>
+      </div>
+
+      <div class="btn y" style="position:absolute;left:50%;bottom:36px;transform:translateX(-50%);width:96px;height:96px;border-radius:50%;">
+        <span class="lil st-s" style="font-size:20px">TANGKAP</span>
+      </div>
+      <div class="badge" style="position:absolute;left:22px;bottom:58px;width:52px;height:52px;background:#2b3a5a;border-width:4px"><span class="lil" style="font-size:22px">✕</span></div>
+      <div class="badge" style="position:absolute;right:22px;bottom:58px;width:52px;height:52px;background:var(--sky);border-width:4px"><svg style="width:26px;height:26px"><use href="#i-comp"/></svg></div>
+    </div>
+    <p class="cap"><b>Berburu (AR).</b> Kasus terberat karena latarnya foto kamera. Semua teks ada di pil gelap atau berstroke tebal, jadi tetap terbaca di latar apa pun.</p>
+  </div>
+
+  </div>
+<!-- ===== STYLE SYSTEM ===== -->
+<div class="sys">
+  <div class="grid2">
+    <div>
+      <h3>WARNA &amp; PERANNYA</h3>
+      <div class="sw">
+        <div><b style="background:#14213a;border-bottom:2px solid #333"></b><span><b style="height:auto;display:inline">Ink #14213A</b><br>outline, bayangan</span></div>
+        <div><b style="background:#ff6b2c"></b><span><b style="height:auto;display:inline">Orange #FF6B2C</b><br>aksi utama (brand)</span></div>
+        <div><b style="background:#ffc93c"></b><span><b style="height:auto;display:inline">Sun #FFC93C</b><br>hadiah, energi (brand)</span></div>
+        <div><b style="background:#1e8fa6"></b><span><b style="height:auto;display:inline">Teal #1E8FA6</b><br>langit / latar</span></div>
+        <div><b style="background:#7bd36a"></b><span><b style="height:auto;display:inline">Grass #7BD36A</b><br>dunia, sukses</span></div>
+        <div><b style="background:#ff3b5c"></b><span><b style="height:auto;display:inline">Berry #FF3B5C</b><br>notifikasi, bahaya</span></div>
+      </div>
+      <p style="font-size:13px;opacity:.85;margin-top:10px">Oranye dan kuning brand tetap dipakai. Teal dan hijau ditambahkan untuk dunia game seperti di referensi. Cream lama hanya dipakai di kertas kuis.</p>
+    </div>
+    <div>
+      <h3>BENTUK &amp; HURUF</h3>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <div class="lil st" style="font-size:38px"><span class="gC">JUDUL</span></div>
+        <div style="font-size:13px;line-height:1.4;max-width:260px">Judul: <b>Lilita One</b>, tegak (tidak miring), stroke tinta 6px + bayangan turun.<br>Teks isi: <b>Fredoka</b> 600/700.</div>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:16px;align-items:center;flex-wrap:wrap">
+        <div class="btn o lil st-s" style="width:120px;height:52px;font-size:20px">TOMBOL</div>
+        <div class="tile" style="width:70px;background:linear-gradient(#fff0a0,#ffc93c)"><svg><use href="#i-sun"/></svg></div>
+        <div class="pill plain lil" style="font-weight:400;color:var(--sun)">LABEL PIL</div>
+      </div>
+      <p style="font-size:13px;opacity:.85;margin-top:12px">Semua panel dan tombol: garis tinta 4–5px, sudut 16–22px, "bibir" bayangan 6–7px di bawah, kilau putih di atas. Dibuat sebagai 9-slice supaya bisa melar ke segala ukuran.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root{--ink:#14213a;--sun:#ffc93c;--orange:#ff6b2c;--teal:#1e8fa6;--teal2:#36b8a8;--grass:#7bd36a;--grass2:#4fb35a;--sky:#7ff6ff;--berry:#ff3b5c;--ok:#45c23a;--bad:#ff3b5c}
+  .q{font-family:'Fredoka',sans-serif}
+  .lil{font-family:'Lilita One',cursive;letter-spacing:.5px}
+  .st{-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink)}
+  .st-s{-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;text-shadow:0 3px 0 var(--ink)}
+  .row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .step{display:inline-block;background:var(--ink);color:#fff;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:700;margin-bottom:4px}
+
+
+  .pill{background:rgba(10,22,40,.78);border:3px solid var(--ink);border-radius:22px;padding:3px 12px;display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
+  .badge{width:26px;height:26px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+  .badge svg{width:15px;height:15px}
+  .btn{border:5px solid var(--ink);border-radius:20px;box-shadow:0 7px 0 var(--ink),inset 0 -8px 0 rgba(0,0,0,.18),inset 0 6px 0 rgba(255,255,255,.45);display:grid;place-items:center;position:relative}
+  .btn.o{background:linear-gradient(#ffc04d,#ff6b2c)}
+  .btn.g{background:linear-gradient(#c6f58a,#45b83a)}
+  .btn.r{background:linear-gradient(#ff9aa8,#e8304e)}
+  .btn.off{background:linear-gradient(#c9ccd6,#8d93a3)}
+
+  .top{position:absolute;top:16px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;z-index:4}
+  .dots{display:flex;gap:6px}
+  .dot{width:22px;height:22px;border-radius:50%;border:3px solid var(--ink);background:#2b3a5a;display:grid;place-items:center}
+  .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.now{background:var(--sun)}
+  .dot svg{width:12px;height:12px}
+
+  .card{position:absolute;left:22px;right:22px;top:118px;height:330px;background:linear-gradient(#fffaf0,#ffe9c2);border:5px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink);color:var(--ink);z-index:3}
+  .stack{position:absolute;left:34px;right:34px;top:130px;height:330px;border:5px solid var(--ink);border-radius:26px;background:#f3d9a8;z-index:2;transform:rotate(3deg)}
+  .stack.b{;background:#e9c88e;z-index:1}
+  .timer{height:16px;border:3px solid var(--ink);border-radius:10px;background:#e7dcc6;overflow:hidden}
+  .timer i{display:block;height:100%;background:linear-gradient(#fff07a,#ff9a1f)}
+  .stmt{font-weight:700;font-size:18px;line-height:1.3;text-align:center;margin:12px 16px 0}
+  .ans{position:absolute;bottom:26px;left:16px;right:16px;display:flex;gap:14px;z-index:4}
+  .ans .btn{flex:1;height:58px}
+  .stamp{position:absolute;font-family:'Lilita One';font-size:34px;border:5px solid;border-radius:14px;padding:0 10px;transform:rotate(-14deg);background:rgba(255,255,255,.75)}
+
+  .pop{position:absolute;left:16px;right:16px;background:linear-gradient(#fffaf0,#ffe9c2);border:5px solid var(--ink);border-radius:28px;box-shadow:0 8px 0 var(--ink);color:var(--ink);z-index:3;text-align:center}
+  .ribbon{position:absolute;left:30px;right:30px;top:-28px;height:52px;border-radius:16px}
+  .explain{font-size:14.5px;line-height:1.4;margin:0 16px;font-weight:600;color:#3a4256}
+  .chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:3px solid var(--ink);border-radius:12px;padding:2px 8px;font-size:12.5px;font-weight:700;color:var(--ink);box-shadow:0 3px 0 var(--ink)}
+  .pop .btn{color:#fff}
+  .pop .btn.off{color:#3a4256}
+  .burst{position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 50% 32%,rgba(255,230,120,.35) 0 10deg,transparent 10deg 20deg);z-index:1}
+</style>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-sun" viewBox="0 0 48 48"><g stroke="#14213a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 3v7M24 38v7M3 24h7M38 24h7M9 9l5 5M34 34l5 5M39 9l-5 5M14 34l-5 5"/><circle cx="24" cy="24" r="11" fill="#ffc93c"/></g><circle cx="20" cy="20" r="3.5" fill="#fff6c8"/></symbol>
+    <symbol id="q-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6" fill="none" stroke="#14213a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="q-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="#14213a" stroke-width="4" stroke-linecap="round"/></symbol>
+    <symbol id="q-star" viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.4 4.7L18.2 22 12 18l-6.2 4 1.6-7.7L2 9.6 9 9z" fill="#ffc93c" stroke="#14213a" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+    <symbol id="q-star0" viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.4 4.7L18.2 22 12 18l-6.2 4 1.6-7.7L2 9.6 9 9z" fill="#5a6378" stroke="#14213a" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+    <symbol id="q-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#fff" stroke="#14213a" stroke-width="3"/><path d="M12 7v5l3 2" stroke="#14213a" stroke-width="3" stroke-linecap="round" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="q">
+<h2 style="margin-top:36px">Sesi kuis: alurnya dari soal sampai hadiah</h2>
+<p class="subtitle">Mengikuti kuis yang sudah ada di game: 3 pernyataan benar/salah, tiap soal 15 detik, geser kartu ke kanan untuk BENAR dan ke kiri untuk SALAH. Yang berubah cuma tampilannya, jadi seperti kartu game, bukan formulir.</p>
+
+<div class="row">
+
+  <!-- 1. Question card -->
+  <div>
+    <div class="phone"><div class="world" style="filter:brightness(.55)"></div>
+      <div class="top">
+        <div class="dots"><div class="dot now"></div><div class="dot"></div><div class="dot"></div></div>
+        <span class="pill lil" style="font-weight:400;font-size:15px;color:var(--sun)">SOAL 1/3</span>
+      </div>
+      <div class="lil st" style="position:absolute;top:62px;width:100%;text-align:center;font-size:27px;white-space:nowrap;z-index:4">BENAR <span style="color:#ff9a1f">ATAU</span> SALAH?</div>
+      <div class="stack b"></div><div class="stack"></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;padding:16px 16px 0">
+          <svg style="width:22px;height:22px;flex:none"><use href="#q-clock"/></svg>
+          <div class="timer" style="flex:1"><i style="width:72%"></i></div>
+          <b style="font-size:14px">11</b>
+        </div>
+        <svg style="width:74px;height:74px;display:block;margin:18px auto 0"><use href="#i-sun"/></svg>
+        <p class="stmt">Panel surya fotovoltaik mengubah cahaya matahari menjadi listrik.</p>
+        <p style="text-align:center;font-size:12px;font-weight:700;color:#8a7a5a;margin-top:18px">‹ geser kartu atau tekan tombol ›</p>
+      </div>
+      <div class="ans">
+        <div class="btn r"><svg style="width:30px;height:30px"><use href="#q-x"/></svg></div>
+        <div class="btn g"><svg style="width:30px;height:30px"><use href="#q-check"/></svg></div>
+      </div>
+      <div style="position:absolute;bottom:92px;left:16px;right:16px;display:flex;justify-content:space-between;z-index:4" class="lil st-s"><span style="font-size:15px;width:45%;text-align:center">SALAH</span><span style="font-size:15px;width:45%;text-align:center">BENAR</span></div>
+    </div>
+    <p class="cap"><span class="step">1</span><br><b>Kartu soal.</b> Kartu bertumpuk menandakan ada 3 soal. Pengatur waktu jadi bar tebal. Selain bisa digeser, ada dua tombol besar ✕ / ✓ supaya jelas cara menjawabnya.</p>
+  </div>
+
+  <!-- 2. Swiping -->
+  <div>
+    <div class="phone"><div class="world" style="filter:brightness(.55)"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 40%,rgba(69,194,58,.45));z-index:1"></div>
+      <div class="top">
+        <div class="dots"><div class="dot now"></div><div class="dot"></div><div class="dot"></div></div>
+        <span class="pill lil" style="font-weight:400;font-size:15px;color:var(--sun)">SOAL 1/3</span>
+      </div>
+      <div class="stack b"></div>
+      <div class="card" style="transform:translateX(46px) rotate(12deg);border-color:#1f6b17;box-shadow:0 8px 0 #1f6b17,0 0 0 4px var(--ok)">
+        <div style="display:flex;align-items:center;gap:8px;padding:16px 16px 0">
+          <svg style="width:22px;height:22px;flex:none"><use href="#q-clock"/></svg>
+          <div class="timer" style="flex:1"><i style="width:60%"></i></div>
+          <b style="font-size:14px">9</b>
+        </div>
+        <svg style="width:74px;height:74px;display:block;margin:18px auto 0"><use href="#i-sun"/></svg>
+        <p class="stmt">Panel surya fotovoltaik mengubah cahaya matahari menjadi listrik.</p>
+        <div class="stamp" style="top:24px;left:18px;color:#2f9a24;border-color:#2f9a24">BENAR</div>
+      </div>
+      <div class="ans">
+        <div class="btn r" style="opacity:.45"><svg style="width:30px;height:30px"><use href="#q-x"/></svg></div>
+        <div class="btn g" style="transform:scale(1.08)"><svg style="width:30px;height:30px"><use href="#q-check"/></svg></div>
+      </div>
+    </div>
+    <p class="cap"><span class="step">2</span><br><b>Saat digeser.</b> Kartu miring, cap BENAR muncul, dan sisi layar ikut berwarna. Ke kiri tampilannya sama tapi merah dengan cap SALAH.</p>
+  </div>
+
+  <!-- 3. Feedback correct -->
+  <div>
+    <div class="phone"><div class="world" style="filter:brightness(.55)"></div><div class="burst"></div>
+      <div class="top">
+        <div class="dots"><div class="dot ok"><svg><use href="#q-check"/></svg></div><div class="dot"></div><div class="dot"></div></div>
+        <span class="pill lil" style="font-weight:400;font-size:15px;color:var(--sun)">SOAL 1/3</span>
+      </div>
+      <div class="pop" style="top:120px;padding:44px 0 22px">
+        <div class="btn g ribbon lil st-s" style="font-size:28px">BENAR!</div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:6px"><span class="chip">Pernyataan ini <span style="color:#2f9a24">BENAR</span></span></div>
+        <svg style="width:62px;height:62px;display:block;margin:8px auto"><use href="#i-sun"/></svg>
+        <p class="explain">Sel fotovoltaik mengubah cahaya matahari langsung menjadi listrik.</p>
+        <div style="margin:14px 0 0"><span class="chip" style="background:#fff3c4"><svg style="width:16px;height:16px"><use href="#i-sun"/></svg> +1 unit</span></div>
+        <div class="btn o lil st-s" style="margin:22px 16px 0;height:56px;font-size:20px">SOAL BERIKUTNYA</div>
+      </div>
+    </div>
+    <p class="cap"><span class="step">3a</span><br><b>Jawaban benar.</b> Pita hijau, sinar di belakang, dan bonus +1 unit langsung terlihat. Titik progres di atas berubah jadi centang.</p>
+  </div>
+
+  <!-- 4. Feedback wrong -->
+  <div>
+    <div class="phone"><div class="world" style="filter:brightness(.55)"></div>
+      <div class="top">
+        <div class="dots"><div class="dot ok"><svg><use href="#q-check"/></svg></div><div class="dot bad"><svg><use href="#q-x"/></svg></div><div class="dot"></div></div>
+        <span class="pill lil" style="font-weight:400;font-size:15px;color:var(--sun)">SOAL 2/3</span>
+      </div>
+      <div class="pop" style="top:120px;padding:44px 0 22px">
+        <div class="btn r ribbon lil st-s" style="font-size:28px">SALAH</div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:6px"><span class="chip">Pernyataan ini <span style="color:#d42a45">SALAH</span></span></div>
+        <svg style="width:62px;height:62px;display:block;margin:8px auto"><use href="#i-sun"/></svg>
+        <p class="explain">Pada malam hari tidak ada cahaya matahari langsung. Penyimpanan energi adalah sistem terpisah.</p>
+        <div class="btn off lil" style="margin:24px 16px 0;height:56px;font-size:16px;color:#3a4256;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:55%;background:rgba(255,255,255,.45)"></div>
+          <span style="position:relative">BACA DULU...</span>
+        </div>
+      </div>
+    </div>
+    <p class="cap"><span class="step">3b</span><br><b>Jawaban salah atau waktu habis.</b> Pita merah. Tombol lanjut terisi pelan selama 2 detik supaya penjelasannya dibaca dulu, sama seperti aturan sekarang.</p>
+  </div>
+
+  <!-- 5. Result -->
+  <div>
+    <div class="phone"><div class="world"></div><div class="burst" style="background:repeating-conic-gradient(from 0deg at 50% 30%,rgba(255,240,150,.4) 0 10deg,transparent 10deg 20deg)"></div>
+      <div class="lil st" style="position:absolute;top:40px;width:100%;text-align:center;font-size:40px;z-index:4">BAGUS!</div>
+      <div class="pop" style="top:120px;padding:40px 0 22px">
+        <div class="btn o ribbon lil st-s" style="font-size:18px;white-space:nowrap;top:-26px;left:20px;right:20px">HASIL ANALISIS</div>
+        <div style="display:flex;justify-content:center;gap:2px;align-items:flex-end">
+          <svg style="width:42px;height:42px"><use href="#q-star"/></svg>
+          <svg style="width:54px;height:54px;margin-bottom:8px"><use href="#q-star"/></svg>
+          <svg style="width:42px;height:42px"><use href="#q-star0"/></svg>
+        </div>
+        <div class="lil" style="font-size:34px;color:var(--ink);margin-top:4px">2/3 BENAR</div>
+        <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 0 4px">
+          <svg style="width:44px;height:44px"><use href="#i-sun"/></svg>
+          <span class="lil st-s" style="font-size:34px;color:#fff">+5</span>
+          <span class="chip">Normal</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:8px 12px 0">
+          <span class="chip">Dasar +1</span><span class="chip">Kuis +2</span><span class="chip" style="background:#fff3c4">Ekstraksi Hebat +2</span>
+        </div>
+        <p class="explain" style="margin-top:12px">Jawab semua dengan tepat untuk hasil Murni.</p>
+        <div class="btn o lil st-s" style="margin:18px 16px 0;height:56px;font-size:20px">LANJUT BERBURU</div>
+      </div>
+    </div>
+    <p class="cap"><span class="step">4</span><br><b>Hasil.</b> Benar 3/3 dapat 3 bintang, judul SEMPURNA!, dan label Murni. Hadiah ditampilkan besar, lalu rinciannya dalam bentuk chip.</p>
+  </div>
+
+</div>
+
+<div class="options" style="margin-top:18px">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)"><div class="letter">✓</div><div class="content"><h3>Alur kuis sudah pas</h3></div></div>
+  <div class="option" data-choice="tweak" onclick="toggleSelect(this)"><div class="letter">~</div><div class="content"><h3>Ada yang perlu diubah</h3><p>Tulis di terminal</p></div></div>
+</div>
+</div>

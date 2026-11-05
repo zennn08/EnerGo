@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+    <!-- LobbyScene root: the map background and one layer per screen; LobbyView shows the layer for the current state. -->
+    <ui:Template name="Lobby" src="project://database/Assets/UI/Screens/Lobby.uxml" />
+    <ui:Template name="SheetPengaturan" src="project://database/Assets/UI/Screens/SheetPengaturan.uxml" />
+    <ui:Template name="SheetLatihan" src="project://database/Assets/UI/Screens/SheetLatihan.uxml" />
+    <ui:Template name="SheetPanduan" src="project://database/Assets/UI/Screens/SheetPanduan.uxml" />
+    <ui:Template name="KartuPanduan" src="project://database/Assets/UI/Screens/KartuPanduan.uxml" />
+    <ui:Template name="Splash" src="project://database/Assets/UI/Screens/Splash.uxml" />
+    <ui:Template name="Transisi" src="project://database/Assets/UI/Screens/Transisi.uxml" />
+    <Style src="project://database/Assets/UI/Theme.uss" />
+    <Style src="project://database/Assets/UI/Components.uss" />
+    <Style src="project://database/Assets/UI/Screens/Layar.uss" />
+    <ui:VisualElement name="akar" style="flex-grow: 1;">
+        <eg:PetaLatar name="peta" />
+        <ui:VisualElement name="lapis-lobby" class="eg-lapis"><ui:Instance template="Lobby" class="eg-lapis" /></ui:VisualElement>
+        <ui:VisualElement name="lapis-sheet" class="eg-lapis" picking-mode="Ignore">
+            <ui:VisualElement name="tirai" class="eg-redup" />
+            <ui:Instance template="SheetPengaturan" class="eg-lapis" picking-mode="Ignore" />
+            <ui:Instance template="SheetLatihan" class="eg-lapis" picking-mode="Ignore" />
+            <ui:Instance template="SheetPanduan" class="eg-lapis" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="lapis-panduan" class="eg-lapis" picking-mode="Ignore">
+            <ui:Instance template="KartuPanduan" class="eg-lapis" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="lapis-splash" class="eg-lapis" picking-mode="Ignore"><ui:Instance template="Splash" class="eg-lapis" /></ui:VisualElement>
+        <ui:VisualElement name="lapis-transisi" class="eg-lapis" picking-mode="Ignore"><ui:Instance template="Transisi" class="eg-lapis" /></ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
