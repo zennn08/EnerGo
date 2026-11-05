@@ -1,0 +1,95 @@
+<!-- @dsCard group="Layar" page height=960 width=1600 subtitle="Mini-game Matahari, Batu Bara, dan Emas" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Layar tangkap 1</title></head>
+<body>
+<div class="eg-baris-hp">
+
+  <!-- Matahari -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-kamera">
+      <div class="eg-layar" style="gap:12px">
+        <div class="eg-hud-atas">
+          <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Radar</button>
+          <span class="eg-pil eg-pil--laut" style="min-height:36px;font-size:13px">ARCore</span>
+          <span class="eg-pil" style="min-height:36px;font-size:13px"><img src="../../assets/Ikon/sda-matahari.svg" alt="">Matahari · 12</span>
+        </div>
+        <div class="eg-status">
+          <div class="eg-status__atas"><span class="eg-status__tag">AMAN</span><span class="eg-status__teks">Cahaya terkunci · sisa 14 dtk</span></div>
+          <div class="eg-bar"><i style="width:62%;--isi:var(--sda-matahari)"></i></div>
+        </div>
+        <div class="eg-kompas"><span class="u" style="left:25%">U</span><span style="left:62.5%">TL</span><span style="left:100%">T</span><div class="eg-kompas__tengah"></div><div class="eg-kompas__titik" style="left:52%"></div></div>
+        <div class="eg-tengah" style="flex:1;position:relative">
+          <div style="position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#fff6d6 0 30%,#f2b33d 31% 46%,rgba(242,179,61,.45) 47% 64%,rgba(242,179,61,0) 70%);left:calc(50% - 64px);top:calc(50% - 82px)"></div>
+          <div class="eg-bidik is-terkunci"></div>
+        </div>
+        <button class="eg-btn eg-btn--kecil eg-btn--kertas eg-btn--penuh">Munculkan ulang target</button>
+      </div>
+    </div>
+    <div class="eg-hp-label">Ekstraksi · cahaya terkunci di lingkaran bidik</div>
+  </div>
+
+  <!-- Batu Bara -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-kamera">
+      <div class="eg-layar" style="gap:12px">
+        <div class="eg-hud-atas">
+          <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Radar</button>
+          <span class="eg-pil eg-pil--laut" style="min-height:36px;font-size:13px">ARCore</span>
+          <span class="eg-pil" style="min-height:36px;font-size:13px"><img src="../../assets/Ikon/sda-batubara.svg" alt="">Batu Bara · 31</span>
+        </div>
+        <div class="eg-status">
+          <div class="eg-status__atas"><span class="eg-status__tag">AMAN</span><span class="eg-status__teks">Pecahkan batu bara · ketuk bongkahnya</span></div>
+          <div class="eg-bar-baris"><span>KETUKAN</span><b>2/4 hancur</b></div>
+          <div class="eg-bar"><i style="width:55%;--isi:var(--sda-batubara)"></i></div>
+        </div>
+        <div class="eg-kompas"><span class="u" style="left:25%">U</span><span style="left:62.5%">TL</span><span style="left:100%">T</span><div class="eg-kompas__tengah"></div><div class="eg-kompas__titik" style="left:40%"></div></div>
+        <div style="flex:1;position:relative">
+          <div style="position:absolute;left:40px;top:90px;text-align:center">
+            <div class="eg-baris" style="gap:4px;justify-content:center;margin-bottom:8px"><i class="eg-pip is-isi"></i><i class="eg-pip is-isi"></i><i class="eg-pip"></i><i class="eg-pip"></i></div>
+            <img src="../../assets/Ikon/sda-batubara.svg" alt="" width="140" height="140">
+          </div>
+          <div style="position:absolute;right:52px;top:40px;text-align:center">
+            <div class="eg-baris" style="gap:4px;justify-content:center;margin-bottom:8px"><i class="eg-pip is-isi"></i><i class="eg-pip"></i></div>
+            <img src="../../assets/Ikon/sda-batubara.svg" alt="" width="88" height="88" style="transform:rotate(18deg)">
+          </div>
+          <div style="position:absolute;left:150px;top:170px;width:70px;height:70px;border-radius:50%;border:4px solid var(--oranye)"></div>
+          <div class="eg-catatan" style="position:absolute;right:30px;bottom:30px;"><span class="eg-label-kamera">2 lagi di kiri ←</span></div>
+        </div>
+        <button class="eg-btn eg-btn--kecil eg-btn--kertas eg-btn--penuh">Munculkan ulang target</button>
+      </div>
+    </div>
+    <div class="eg-hp-label">Tambang · pip menunjukkan sisa ketukan</div>
+  </div>
+
+  <!-- Emas -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-kamera">
+      <div class="eg-layar" style="gap:12px">
+        <div class="eg-hud-atas">
+          <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Radar</button>
+          <span class="eg-pil eg-pil--laut" style="min-height:36px;font-size:13px">Sensor 360</span>
+          <span class="eg-pil" style="min-height:36px;font-size:13px"><img src="../../assets/Ikon/sda-emas.svg" alt="">Emas · 14</span>
+        </div>
+        <div class="eg-status eg-status--awas">
+          <div class="eg-status__atas"><span class="eg-status__tag">AWAS</span><span class="eg-status__teks">Terlalu kencang! Emas bisa tumpah</span></div>
+          <div class="eg-bar"><i style="width:48%;--isi:var(--sda-emas)"></i></div>
+        </div>
+        <div class="eg-tengah" style="flex:1;flex-direction:column;gap:14px;position:relative">
+          <span class="eg-pil eg-pil--angka eg-pil--oker">EMAS 15/18</span>
+          <div class="eg-dulang">
+            <div style="position:absolute;inset:40px;border-radius:50%;background:radial-gradient(circle at 45% 45%, rgba(156,195,211,.75) 0 40%, rgba(156,195,211,.35) 41% 100%)"></div>
+            <i class="eg-keping" style="left:120px;top:130px"></i><i class="eg-keping" style="left:150px;top:118px;width:20px;height:14px"></i><i class="eg-keping" style="left:138px;top:156px"></i><i class="eg-keping" style="left:168px;top:150px"></i><i class="eg-keping" style="left:108px;top:166px;width:18px;height:12px"></i><i class="eg-keping" style="left:182px;top:126px"></i>
+            <i class="eg-keping" style="left:262px;top:10px;transform:rotate(30deg)"></i>
+            <i class="eg-keping" style="left:300px;top:-26px;opacity:.6;transform:rotate(60deg)"></i>
+          </div>
+          <div class="eg-catatan" style=""><span class="eg-label-kamera">pelan-pelan, putar melingkar</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Dulang · keping emas terlempar saat terlalu kasar</div>
+  </div>
+
+</div>
+</body>
+</html>

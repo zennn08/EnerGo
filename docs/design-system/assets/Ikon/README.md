@@ -1,0 +1,3 @@
+Ikon garis EnerGo, 24 × 24 dengan garis `tinta` (#1f2a36) 2 unit, ujung bulat. Isian memakai `kertas-100`, `kertas-300`, `oker`, `oranye`, `stempel`, atau `peta-hijau`. Ikon `sda-*` berwarna penuh sesuai warna SDA-nya. Semua bertinta tetap; untuk dipakai di atas isian gelap, beri filter invert dan selalu sertakan label.
+
+Pemetaan dari nama lama: arrow → panah, bolt → petir, book → buku, check → centang, clock → jam, coal → sda-batubara, compass → kompas, cross → silang, dice → dadu / sda-acak, gear → gir, gold → sda-emas, oil → sda-minyak, star → bintang, star_empty → bintang-kosong, sun → sda-matahari, target → target, tree → pohon, uranium → sda-uranium. Baru: kembali, gembok, lokasi, radar, kamera, rumah, pembangkit, suara, getar, selotip.

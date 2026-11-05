@@ -1,0 +1,26 @@
+<!-- @dsCard group="HUD Tangkap" height=420 width=560 subtitle="Header dan kotak status di atas kamera" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>HUD tangkap</title></head>
+<body>
+<div class="eg-kamera" style="padding:20px 16px;display:flex;flex-direction:column;gap:14px;width:480px">
+  <div class="eg-hud-atas">
+    <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Radar</button>
+    <span class="eg-pil eg-pil--laut" style="min-height:36px;font-size:13px">ARCore</span>
+    <span class="eg-pil" style="min-height:36px;font-size:13px"><img src="../../assets/Ikon/sda-matahari.svg" alt="">Matahari · 12</span>
+  </div>
+  <div class="eg-status">
+    <div class="eg-status__atas"><span class="eg-status__tag">AMAN</span><span class="eg-status__teks">Cahaya terkunci · sisa 14 dtk</span></div>
+    <div class="eg-bar"><i style="width:62%;--isi:var(--sda-matahari)"></i></div>
+  </div>
+  <div class="eg-status eg-status--awas">
+    <div class="eg-status__atas"><span class="eg-status__tag">AWAS</span><span class="eg-status__teks">Kantong gas! Pelan-pelan</span></div>
+    <div class="eg-bar-baris"><span>KEDALAMAN</span><b>1.140 m</b></div>
+    <div class="eg-bar"><i style="width:57%;--isi:var(--sda-minyak)"></i></div>
+  </div>
+  <div class="eg-status eg-status--gagal">
+    <div class="eg-status__atas"><span class="eg-status__tag">GAGAL</span><span class="eg-status__teks">Blowout! Cari titik bor baru</span></div>
+  </div>
+</div>
+</body>
+</html>

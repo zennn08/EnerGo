@@ -10,7 +10,7 @@ namespace EnerGo
         private enum UraniumPhase { None, Search, Collect, Done, Failed }
 
         private static readonly Color UraniumGlow = new Color(0.22f, 1f, 0.08f); // #39FF14
-        private const float UraniumOreSize = 0.22f, UraniumFragmentSize = 0.14f, UraniumOreDistance = 1.6f;
+        private const float UraniumFragmentSize = 1.8f, UraniumOreDistance = 1.6f; // sda_uranium_serpihan is 0.12 m long
         private const float UraniumFlySec = 0.35f;  // a grabbed fragment drops into the lead box
 
         private UraniumPhase uraniumPhase = UraniumPhase.None;
@@ -31,37 +31,6 @@ namespace EnerGo
         private float uraniumRevealAt, uraniumPhaseAt;
         private string uraniumFailText = "";
 
-        // Flat-coloured unlit material (these scenes have no light). Shared with the oil pump jack.
-        private Material UnlitColor(Color c)
-        {
-            var m = energyMaterial != null ? new Material(energyMaterial)
-                : new Material(Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Standard"));
-            if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", null);
-            if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", null);
-            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
-            if (m.HasProperty("_Color")) m.SetColor("_Color", c);
-            return m;
-        }
-
-        // ponytail: primitive ore cluster; swap for Resources/Uranium/uranium when a real model exists.
-        private Transform MakeUraniumOre(string name, Material mat, float size, Vector3 worldPos)
-        {
-            var ore = new GameObject(name).transform;
-            for (int i = 0; i < 4; i++)
-            {
-                var lump = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(lump.GetComponent<Collider>());
-                lump.transform.SetParent(ore, false);
-                lump.transform.localPosition = i == 0 ? Vector3.zero : Random.onUnitSphere * 0.45f;
-                lump.transform.localScale = Vector3.one * (i == 0 ? 1f : Random.Range(0.45f, 0.65f));
-                lump.GetComponent<Renderer>().sharedMaterial = mat;
-            }
-            ore.position = worldPos;
-            ore.localScale = Vector3.one * size;
-            ore.SetParent(target.transform, true);
-            return ore;
-        }
-
         private void SpawnUranium()
         {
             // The target is a container at the player; the ore and later its fragments hang under it, fixed to north.
@@ -69,8 +38,9 @@ namespace EnerGo
             target.transform.position = arCamera.transform.position;
             target.transform.SetParent(compass.North, true);
             float pitch = Random.Range(UraniumMath.HideMinPitchDeg, UraniumMath.HideMaxPitchDeg);
-            uraniumOre = MakeUraniumOre("Ore", UnlitColor(UraniumGlow), UraniumOreSize, AtBearing(0f, pitch, UraniumOreDistance));
-            uraniumOre.gameObject.SetActive(false);
+            uraniumOre = new GameObject("Ore").transform; // hidden: only its position exists until the Geiger counter finds it
+            uraniumOre.position = AtBearing(0f, pitch, UraniumOreDistance);
+            uraniumOre.SetParent(target.transform, true);
 
             uraniumPhase = UraniumPhase.Search;
             uraniumFragments = null;
@@ -146,7 +116,7 @@ namespace EnerGo
         {
             uraniumPhase = UraniumPhase.Collect;
             uraniumPhaseAt = uraniumRevealAt = Time.time;
-            var mat = UnlitColor(UraniumGlow);
+            StartUraniumBreak(uraniumOre.position);
             float[] yaws = UraniumMath.FragmentYaws(() => Random.value);
             int n = UraniumMath.FragmentCount;
             uraniumFragments = new Transform[n];
@@ -157,7 +127,7 @@ namespace EnerGo
             {
                 Vector3 pos = i == 0 ? uraniumOre.position
                     : AtBearing(yaws[i], Random.Range(UraniumMath.HideMinPitchDeg, UraniumMath.HideMaxPitchDeg), UraniumOreDistance);
-                uraniumFragments[i] = MakeUraniumOre("Fragment " + i, mat, UraniumFragmentSize, pos);
+                uraniumFragments[i] = MakeUraniumFragment(i, pos);
             }
             Destroy(uraniumOre.gameObject);
             uraniumOre = null;
@@ -230,7 +200,7 @@ namespace EnerGo
         private static void UraniumGripRect(float sw, float sh, out Rect btn) =>
             btn = new Rect(sw - 16f - 104f, sh * 0.52f, 104f, 104f);
 
-        // Fragments pop in and glow; a grabbed one drops toward the bottom of the view and disappears.
+        // Fragments pop in and glow; a grabbed one flies into the lead flask and disappears.
         private void AnimateUraniumFragments(float dt)
         {
             if (uraniumFragments == null) return;
@@ -241,13 +211,13 @@ namespace EnerGo
                 if (uraniumTaken[i])
                 {
                     float k = (Time.time - uraniumTakenAt[i]) / UraniumFlySec;
-                    if (k >= 1f) { f.gameObject.SetActive(false); continue; }
-                    Vector3 box = arCamera.transform.position + arCamera.transform.forward * 0.5f - arCamera.transform.up * 0.4f;
+                    if (k >= 1f) { f.gameObject.SetActive(false); UraniumFragmentLanded(); continue; }
+                    Vector3 box = UraniumFlaskMouth();
                     f.position = Vector3.Lerp(f.position, box, k);
                     f.localScale = Vector3.one * UraniumFragmentSize * (1f - k);
                     continue;
                 }
-                float pop = Mathf.Clamp01((Time.time - uraniumRevealAt) / 0.3f);
+                float pop = UraniumVisual.FragmentPop(Time.time - uraniumRevealAt);
                 bool gripping = i == uraniumNearest && uraniumGrip > 0f;
                 f.localScale = Vector3.one * UraniumFragmentSize * pop * (1f + 0.08f * Mathf.Sin(Time.time * (gripping ? 18f : 6f)));
                 f.Rotate(0f, 20f * dt, 0f, Space.Self);

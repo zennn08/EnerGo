@@ -1,0 +1,112 @@
+<!-- @dsCard group="Layar" page height=960 width=1600 subtitle="Mini-game Minyak Bumi (bor dan pompa) dan Uranium" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Layar tangkap 2</title></head>
+<body>
+<div class="eg-baris-hp">
+
+  <!-- Minyak: bor -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-kamera">
+      <div class="eg-layar" style="gap:12px">
+        <div class="eg-hud-atas">
+          <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Radar</button>
+          <span class="eg-pil eg-pil--laut" style="min-height:36px;font-size:13px">ARCore</span>
+          <span class="eg-pil" style="min-height:36px;font-size:13px"><img src="../../assets/Ikon/sda-minyak.svg" alt="">Minyak · 6</span>
+        </div>
+        <div class="eg-status eg-status--awas">
+          <div class="eg-status__atas"><span class="eg-status__tag">AWAS</span><span class="eg-status__teks">Kantong gas! Pelan-pelan</span></div>
+          <div class="eg-bar-baris"><span>KEDALAMAN</span><b>1.140 m</b></div>
+          <div class="eg-bar"><i style="width:57%;--isi:var(--sda-minyak)"></i></div>
+        </div>
+        <div class="eg-baris" style="flex:1;align-items:center;justify-content:center;gap:18px">
+          <div class="eg-kartu" style="padding:30px 12px 12px">
+            <div class="eg-selotip">Penampang</div>
+            <div class="eg-baris" style="align-items:stretch;gap:10px">
+              <div class="eg-penampang">
+                <div style="--lapis:var(--lapis-tanah);height:58px">Tanah</div>
+                <div style="--lapis:var(--lapis-batuan);height:78px">Batuan</div>
+                <div style="--lapis:var(--lapis-penutup);height:62px">Penutup</div>
+                <div style="--lapis:var(--lapis-gas);height:70px">Kantong gas</div>
+                <div style="--lapis:var(--lapis-minyak);height:30px">Minyak</div>
+                <div style="--lapis:var(--lapis-air-asin);height:52px">Air asin</div>
+                <span style="position:absolute;left:25px;top:0;width:4px;height:236px;background:var(--tinta)"></span>
+                <span style="position:absolute;left:17px;top:232px;border:10px solid transparent;border-top:14px solid var(--tinta)"></span>
+              </div>
+              <div style="position:relative;width:26px;border:2px solid var(--tinta);border-radius:13px;background:var(--kertas-300);overflow:hidden">
+                <i style="position:absolute;left:0;right:0;bottom:0;height:72%;background:var(--stempel);border-top:2px solid var(--tinta)"></i>
+              </div>
+            </div>
+            <div class="eg-data" style="font-size:12px;text-align:right;margin-top:6px;font-weight:700">GAS 72%</div>
+          </div>
+        </div>
+        <div class="eg-catatan" style="text-align:center;"><span class="eg-label-kamera">tahan layar untuk mengebor</span></div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Bor · tekanan gas mendekati blowout</div>
+  </div>
+
+  <!-- Minyak: pompa -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-kamera">
+      <div class="eg-layar" style="gap:12px">
+        <div class="eg-hud-atas">
+          <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Radar</button>
+          <span class="eg-pil eg-pil--laut" style="min-height:36px;font-size:13px">ARCore</span>
+          <span class="eg-pil" style="min-height:36px;font-size:13px"><img src="../../assets/Ikon/sda-minyak.svg" alt="">Minyak · 6</span>
+        </div>
+        <div class="eg-status">
+          <div class="eg-status__atas"><span class="eg-status__tag">AMAN</span><span class="eg-status__teks">Pas! Terus pompa</span></div>
+          <div class="eg-bar-baris"><span>DRUM</span><b>70%</b></div>
+          <div class="eg-bar eg-bar--tebal"><i style="width:70%;--isi:var(--sda-minyak)"></i></div>
+        </div>
+        <div class="eg-tengah" style="flex:1">
+          <svg viewBox="0 0 220 200" width="240" height="210" aria-hidden="true">
+            <path d="M20 190h180" stroke="#1f2a36" stroke-width="4" stroke-linecap="round"/>
+            <path d="M80 190 L110 70 L140 190" fill="none" stroke="#1f2a36" stroke-width="6" stroke-linejoin="round"/>
+            <rect x="30" y="58" width="160" height="16" rx="6" fill="#5b4bb5" stroke="#1f2a36" stroke-width="3" transform="rotate(-10 110 66)"/>
+            <path d="M24 70 q-10 20 6 40" fill="#e2a72e" stroke="#1f2a36" stroke-width="3"/>
+            <rect x="160" y="150" width="34" height="40" rx="4" fill="#cdb68a" stroke="#1f2a36" stroke-width="3"/>
+            <circle cx="110" cy="70" r="8" fill="#fbf6ea" stroke="#1f2a36" stroke-width="3"/>
+          </svg>
+        </div>
+        <div class="eg-tengah" style="position:relative;height:200px">
+          <div style="position:absolute;width:168px;height:168px;border-radius:50%;border:4px dashed var(--kertas-100);box-shadow:0 0 0 3px var(--tinta)"></div>
+          <div class="eg-cincin-pompa"><img src="../../assets/Ikon/sda-minyak.svg" alt="" width="40" height="40"></div>
+        </div>
+        <div class="eg-status" style="padding:10px 12px"><div class="eg-bar-baris"><span>TEKANAN</span><b>35%</b></div><div class="eg-bar"><i style="width:35%;--isi:var(--oker)"></i></div></div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Pompa · tekan saat lingkaran pas di target</div>
+  </div>
+
+  <!-- Uranium -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-kamera">
+      <div class="eg-layar" style="gap:12px">
+        <div class="eg-hud-atas">
+          <button class="eg-btn eg-btn--kecil eg-btn--kertas"><img src="../../assets/Ikon/kembali.svg" alt="">Radar</button>
+          <span class="eg-pil eg-pil--laut" style="min-height:36px;font-size:13px">ARCore</span>
+          <span class="eg-pil" style="min-height:36px;font-size:13px"><img src="../../assets/Ikon/sda-uranium.svg" alt="">Uranium · 0</span>
+        </div>
+        <div class="eg-status">
+          <div class="eg-status__atas"><span class="eg-status__tag">AMAN</span><span class="eg-status__teks">Menjepit... tahan</span><span class="eg-pil eg-pil--angka" style="margin-left:auto;min-height:28px;font-size:13px">1/3</span></div>
+          <div class="eg-baris" style="align-items:flex-end"><span class="eg-data" style="font-weight:700;font-size:34px;line-height:34px">88</span><div class="eg-isi"><div class="eg-bar-baris" style="margin-bottom:4px"><span>RAD · menguat ↑</span></div><div class="eg-bar"><i style="width:88%;--isi:var(--sda-uranium)"></i></div></div></div>
+        </div>
+        <div class="eg-kompas"><div class="eg-kompas__sektor" style="left:18%;right:22%"></div><span class="u" style="left:25%">U</span><span style="left:62.5%">TL</span><span style="left:100%">T</span><div class="eg-kompas__tengah"></div></div>
+        <div style="flex:1;position:relative">
+          <div style="position:absolute;left:calc(50% - 75px);top:80px">
+            <div style="position:absolute;left:44px;top:46px;width:58px;height:58px;border-radius:30% 50% 40% 50%;background:#39ff14;box-shadow:0 0 30px 12px rgba(57,255,20,.55);border:2px solid #1f2a36"></div>
+            <div class="eg-bidik is-rad"></div>
+          </div>
+          <div style="position:absolute;right:-6px;bottom:24px" class="eg-jepit is-ditekan"><i style="width:70px;height:70px"></i><b>JEPIT</b></div>
+        </div>
+        <div class="eg-status" style="padding:10px 12px"><div class="eg-bar-baris"><span>DOSIS · BAHAYA</span><b>78%</b></div><div class="eg-bar"><i style="width:78%;--isi:var(--stempel)"></i></div></div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Pemburu Geiger · menjepit serpihan pertama</div>
+  </div>
+
+</div>
+</body>
+</html>

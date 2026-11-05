@@ -1,0 +1,47 @@
+<!-- @dsCard height=300 -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>EnerGo</title>
+<style>
+  html, body { margin: 0; background: var(--kertas-200); }
+  .sampul { position: relative; width: 960px; height: 300px; overflow: hidden; background: var(--kertas-200); }
+  .sampul svg { position: absolute; inset: 0; }
+  .tinta { fill: var(--tinta); }
+  .oranye { fill: var(--oranye); }
+  .oker { fill: var(--oker); }
+  .minyak { fill: var(--sda-minyak); }
+  .kraft { fill: var(--kertas-300); }
+  .lg { rx: var(--radius-lg); }
+  .md { rx: var(--radius-md); }
+  .kontur { fill: none; stroke: var(--tinta); stroke-width: var(--garis-tinta); }
+  .nama { position: absolute; left: 40px; bottom: 40px; width: 440px; }
+  .nama h1 { margin: 0; font-family: var(--font-judul); font-weight: 800; font-size: 120px; line-height: 0.92; letter-spacing: -0.03em; color: var(--tinta); }
+  .nama p { margin: 12px 0 0; font-family: var(--font-isi); font-size: 14px; line-height: 20px; color: var(--tinta-pudar); }
+</style>
+</head>
+<body>
+<div class="sampul">
+  <svg viewBox="0 0 960 300" width="960" height="300" aria-hidden="true">
+    <!--
+      blocks: tinta 128×300 slab; oranye 208×176 (radius-lg); oker 112×112 and sda-minyak 112×172 bleeding right; kertas-300 208×108 (radius-lg)
+      arrangement: one tall ink slab with satellites, blocks bleeding off the top, right and bottom edges, gaps of space-4
+      pattern: literal motif — contour rings (topographic map / compass dial) from the README's "peta kontur"; four rings at space-6 pitch, garis-tinta
+      scales: gaps space-4 (16), ring pitch space-6 (24), corners radius-lg (16), stroke garis-tinta (2px)
+    -->
+    <rect class="tinta" x="480" y="0" width="128" height="300"/>
+    <rect class="oranye lg" x="624" y="-16" width="208" height="192"/>
+    <rect class="oker md" x="848" y="-16" width="128" height="128"/>
+    <rect class="minyak md" x="848" y="128" width="128" height="188"/>
+    <rect class="kraft lg" x="624" y="192" width="208" height="124"/>
+    <circle class="kontur" cx="728" cy="184" r="24"/>
+    <circle class="kontur" cx="728" cy="184" r="48"/>
+    <circle class="kontur" cx="728" cy="184" r="72"/>
+    <circle class="kontur" cx="728" cy="184" r="96"/>
+  </svg>
+  <div class="nama">
+    <h1>EnerGo</h1>
+    <p>Jelajahi sumber daya, temukan energinya.</p>
+  </div>
+</div>
+</body>
+</html>

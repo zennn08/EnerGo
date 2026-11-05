@@ -1,0 +1,74 @@
+<!-- @dsCard group="Layar" page height=960 width=1600 subtitle="Splash, Lobby, dan transisi" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Layar awal</title></head>
+<body>
+<div class="eg-baris-hp">
+
+  <!-- Splash -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-layar" style="align-items:center;justify-content:center;text-align:center">
+        <span class="eg-stempel eg-stempel--normal eg-stempel--kecil" style="position:absolute;top:44px;right:28px;color:var(--tinta)">Ekspedisi · v0.1</span>
+        <div class="eg-kartu" style="padding:28px 28px 22px;display:flex;flex-direction:column;align-items:center">
+          <img src="../../assets/Logo/energo-mark.svg" alt="" width="128" height="128">
+          <div style="font-family:var(--font-judul);font-weight:800;font-size:72px;line-height:64px;letter-spacing:-0.03em;margin-top:12px">Ener<span style="color:var(--oranye-tua)">Go</span></div>
+          <div style="font-size:16px;line-height:22px;color:var(--tinta-pudar);margin-top:10px">Jelajahi sumber daya, temukan energinya.</div>
+        </div>
+        <div style="position:absolute;left:56px;right:56px;bottom:64px">
+          <div class="eg-bar eg-bar--tipis"><i style="width:68%"></i></div>
+          <div class="eg-status__teks" style="margin-top:18px">Sentuh layar untuk mulai</div>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Splash · 2,4 detik, ketuk untuk lewati</div>
+  </div>
+
+  <!-- Lobby -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-layar" style="gap:12px">
+        <div class="eg-baris" style="justify-content:space-between">
+          <span class="eg-pil eg-pil--angka"><img src="../../assets/Ikon/petir.svg" alt="">63 unit</span>
+          <img src="../../assets/Logo/energo-mark.svg" alt="" width="44" height="44">
+        </div>
+        <div style="text-align:center;margin:0 0 10px;position:relative">
+          <div style="font-family:var(--font-judul);font-weight:800;font-size:60px;line-height:54px;letter-spacing:-0.03em">ENER<span style="color:var(--oranye-tua)">GO!</span></div>
+        </div>
+        <div class="eg-kartu" style="padding:28px 8px 16px">
+          <div class="eg-selotip">Koleksi energimu</div>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px 10px">
+            <div class="eg-tile eg-tile--ringkas" style="--muda:var(--sda-matahari-muda)"><span class="eg-tile__no">No.01</span><span class="eg-badge">12</span><img src="../../assets/Ikon/sda-matahari.svg" alt=""><div class="eg-tile__nama">Matahari</div></div>
+            <div class="eg-tile eg-tile--ringkas" style="--muda:var(--sda-batubara-muda)"><span class="eg-tile__no">No.02</span><span class="eg-badge">31</span><img src="../../assets/Ikon/sda-batubara.svg" alt=""><div class="eg-tile__nama">Batu Bara</div></div>
+            <div class="eg-tile eg-tile--ringkas" style="--muda:var(--sda-emas-muda)"><span class="eg-tile__no">No.03</span><span class="eg-badge">14</span><img src="../../assets/Ikon/sda-emas.svg" alt=""><div class="eg-tile__nama">Emas</div></div>
+            <div class="eg-tile eg-tile--ringkas" style="--muda:var(--sda-minyak-muda)"><span class="eg-tile__no">No.04</span><span class="eg-badge">6</span><img src="../../assets/Ikon/sda-minyak.svg" alt=""><div class="eg-tile__nama">Minyak Bumi</div></div>
+            <div class="eg-tile eg-tile--ringkas" style="--muda:var(--sda-uranium-muda)"><span class="eg-tile__no">No.05</span><span class="eg-badge">0</span><img src="../../assets/Ikon/sda-uranium.svg" alt=""><div class="eg-tile__nama">Uranium</div></div>
+          </div>
+        </div>
+        <div class="eg-tengah"><span class="eg-pil eg-pil--laut" style="min-height:32px;font-size:13px"><img src="../../assets/Ikon/kamera.svg" alt="" style="width:20px;height:20px">Mode kamera: AR (ARCore)</span></div>
+        <button class="eg-btn eg-btn--utama eg-btn--besar eg-btn--penuh"><img src="../../assets/Ikon/radar.svg" alt="" style="width:40px;height:40px">Berburu!</button>
+        <div style="display:flex;justify-content:space-around;margin-top:auto">
+          <div class="eg-bulat eg-bulat--oker"><button aria-label="Panduan"><img src="../../assets/Ikon/buku.svg" alt=""></button>Panduan</div>
+          <div class="eg-bulat eg-bulat--laut"><button aria-label="Latihan"><img src="../../assets/Ikon/target.svg" alt=""></button>Latihan</div>
+          <div class="eg-bulat"><button aria-label="Pengaturan"><img src="../../assets/Ikon/gir.svg" alt=""></button>Pengaturan</div>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Lobby · koleksi sebagai buku spesimen</div>
+  </div>
+
+  <!-- Transisi -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp" style="background:var(--tinta)">
+      <div class="eg-layar" style="align-items:center;justify-content:center;gap:24px">
+        <img src="../../assets/Logo/energo-mark.svg" alt="" width="120" height="120" style="transform:rotate(-24deg)">
+        <div style="font-family:var(--font-data);font-weight:700;font-size:18px;color:var(--kertas-100)">Menyalakan radar...</div>
+        <div style="width:200px"><div class="eg-bar eg-bar--tipis" style="border-color:var(--kertas-100)"><i style="width:40%;border-color:var(--kertas-100)"></i></div></div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Transisi · 0,45 detik, jarum kompas berputar</div>
+  </div>
+
+</div>
+</body>
+</html>

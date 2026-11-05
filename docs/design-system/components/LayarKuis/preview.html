@@ -1,0 +1,85 @@
+<!-- @dsCard group="Layar" page height=960 width=1600 subtitle="Kuis, umpan balik, dan hasil" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Layar kuis</title></head>
+<body>
+<div class="eg-baris-hp">
+
+  <!-- Kuis -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-layar" style="gap:16px">
+        <div class="eg-baris" style="justify-content:space-between">
+          <div class="eg-penanda"><i class="is-benar">✓</i><i class="is-kini"></i><i></i></div>
+          <span class="eg-pil eg-pil--angka eg-pil--oker">SOAL 2/3</span>
+        </div>
+        <div class="eg-judul-dua" style="text-align:center;font-size:40px;line-height:40px">BENAR <em>ATAU</em><br>SALAH?</div>
+        <div class="eg-tengah" style="flex:1">
+          <div class="eg-soal-tumpuk" style="--miring:-6deg;--geser:-26px">
+            <div class="eg-kartu eg-soal" style="box-shadow:0 0 0 6px var(--stempel), var(--bayang-kartu)">
+              <div class="eg-soal__waktu"><img src="../../assets/Ikon/jam.svg" alt=""><div class="eg-bar eg-bar--tipis eg-isi"><i style="width:60%"></i></div><b class="eg-data">9</b></div>
+              <img src="../../assets/Ikon/sda-emas.svg" alt="" width="56" height="56" style="margin:18px auto 12px">
+              <p class="eg-soal__teks">Emas bisa ditemukan di endapan pasir sungai.</p>
+              <span class="eg-stempel" style="position:absolute;top:84px;right:20px">Salah</span>
+            </div>
+          </div>
+        </div>
+        <div class="eg-baris" style="gap:14px">
+          <button class="eg-btn eg-btn--bahaya eg-isi is-ditekan"><img src="../../assets/Ikon/silang.svg" alt="" style="filter:invert(1)">Salah</button>
+          <button class="eg-btn eg-btn--ok eg-isi"><img src="../../assets/Ikon/centang.svg" alt="" style="filter:invert(1)">Benar</button>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;top:0;bottom:0;width:18px;background:linear-gradient(90deg, rgba(181,54,43,.55), transparent)"></div>
+    </div>
+    <div class="eg-hp-label">Kuis · kartu digeser ke kiri, cap SALAH muncul</div>
+  </div>
+
+  <!-- Umpan balik -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-redup" style="background:rgba(31,42,54,.35)"></div>
+      <div class="eg-layar" style="justify-content:center">
+        <div class="eg-baris" style="justify-content:space-between;position:absolute;top:28px;left:16px;right:16px">
+          <div class="eg-penanda"><i class="is-benar">✓</i><i class="is-salah">✕</i><i></i></div>
+          <span class="eg-pil eg-pil--angka eg-pil--oker">SOAL 2/3</span>
+        </div>
+        <div class="eg-kartu eg-kartu--salah" style="padding-top:36px">
+          <div class="eg-selotip eg-selotip--merah">Salah</div>
+          <span class="eg-chip eg-chip--benar"><img src="../../assets/Ikon/centang.svg" alt="">Pernyataan ini BENAR</span>
+          <div class="eg-baris" style="align-items:flex-start;margin:16px 0"><img src="../../assets/Ikon/sda-emas.svg" alt="" width="44" height="44"><p style="margin:0;font-size:18px;line-height:27px">Emas sering terbawa arus dan mengendap di pasir sungai, makanya pendulang mencarinya di tepi sungai.</p></div>
+          <div class="eg-catatan" style="margin-bottom:12px">sumber: USGS</div>
+          <button class="eg-btn eg-btn--nonaktif eg-btn--penuh" style="overflow:hidden" disabled>Baca dulu...<span class="eg-btn__isi" style="width:55%"></span></button>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Umpan balik · tombol terkunci 2 detik</div>
+  </div>
+
+  <!-- Hasil -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-layar" style="gap:36px;justify-content:center">
+        <div class="eg-judul-dua" style="text-align:center;font-size:56px;line-height:52px">SEMPURNA!</div>
+        <div class="eg-kartu" style="padding:40px 20px 20px;text-align:center">
+          <div class="eg-selotip">Hasil analisis</div>
+          <div class="eg-tengah" style="gap:6px;align-items:flex-end"><img src="../../assets/Ikon/bintang.svg" alt="" width="56" height="56"><img src="../../assets/Ikon/bintang.svg" alt="" width="76" height="76"><img src="../../assets/Ikon/bintang.svg" alt="" width="56" height="56"></div>
+          <div class="eg-data" style="font-weight:700;font-size:18px;margin:8px 0 14px">3/3 BENAR</div>
+          <div class="eg-tengah" style="gap:16px;position:relative">
+            <img src="../../assets/Ikon/sda-emas.svg" alt="" width="64" height="64">
+            <span class="eg-data" style="font-weight:700;font-size:56px;line-height:56px">+6</span>
+            <span class="eg-stempel eg-stempel--benar" style="margin-left:8px">Murni</span>
+          </div>
+          <div class="eg-tengah" style="flex-wrap:wrap;gap:8px;margin:18px 0 12px">
+            <span class="eg-chip">Dasar +1</span><span class="eg-chip">Kuis +3</span><span class="eg-chip">Dulang · Hebat +2</span>
+          </div>
+          <p style="margin:0 0 18px;font-size:18px;line-height:26px">Sempurna! Semua jawaban tepat.</p>
+          <button class="eg-btn eg-btn--utama eg-btn--penuh">Lanjut berburu</button>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Hasil · Sempurna, kualitas Murni</div>
+  </div>
+
+</div>
+</body>
+</html>

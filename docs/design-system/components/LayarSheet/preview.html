@@ -1,0 +1,79 @@
+<!-- @dsCard group="Layar" page height=960 width=1600 subtitle="Sheet Pengaturan, Latihan, dan kartu Panduan" -->
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Layar sheet</title></head>
+<body>
+<div class="eg-baris-hp">
+
+  <!-- Pengaturan -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-redup"></div>
+      <div class="eg-kartu" style="position:absolute;left:12px;right:12px;bottom:-16px;padding:36px 20px 40px;border-radius:24px 24px 0 0">
+        <div class="eg-selotip">Pengaturan</div>
+        <div class="eg-baris-atur"><div><div class="judul">Mode AR (ARCore)</div><div class="sub">Butuh Google Play Services for AR</div></div><div class="eg-toggle is-nyala"></div></div>
+        <div class="eg-baris-atur"><img src="../../assets/Ikon/suara.svg" alt="" width="32" height="32"><div class="eg-slider"><div class="eg-bar"><i style="width:70%;--isi:var(--laut)"></i></div><b style="left:70%"></b></div><span class="eg-data" style="font-weight:700;font-size:16px;width:48px;text-align:right">70%</span></div>
+        <div class="eg-baris-atur"><div><div class="judul">Getaran</div><div class="sub">HP bergetar saat main</div></div><div class="eg-toggle is-nyala"></div></div>
+        <div class="eg-kolom" style="margin-top:20px;gap:14px">
+          <button class="eg-btn eg-btn--info eg-btn--penuh">Latihan (tanpa GPS)</button>
+          <button class="eg-btn eg-btn--bahaya eg-btn--penuh" style="font-size:18px">Tekan lagi untuk menghapus</button>
+          <div class="eg-bar eg-bar--tipis" style="margin:-6px 8px 0"><i style="width:60%;--isi:var(--stempel)"></i></div>
+          <button class="eg-btn eg-btn--utama eg-btn--penuh">Selesai</button>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Pengaturan · reset sedang menunggu ketukan kedua</div>
+  </div>
+
+  <!-- Latihan -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-peta">
+      <div class="eg-redup"></div>
+      <div class="eg-kartu" style="position:absolute;left:12px;right:12px;bottom:-16px;padding:36px 16px 40px;border-radius:24px 24px 0 0">
+        <div class="eg-selotip">Latihan</div>
+        <div style="text-align:center;font-size:16px;color:var(--tinta-pudar);margin-bottom:18px">Pilih sumber daya, main tanpa GPS</div>
+        <div style="display:grid;grid-template-columns:repeat(3,132px);justify-content:center;gap:16px 12px">
+          <div class="eg-tile" style="--muda:var(--sda-matahari-muda)"><span class="eg-tile__no">No.01</span><span class="eg-badge">12</span><img src="../../assets/Ikon/sda-matahari.svg" alt=""><div class="eg-tile__nama">Matahari</div></div>
+          <div class="eg-tile" style="--muda:var(--sda-batubara-muda)"><span class="eg-tile__no">No.02</span><span class="eg-badge">31</span><img src="../../assets/Ikon/sda-batubara.svg" alt=""><div class="eg-tile__nama">Batu Bara</div></div>
+          <div class="eg-tile is-terpilih" style="--muda:var(--sda-emas-muda)"><span class="eg-tile__no">No.03</span><span class="eg-badge">14</span><img src="../../assets/Ikon/sda-emas.svg" alt=""><div class="eg-tile__nama">Emas</div></div>
+          <div class="eg-tile" style="--muda:var(--sda-minyak-muda)"><span class="eg-tile__no">No.04</span><span class="eg-badge">6</span><img src="../../assets/Ikon/sda-minyak.svg" alt=""><div class="eg-tile__nama">Minyak Bumi</div></div>
+          <div class="eg-tile" style="--muda:var(--sda-uranium-muda)"><span class="eg-tile__no">No.05</span><span class="eg-badge">0</span><img src="../../assets/Ikon/sda-uranium.svg" alt=""><div class="eg-tile__nama">Uranium</div></div>
+          <div class="eg-tile" style="--muda:var(--sda-acak-muda)"><span class="eg-tile__no">???</span><img src="../../assets/Ikon/sda-acak.svg" alt=""><div class="eg-tile__nama">Acak</div></div>
+        </div>
+        <button class="eg-btn eg-btn--utama eg-btn--penuh" style="margin-top:28px">Mulai latihan</button>
+      </div>
+    </div>
+    <div class="eg-hp-label">Latihan · Emas terpilih</div>
+  </div>
+
+  <!-- Panduan -->
+  <div class="eg-hp-wrap">
+    <div class="eg-hp eg-kamera">
+      <div class="eg-redup"></div>
+      <div class="eg-layar" style="justify-content:center">
+        <div class="eg-kartu eg-kartu--garis" style="padding:34px 20px 20px">
+          <div class="eg-selotip">Emas</div>
+          <div class="eg-data" style="text-align:center;font-weight:700;font-size:14px;color:var(--tinta-pudar)">LANGKAH 2/3</div>
+          <svg viewBox="0 0 280 170" width="100%" height="170" style="display:block;margin:12px 0" aria-hidden="true">
+            <rect x="40" y="18" width="200" height="134" rx="12" fill="#e7d9ba" stroke="#1f2a36" stroke-width="2"/>
+            <path d="M70 120 L210 120 L196 92 L84 92 Z" fill="#fbf6ea" stroke="#1f2a36" stroke-width="3" stroke-linejoin="round"/>
+            <rect x="92" y="84" width="96" height="12" rx="3" fill="#1f2a36"/>
+            <ellipse cx="140" cy="60" rx="50" ry="20" fill="#fbf6ea" stroke="#1f2a36" stroke-width="2.5"/>
+            <circle cx="140" cy="60" r="7" fill="#2e7a47" stroke="#1f2a36" stroke-width="2"/>
+            <path d="M118 60h-10M172 60h-10" stroke="#1f2a36" stroke-width="2" stroke-linecap="round"/>
+            <text x="214" y="46" font-family="Caveat, cursive" font-size="22" font-weight="600" fill="#a6481a">datar!</text>
+          </svg>
+          <div style="font-family:var(--font-judul);font-weight:800;font-size:24px;line-height:28px">Letakkan HP datar</div>
+          <p style="margin:6px 0 14px;font-size:18px;line-height:28px">Setelah endapan diketuk, letakkan HP datar sampai hitungan mulai.</p>
+          <div class="eg-tengah" style="gap:8px;margin-bottom:16px"><i style="width:10px;height:10px;border-radius:50%;background:var(--kertas-300);border:2px solid var(--tinta)"></i><i style="width:24px;height:10px;border-radius:5px;background:var(--tinta)"></i><i style="width:10px;height:10px;border-radius:50%;background:var(--kertas-300);border:2px solid var(--tinta)"></i></div>
+          <label class="eg-baris" style="font-size:16px;margin-bottom:14px"><span style="width:26px;height:26px;border:2px solid var(--tinta);border-radius:6px;background:var(--kertas-100)"></span>Jangan ingatkan lagi</label>
+          <div class="eg-baris"><button class="eg-btn eg-btn--kecil eg-btn--kertas">Lewati</button><button class="eg-btn eg-btn--utama eg-isi">Lanjut</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="eg-hp-label">Kartu Panduan · mode main, langkah 2 dari 3</div>
+  </div>
+
+</div>
+</body>
+</html>

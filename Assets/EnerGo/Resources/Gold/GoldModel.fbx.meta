@@ -3,7 +3,37 @@ guid: 2114c266732c408448fe93863b93bb18
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_air
+    second: {fileID: 2100000, guid: 4016f2cc6f6b6a84387a55b3339baa90, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_emas
+    second: {fileID: 2100000, guid: 14f3543957665284886ce05179fc31bc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_emas_kilau
+    second: {fileID: 2100000, guid: 59f0b6619fa480542913d8f4e7ed6a7d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_kraft
+    second: {fileID: 2100000, guid: 6aa520ead49d00140983f0a8ee2a179b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_kraft_tua
+    second: {fileID: 2100000, guid: 5483e8caad1eca94d94bc74804d90e93, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_tinta
+    second: {fileID: 2100000, guid: aa04b2e3f873c6042861d5e307f9147a, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
