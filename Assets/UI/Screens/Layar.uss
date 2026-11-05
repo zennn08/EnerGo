@@ -61,3 +61,30 @@
 .transisi__teks { -unity-font-definition: var(--font-data-bold); font-size: 18px; color: var(--kertas-100); margin-bottom: 24px; }
 .transisi__bar { width: 200px; border-color: var(--kertas-100); }
 .transisi__isi { border-color: var(--kertas-100); }
+
+/* Radar (LayarRadar, Radar, KartuTarget) */
+.radar__atas { justify-content: space-between; margin-bottom: 8px; }
+.radar__disk { flex-grow: 1; flex-shrink: 1; min-height: 160px; margin-bottom: 8px; }
+.radar__huruf { position: absolute; width: 24px; height: 24px; -unity-text-align: middle-center; -unity-font-definition: var(--font-judul); font-size: 18px; color: var(--tinta); padding: 0; margin: 0; }
+.radar__huruf--utara { color: var(--stempel); }
+.radar__jarak { position: absolute; -unity-font-definition: var(--font-data); font-size: 12px; color: var(--tinta-pudar); padding: 0; margin: 0; }
+.radar__node { position: absolute; align-items: center; justify-content: center; background-color: var(--kertas-100); border-width: 2px; border-color: var(--tinta); border-radius: 29px; }
+.radar__node.is-dekat { border-width: 4px; border-color: var(--oranye); }
+.radar__node.is-terpilih { border-width: 4px; border-color: var(--tinta); }
+.radar__node.is-terkunci { opacity: 0.55; }
+.radar__node-ikon { width: 70%; height: 70%; }
+.radar__node-cahaya { position: absolute; left: -6px; top: -6px; right: -6px; bottom: -6px; border-radius: 40px; background-color: rgba(57, 255, 20, 0.28); }
+.radar__info { flex-direction: column; align-items: flex-start; align-self: stretch; justify-content: center; min-height: 48px; padding: 4px 14px; border-radius: 20px; font-size: 13px; letter-spacing: 0; margin-bottom: 8px; }
+.radar__info Label { padding: 0; margin: 0; white-space: normal; }
+.radar__info--awas { color: var(--stempel); }
+.radar__target { padding: 14px 16px 14px 16px; }
+.radar__target-isi { margin-bottom: 10px; }
+.radar__target-ikon { width: 56px; height: 56px; margin-right: 12px; }
+.radar__panah { width: 40px; height: 40px; background-image: url("project://database/Assets/UI/Icons/panah.svg"); }
+.radar__panah.is-terkunci { background-image: url("project://database/Assets/UI/Icons/gembok.svg"); }
+.radar__kosong { -unity-text-align: middle-center; white-space: normal; padding: 18px 8px; }
+.radar__lapis { align-items: center; justify-content: center; padding: 0 24px; }
+.radar__dialog { width: 100%; max-width: 400px; padding: 40px 20px 18px 20px; }
+.radar__dialog-teks { white-space: normal; -unity-text-align: middle-center; margin-bottom: 16px; }
+.radar__dialog-btn { margin-top: 10px; }
+.radar__pudar { opacity: 0.35; }

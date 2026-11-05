@@ -60,8 +60,12 @@ namespace EnerGo.Editor
         }
 
         // The "UI" object that draws LobbyScene: UIDocument (480 x 800 panel, LobbyScene.uxml), LobbyView, SafeArea.
-        // Replaces an existing "UI" object, so it can be run again on the open LobbyScene.
-        public static GameObject InstallLobbyUi(LobbyController controller)
+        public static GameObject InstallLobbyUi(LobbyController controller) =>
+            InstallUi("Assets/UI/Screens/LobbyScene.uxml", typeof(EnerGo.UI.LobbyView), controller);
+
+        // A scene's "UI" object: UIDocument with this screen, its view wired to `controller`, and SafeArea.
+        // Replaces an existing "UI" object, so it can be run again on the open scene.
+        public static GameObject InstallUi(string uxmlPath, System.Type viewType, Component controller)
         {
             var old = GameObject.Find("UI");
             if (old != null) Object.DestroyImmediate(old);
@@ -69,8 +73,8 @@ namespace EnerGo.Editor
             ui.SetActive(false); // wire everything before OnEnable runs
             var doc = ui.AddComponent<UnityEngine.UIElements.UIDocument>();
             doc.panelSettings = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.PanelSettings>("Assets/UI/PanelSettings.asset");
-            doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>("Assets/UI/Screens/LobbyScene.uxml");
-            var view = ui.AddComponent<EnerGo.UI.LobbyView>();
+            doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>(uxmlPath);
+            var view = ui.AddComponent(viewType);
             var so = new SerializedObject(view);
             so.FindProperty("controller").objectReferenceValue = controller;
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -94,7 +98,7 @@ namespace EnerGo.Editor
             camGo.tag = "MainCamera";
             var radar = new GameObject("Radar");
             radar.AddComponent<LocationFeed>();
-            radar.AddComponent<RadarController>();
+            InstallUi("Assets/UI/Screens/Radar.uxml", typeof(EnerGo.UI.RadarView), radar.AddComponent<RadarController>());
             EditorSceneManager.SaveScene(scene, ExploreScenePath);
             UpdateBuildSettings();
         }

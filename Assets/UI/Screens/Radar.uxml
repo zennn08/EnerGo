@@ -1,0 +1,49 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+    <!-- Exploration radar (docs/design-system/components/LayarRadar). Values are set by RadarView. -->
+    <Style src="project://database/Assets/UI/Theme.uss" />
+    <Style src="project://database/Assets/UI/Components.uss" />
+    <Style src="project://database/Assets/UI/Screens/Layar.uss" />
+    <eg:PetaLatar class="eg-peta" />
+    <ui:VisualElement class="eg-layar eg-aman" picking-mode="Ignore">
+        <ui:VisualElement class="eg-baris radar__atas" picking-mode="Ignore">
+            <ui:Button name="btn-kembali" class="eg-btn eg-btn--kecil eg-btn--kertas" text="‹ LOBBY" />
+            <ui:VisualElement class="eg-pil eg-pil--data" picking-mode="Ignore"><ui:Label name="pil-spawn" text="SPAWN BARU 00:00" /></ui:VisualElement>
+        </ui:VisualElement>
+        <eg:RadarDisk name="radar-disk" class="radar__disk" />
+        <ui:VisualElement name="radar-info" class="eg-pil radar__info" picking-mode="Ignore">
+            <ui:Label name="info-kompas" text="Kompas" />
+            <ui:Label name="info-gps" text="GPS" />
+        </ui:VisualElement>
+        <ui:VisualElement name="kartu-target" class="eg-kartu radar__target" picking-mode="Ignore">
+            <ui:VisualElement class="eg-baris radar__target-isi" picking-mode="Ignore">
+                <ui:VisualElement name="target-ikon" class="radar__target-ikon" picking-mode="Ignore" />
+                <ui:VisualElement class="eg-kolom eg-isi" picking-mode="Ignore">
+                    <ui:Label name="target-nama" class="eg-judul-kartu" text="Nama" />
+                    <ui:Label name="target-jarak" class="eg-data-tebal" text="0 m" />
+                </ui:VisualElement>
+                <ui:VisualElement name="target-panah" class="radar__panah" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:Label name="target-kosong" class="eg-isi-teks radar__kosong" text="Belum ada SDA di sekitar. Coba berjalan ke area lain." />
+            <ui:Button name="btn-tangkap" class="eg-btn eg-btn--utama eg-btn--penuh" text="TANGKAP" />
+        </ui:VisualElement>
+        <ui:VisualElement name="kartu-tunggu" class="eg-kartu radar__target" picking-mode="Ignore">
+            <ui:Label class="eg-isi-teks radar__kosong" text="Mencari sinyal GPS..." />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="lapis-gps" class="eg-lapis radar__lapis" picking-mode="Ignore">
+        <ui:VisualElement name="kartu-gps" class="eg-kartu radar__dialog">
+            <ui:Label name="gps-judul" class="eg-selotip eg-selotip--merah" text="GPS" />
+            <ui:Label name="gps-isi" class="eg-isi-teks radar__dialog-teks" text="" />
+            <ui:Button name="btn-coba-lagi" class="eg-btn eg-btn--utama eg-btn--penuh radar__dialog-btn" text="COBA LAGI" />
+            <ui:Button name="btn-latihan-gps" class="eg-btn eg-btn--kertas eg-btn--penuh radar__dialog-btn" text="MAIN MODE LATIHAN" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="lapis-aman" class="eg-lapis radar__lapis">
+        <ui:VisualElement class="eg-redup" />
+        <ui:VisualElement class="eg-kartu radar__dialog">
+            <ui:Label class="eg-selotip" text="HATI-HATI DI JALAN" />
+            <ui:Label class="eg-isi-teks radar__dialog-teks" text="Perhatikan jalan dan sekitarmu saat berburu. Jangan masuk ke area berbahaya atau milik orang lain." />
+            <ui:Button name="btn-mengerti" class="eg-btn eg-btn--utama eg-btn--penuh radar__dialog-btn" text="SAYA MENGERTI" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
