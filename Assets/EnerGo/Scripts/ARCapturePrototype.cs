@@ -40,7 +40,7 @@ namespace EnerGo
         private GameObject goldModel;
         private GameObject sunModel;   // Resources/Sun/sun; falls back to a yellow sphere while it has no mesh
         private string resourceId;
-        private GuideViewer guide; // pre-game guide overlay; null = closed
+        private bool guideOpen; // the pre-game guide overlay is showing
         private CompassAnchor compass;
         private float captureBearing; // compass bearing of this capture's SDA (radar), random in practice mode
         private float resultShownAt;
@@ -231,7 +231,7 @@ namespace EnerGo
             {
                 arCamera.backgroundColor = EnerGoUI.Ink;
             }
-            if (save.pendingCapture == null && GuideViewer.ShouldShow(resourceId)) guide = new GuideViewer(resourceId, withStart: true);
+            if (save.pendingCapture == null && GuideViewer.ShouldShow(resourceId)) guideOpen = true;
         }
 
         private void Start()
@@ -417,7 +417,7 @@ namespace EnerGo
 
             // 3. Target Spawning
             bool canSpawn = (isUsingGyro || ARSession.state == ARSessionState.SessionTracking);
-            if (EnerGoProgress.Current.pendingCapture == null && guide == null && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime && compass.ReadyToPlace)
+            if (EnerGoProgress.Current.pendingCapture == null && !guideOpen && arCamera != null && canSpawn && target == null && Time.time >= nextSpawnTime && compass.ReadyToPlace)
             {
                 // Place the first target in view so sensor-mode users see an immediate response.
                 // A failed gold pan hides the next deposit somewhere around the player instead of in front.
@@ -514,7 +514,7 @@ namespace EnerGo
 
         private void HandleInputs()
         {
-            if (guide != null) return; // the overlay handles its own taps
+            if (guideOpen) return; // the overlay handles its own taps
             // ── When quiz card is showing, route input to card swipe ──
             if (EnerGoProgress.Current.pendingCapture != null
                 && EnerGoProgress.Current.pendingCapture.state == "awaiting-analysis")
@@ -784,11 +784,7 @@ namespace EnerGo
 
             // Ignore taps on UI top or bottom regions
             float scale = HudScale;
-            float guiY = (Screen.height - screenPosition.y) / scale;
-            if (guiY < 128f || guiY > (Screen.height / scale - 70f))
-            {
-                return false;
-            }
+            if (HudTapZones.Blocks((Screen.height - screenPosition.y) / scale, Screen.height / scale)) return false;
 
             if (target == null || arCamera == null)
             {
@@ -1633,6 +1629,60 @@ namespace EnerGo
             stylesInitialized = true;
         }
 
+        // State and actions for CaptureView.
+        public CaptureScreen CurrentScreen => CaptureScreens.For(EnerGoProgress.Current.pendingCapture != null, EnerGoProgress.Current.pendingCapture?.state);
+        public bool GuideOpen => guideOpen;
+        public bool HasARSession => FindFirstObjectByType<ARSession>() != null;
+        public string ResourceId => resourceId;
+        public string BackLabel => ExploreSession.PendingSpawnId != null ? "‹ RADAR" : "‹ LOBBY";
+        public string ModeLabel => isUsingGyro ? (attitudeSensor != null || angularGyro != null ? "SENSOR 360" : "DRAG 360") : "ARCORE";
+        public string ResourceUnitsLabel => EnerGoProgress.Current.Get(resourceId).Total + " UNIT";
+        public float LastHitTime => lastHitTime;
+        public Vector2 LastHitScreenPos => lastHitScreenPos;
+
+        public void BackFromCapture()
+        {
+            if (EnerGoProgress.Current.pendingCapture != null) return;
+            bool fromRadar = ExploreSession.PendingSpawnId != null;
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
+            ExploreSession.PendingSpawnId = null; // leaving without catching: the spawn stays on the radar
+            SceneManager.LoadScene(fromRadar ? "ExploreScene" : "LobbyScene");
+        }
+
+        public void ToggleTrackingMode()
+        {
+            if (EnerGoProgress.Current.pendingCapture != null) return;
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
+            ApplyTrackingModeState(!isUsingGyro);
+            if (target != null) Destroy(target);
+            target = null;
+            uraniumPhase = UraniumPhase.None;
+            oilPhase = OilPhase.None;
+            nextSpawnTime = Time.time + 0.3f;
+            feedback = isUsingGyro ? "BERALIH KE SENSOR 360" : "BERALIH KE ARCORE";
+        }
+
+        public void RespawnTarget()
+        {
+            if (guideOpen || EnerGoProgress.Current.pendingCapture != null) return;
+            if (target != null) Destroy(target);
+            target = null;
+            uraniumPhase = UraniumPhase.None;
+            oilPhase = OilPhase.None;
+            lookPitch = 0f;
+            lookYaw = 0f;
+            if (arCamera != null) arCamera.transform.localRotation = Quaternion.identity;
+            nextSpawnTime = Time.time + 0.2f;
+            feedback = resourceId == ResourceIds.Sun ? "CARI CAHAYA DI DEPAN" : "IKUTI PITA KOMPAS";
+        }
+
+        public void FinishGuide(bool dontRemind)
+        {
+            if (dontRemind) { PlayerPrefs.SetInt(GuideViewer.SkipKey(resourceId), 1); PlayerPrefs.Save(); }
+            guideOpen = false;
+            nextSpawnTime = Time.time; // the mini-game (and the sun timer) starts now
+        }
+
         private void OnGUI()
         {
             InitStyles();
@@ -1648,47 +1698,7 @@ namespace EnerGo
             float sw = Screen.width / scale;
             float sh = Screen.height / scale;
 
-            float safeTop = EnerGoUI.SafeTop(scale);
-
-            // --- 1. TOP TELEMETRY BAR ---
-            float pillH = 50f;
-
-            // Return to Lobby Button (Left)
-            var lobbyRect = new Rect(14f, safeTop, 90f, pillH);
-            bool fromRadar = ExploreSession.PendingSpawnId != null;
-            if (EnerGoProgress.Current.pendingCapture == null && DrawBtn(lobbyRect, fromRadar ? "‹  RADAR" : "‹  LOBBY", styleBtnText))
-            {
-                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonBack();
-                ExploreSession.PendingSpawnId = null; // leaving without catching: the spawn stays on the radar
-                SceneManager.LoadScene(fromRadar ? "ExploreScene" : "LobbyScene");
-                return;
-            }
-
-            // Mode Indicator / Switcher (Center)
-            string modeName = isUsingGyro ? (attitudeSensor != null || angularGyro != null ? "SENSOR 360" : "DRAG 360") : "ARCORE";
-            float modeW = 160f;
-            var modeRect = new Rect((sw - modeW) * 0.5f, safeTop, modeW, pillH);
-            bool hasARSession = FindFirstObjectByType<ARSession>() != null;
-            if (!hasARSession) DrawPill(modeRect, "MODE TANPA ARCORE", modeName, styleHeaderTag, styleHeaderVal);
-            if (EnerGoProgress.Current.pendingCapture == null && hasARSession && DrawBtn(modeRect, modeName, isUsingGyro ? styleBtnWarn : styleBtnText))
-            {
-                if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
-                // Toggle mode manually
-                ApplyTrackingModeState(!isUsingGyro);
-                if (target != null) Destroy(target);
-                target = null;
-                uraniumPhase = UraniumPhase.None;
-                oilPhase = OilPhase.None;
-                nextSpawnTime = Time.time + 0.3f;
-                feedback = isUsingGyro ? "BERALIH KE SENSOR 360" : "BERALIH KE ARCORE";
-            }
-
-            // Resource Badge (Right)
-            float oreW = 105f;
-            var oreRect = new Rect(sw - 14f - oreW, safeTop, oreW, pillH);
-            DrawPill(oreRect, ResourceIds.Name(resourceId).ToUpperInvariant(), $"{EnerGoProgress.Current.Get(resourceId).Total} UNIT", styleHeaderTag, styleGoldVal);
-
-            if (guide == null)
+            if (!guideOpen)
             {
             if (resourceId == ResourceIds.Sun && target != null && EnerGoProgress.Current.pendingCapture == null) DrawSunReticle(sw, sh);
             if (resourceId == ResourceIds.Coal && target != null && EnerGoProgress.Current.pendingCapture == null) DrawCoalPips(scale);
@@ -1696,45 +1706,8 @@ namespace EnerGo
             if (uraniumPhase != UraniumPhase.None && EnerGoProgress.Current.pendingCapture == null) DrawUraniumOverlay(sw, sh);
             if (oilPhase != OilPhase.None && EnerGoProgress.Current.pendingCapture == null) DrawOilOverlay(sw, sh);
 
-            // --- 2. RADAR & TARGET DIRECTION HUD ---
-            DrawRadarHUD(sw, safeTop + pillH + 10f);
-            if (EnerGoProgress.Current.pendingCapture == null) DrawCompassStrip(sw, safeTop + pillH + 10f + 72f);
             }
 
-            // --- 3. BOTTOM CONTROL BAR ---
-            float botY = sh - 52f;
-            float botBtnW = Mathf.Min(260f, sw - 32f);
-            var resetRect = new Rect((sw - botBtnW) * 0.5f, botY, botBtnW, 40f);
-
-            string resetLabel = "MUNCULKAN ULANG TARGET";
-            if (guide == null && EnerGoProgress.Current.pendingCapture == null && DrawBtn(resetRect, resetLabel, styleBtnText))
-            {
-                if (target != null) Destroy(target);
-                target = null;
-                uraniumPhase = UraniumPhase.None;
-                oilPhase = OilPhase.None;
-                lookPitch = 0f;
-                lookYaw = 0f;
-                if (arCamera != null) arCamera.transform.localRotation = Quaternion.identity;
-                nextSpawnTime = Time.time + 0.2f;
-                feedback = resourceId == ResourceIds.Sun ? "CARI CAHAYA DI DEPAN" : "IKUTI PITA KOMPAS";
-            }
-
-            // Hit Spark Ripple
-            if (Time.time - lastHitTime < 0.35f)
-            {
-                // Expanding, fading ring where the finger landed.
-                float t = (Time.time - lastHitTime) / 0.35f;
-                Vector2 hpos = new Vector2(lastHitScreenPos.x, Screen.height - lastHitScreenPos.y) / scale;
-                float r = Mathf.Lerp(12f, 34f, t);
-                EnerGoUI.DrawPanel(new Rect(hpos.x - r, hpos.y - r, r * 2f, r * 2f), Color.clear, EnerGoUI.Alpha(EnerGoUI.Orange, 1f - t), r, 3f);
-            }
-
-            if (guide != null && guide.Draw(sw, sh, scale) == GuideViewer.Result.Start)
-            {
-                guide = null;
-                nextSpawnTime = Time.time; // the mini-game (and the sun timer) starts now
-            }
             if (EnerGoProgress.Current.pendingCapture != null) DrawAnalysis(sw, sh);
             GUI.color = prevColor;
             GUI.matrix = prevMatrix;
@@ -2064,92 +2037,42 @@ namespace EnerGo
         private static readonly Color HudWarn = EnerGoUI.Orange;
         private static readonly Color HudOk = EnerGoUI.Success;
 
-        private void DrawRadarHUD(float sw, float hudY)
+        // What the status box says right now.
+        public HudStatus ReadHud()
         {
-            float hudW = sw - 32f;
-            float hudX = 16f;
-            Color accent = HudOutline;
-            string line1 = null, line2 = null;
-            GUIStyle style1 = styleStatusSub;
-            bool locked = false;
-            if (uraniumPhase != UraniumPhase.None) { DrawUraniumHud(hudX, hudY, hudW); return; }
-            if (oilPhase != OilPhase.None) { DrawOilHud(hudX, hudY, hudW); return; }
+            if (uraniumPhase != UraniumPhase.None) return ReadUraniumHud();
+            if (oilPhase != OilPhase.None) return ReadOilHud();
 
             if (goldPanning)
             {
-                bool warn = GoldWarning();
-                line1 = goldPhase == GoldPhase.Leveling ? "LETAKKAN HP MENDATAR"
+                string line = goldPhase == GoldPhase.Leveling ? "LETAKKAN HP MENDATAR"
                     : goldPhase == GoldPhase.Countdown ? "SIAP-SIAP MENDULANG"
                     : goldPhase == GoldPhase.Done ? "EMAS TERPISAH DARI PASIR!"
                     : goldPhase == GoldPhase.Failed ? "EMAS TERBUANG!"
                     : goldRough ? "TERLALU KENCANG! EMAS BISA TUMPAH" : "MIRINGKAN HP BERPUTAR PELAN";
-                style1 = warn ? styleRadarAlert : styleRadarLocked;
-                accent = warn ? HudWarn : HudOk;
-                locked = true;
-            }
-            else if (target != null && arCamera != null)
-            {
-                Vector3 toTarget = RadarTargetPosition() - arCamera.transform.position;
-                Vector3 flatToTarget = new Vector3(toTarget.x, 0, toTarget.z).normalized;
-                Vector3 flatCamFwd = new Vector3(arCamera.transform.forward.x, 0, arCamera.transform.forward.z).normalized;
-
-                float signedAngle = Vector3.SignedAngle(flatCamFwd, flatToTarget, Vector3.up);
-                int deg = Mathf.RoundToInt(Mathf.Abs(signedAngle));
-
-                // Is target roughly within view frustum?
-                if (resourceId == ResourceIds.Sun && Mathf.Abs(signedAngle) > 28f)
-                {
-                    line1 = signedAngle < 0 ? $"‹  PUTAR KE KIRI  {deg}°" : $"PUTAR KE KANAN  {deg}°  ›";
-                    line2 = "SISA " + Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft())) + " DTK";
-                    style1 = styleRadarAlert;
-                    accent = HudWarn;
-                }
-                else if (resourceId == ResourceIds.Sun)
-                {
-                    int left = Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft()));
-                    line1 = (sunInside ? "CAHAYA TERKUNCI" : "ARAHKAN KE CAHAYA") + " · SISA " + left + " DTK";
-                    bool hurry = left <= 5 || !sunInside;
-                    style1 = hurry ? styleRadarAlert : styleRadarLocked;
-                    accent = hurry ? HudWarn : HudOk;
-                    locked = true;
-                }
-                else if (resourceId == ResourceIds.Coal)
-                {
-                    line1 = "PECAHKAN BATU BARA · KETUK BONGKAHNYA";
-                    style1 = styleRadarLocked;
-                    accent = HudOk;
-                    locked = true;
-                }
-                else
-                {
-                    line1 = "ENDAPAN EMAS DITEMUKAN";
-                    line2 = "Ketuk endapannya untuk menyendok pasir";
-                    style1 = styleRadarLocked;
-                    accent = HudOk;
-                }
-            }
-            else
-            {
-                line1 = feedback;
-            }
-
-            bool twoLines = line2 != null || locked;
-            var box = new Rect(hudX, hudY, hudW, twoLines ? 64f : 42f);
-            DrawHudBox(box, accent == HudOutline ? (Color?)null : accent);
-
-            GUI.Label(new Rect(hudX + 10, hudY + (twoLines ? 8f : 11f), hudW - 20, 20), line1, style1);
-            if (line2 != null) GUI.Label(new Rect(hudX + 10, hudY + 34, hudW - 20, 18), line2, styleStatusSub);
-            var mint = HudOk;
-            if (locked && resourceId == ResourceIds.Sun)
-                DrawHudBar(hudX + 20f, hudY + 36f, hudW - 40f, sunProgress, sunInside ? mint : HudWarn, Mathf.FloorToInt(sunProgress * 100f) + "%");
-            else if (locked && goldPanning)
-            {
                 // While levelling the bar shows how long the phone has been held flat.
                 float v = goldPhase == GoldPhase.Leveling ? goldFlatHold / GoldFlatHoldSec : goldProgress;
-                DrawHudBar(hudX + 20f, hudY + 36f, hudW - 40f, v, GoldWarning() ? HudWarn : mint, Mathf.FloorToInt(Mathf.Clamp01(v) * 100f) + "%");
+                string label = Mathf.FloorToInt(Mathf.Clamp01(v) * 100f) + "%";
+                return goldPhase == GoldPhase.Failed ? HudStatus.Failed(line, v, label) : HudStatus.WithBar(line, GoldWarning(), v, label);
             }
-            else if (locked && resourceId == ResourceIds.Coal)
-                DrawHudBar(hudX + 20f, hudY + 36f, hudW - 40f, CoalHitProgress(), mint, CoalBroken() + "/" + coalTotal);
+            if (target == null || arCamera == null) return HudStatus.Plain(feedback);
+
+            Vector3 toTarget = RadarTargetPosition() - arCamera.transform.position;
+            Vector3 flatToTarget = new Vector3(toTarget.x, 0, toTarget.z).normalized;
+            Vector3 flatCamFwd = new Vector3(arCamera.transform.forward.x, 0, arCamera.transform.forward.z).normalized;
+            float signedAngle = Vector3.SignedAngle(flatCamFwd, flatToTarget, Vector3.up);
+            int deg = Mathf.RoundToInt(Mathf.Abs(signedAngle));
+
+            if (resourceId == ResourceIds.Sun && Mathf.Abs(signedAngle) > 28f)
+                return HudStatus.Text(signedAngle < 0 ? $"‹  PUTAR KE KIRI  {deg}°" : $"PUTAR KE KANAN  {deg}°  ›", true, "SISA " + Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft())) + " DTK");
+            if (resourceId == ResourceIds.Sun)
+            {
+                int left = Mathf.Max(0, Mathf.CeilToInt(SunTimeLeft()));
+                return HudStatus.WithBar((sunInside ? "CAHAYA TERKUNCI" : "ARAHKAN KE CAHAYA") + " · SISA " + left + " DTK", left <= 5 || !sunInside, sunProgress, Mathf.FloorToInt(sunProgress * 100f) + "%");
+            }
+            if (resourceId == ResourceIds.Coal)
+                return HudStatus.WithBar("PECAHKAN BATU BARA · KETUK BONGKAHNYA", false, CoalHitProgress(), CoalBroken() + "/" + coalTotal);
+            return HudStatus.Text("ENDAPAN EMAS DITEMUKAN", false, "Ketuk endapannya untuk menyendok pasir");
         }
 
         // Fraction of all pickaxe hits needed for the whole coal field.
@@ -2160,38 +2083,24 @@ namespace EnerGo
             return total > 0 ? (float)done / total : 0f;
         }
 
-        private GUIStyle stripLabelStyle;
-
-        // HUD compass: ticks every 15°, U/TL/T/... every 45°, the view direction in the centre, and the SDA marker
-        // (a dot, or for uranium only a rough green sector). Off-strip markers show "‹ 75°" / "75° ›" at the edge.
-        private void DrawCompassStrip(float sw, float y)
+        // The compass ruler: the view direction and the SDA, as a dot, an edge marker, or for uranium only a rough sector.
+        public EnerGo.UI.PitaKompas.State ReadCompassStrip()
         {
-            if (compass == null || arCamera == null) return;
-            if (stripLabelStyle == null) stripLabelStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleCenter };
-            var r = new Rect(16f, y, sw - 32f, 34f);
-            DrawHudBox(r);
+            var st = new EnerGo.UI.PitaKompas.State();
+            if (compass == null || arCamera == null) return st;
             float half = CompassMath.StripHalfSpanDeg, heading = compass.HeadingDeg;
-            float X(float x01) => r.center.x + x01 * (r.width * 0.5f - 14f);
-
-            if (!compass.HasCompass)
-                GUI.Label(new Rect(r.x, r.y, r.width, r.height), "KOMPAS TIDAK TERSEDIA", stripLabelStyle);
-            else
-                for (int d = 0; d < 360; d += 15)
-                {
-                    float x01 = CompassMath.StripX(d, heading, half);
-                    if (Mathf.Abs(x01) > 1f) continue;
-                    if (d % 45 == 0) GUI.Label(new Rect(X(x01) - 16f, r.y + 2f, 32f, r.height - 4f), CompassMath.DirectionLabel(d), stripLabelStyle);
-                    else EnerGoUI.DrawPanel(new Rect(X(x01) - 1f, r.y + 12f, 2f, 10f), new Color(1f, 1f, 1f, 0.5f), Color.clear, 1f);
-                }
-
+            st.HasCompass = compass.HasCompass;
+            st.Heading = heading;
+            st.Half = half;
             if (resourceId == ResourceIds.Uranium)
             {
                 if (uraniumPhase == UraniumPhase.Search) // fragments are found with the RAD meter, not the strip
                 {
                     float c = CompassMath.StripX(captureBearing, heading, half), w = CompassMath.UraniumSectorHalfDeg / half;
-                    float lo = Mathf.Max(-1f, c - w), hi = Mathf.Min(1f, c + w);
-                    if (hi > lo) EnerGoUI.DrawPanel(new Rect(X(lo), r.y + 4f, X(hi) - X(lo), r.height - 8f), EnerGoUI.Alpha(EnerGoUI.Success, 0.3f), Color.clear, 6f);
-                    else StripEdge(r, c, Mathf.Abs(Mathf.DeltaAngle(heading, captureBearing)) - CompassMath.UraniumSectorHalfDeg);
+                    st.Lo01 = Mathf.Max(-1f, c - w);
+                    st.Hi01 = Mathf.Min(1f, c + w);
+                    st.ShowSector = st.Hi01 > st.Lo01;
+                    if (!st.ShowSector) { st.EdgeSide = c < 0f ? -1 : 1; st.EdgeDeg = Mathf.RoundToInt(Mathf.Abs(Mathf.DeltaAngle(heading, captureBearing)) - CompassMath.UraniumSectorHalfDeg); }
                 }
             }
             else if (resourceId != ResourceIds.Sun && target != null)
@@ -2199,18 +2108,11 @@ namespace EnerGo
                 Vector3 to = RadarTargetPosition() - arCamera.transform.position;
                 float bearing = CompassMath.CameraHeading(Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, compass.OffsetDeg);
                 float x01 = CompassMath.StripX(bearing, heading, half);
-                if (Mathf.Abs(x01) <= 1f) EnerGoUI.DrawPanel(new Rect(X(x01) - 6f, r.center.y - 6f, 12f, 12f), EnerGoUI.Orange, EnerGoUI.Ink, 6f, 1.5f);
-                else StripEdge(r, x01, Mathf.Abs(Mathf.DeltaAngle(heading, bearing)));
+                st.ShowDot = Mathf.Abs(x01) <= 1f;
+                st.Dot01 = x01;
+                if (!st.ShowDot) { st.EdgeSide = x01 < 0f ? -1 : 1; st.EdgeDeg = Mathf.RoundToInt(Mathf.Abs(Mathf.DeltaAngle(heading, bearing))); }
             }
-            if (compass.HasCompass) EnerGoUI.DrawPanel(new Rect(r.center.x - 1.5f, r.y + 3f, 3f, r.height - 6f), EnerGoUI.Sun, Color.clear, 1.5f); // view direction
-        }
-
-        private void StripEdge(Rect r, float x01, float deg)
-        {
-            string t = x01 < 0f ? "‹ " + Mathf.RoundToInt(deg) + "°" : Mathf.RoundToInt(deg) + "° ›";
-            var cell = x01 < 0f ? new Rect(r.x + 4f, r.y, 64f, r.height) : new Rect(r.xMax - 68f, r.y, 64f, r.height);
-            EnerGoUI.DrawPanel(new Rect(cell.x, r.y + 5f, cell.width, r.height - 10f), EnerGoUI.Orange, Color.clear, 8f);
-            GUI.Label(cell, t, stripLabelStyle);
+            return st;
         }
 
         // Horizontal progress bar with a short label (percentage or count) on the right.

@@ -33,6 +33,13 @@ namespace EnerGo.Tests
                 "btn-latihan-gps", "kartu-tunggu", "lapis-aman", "btn-mengerti");
 
         [Test]
+        public void CaptureFrameHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Tangkap.uxml"),
+                "lapis-hud", "btn-kembali", "btn-mode", "pil-mode", "pil-sda", "pil-sda-ikon", "pil-sda-teks", "kotak-status", "status-tag",
+                "status-teks", "status-sub", "status-bar", "status-angka", "pita-kompas", "btn-ulang", "riak", "lapis-panduan",
+                "kartu-panduan", "panduan-ingatkan", "panduan-centang", "btn-panduan-tutup", "btn-panduan-utama");
+
+        [Test]
         public void SceneRootHasEveryLayer() =>
             AssertNames(Clone("Assets/UI/Screens/LobbyScene.uxml"),
                 "lapis-splash", "lapis-lobby", "lapis-sheet", "lapis-panduan", "lapis-transisi");

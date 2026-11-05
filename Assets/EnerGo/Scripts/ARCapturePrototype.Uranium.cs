@@ -245,46 +245,26 @@ namespace EnerGo
             feedback = "CARI BIJIH URANIUM BARU";
         }
 
-        private void DrawUraniumHud(float x, float y, float w)
+        private HudStatus ReadUraniumHud()
         {
-            string line;
-            bool warn;
-            float bar;
-            string label;
+            string count = uraniumCollected + "/" + UraniumMath.FragmentCount;
+            float got = uraniumCollected / (float)UraniumMath.FragmentCount;
             switch (uraniumPhase)
             {
                 case UraniumPhase.Search:
-                    line = uraniumLockHold > 0f ? "SINYAL KUAT! TAHAN ARAH HP" : "IKUTI SEKTOR HIJAU · CARI RAD TERTINGGI";
-                    warn = false;
-                    bar = uraniumMeter / 100f;
-                    label = uraniumMeter.ToString();
-                    break;
+                    return HudStatus.WithBar(uraniumLockHold > 0f ? "SINYAL KUAT! TAHAN ARAH HP" : "IKUTI SEKTOR HIJAU · CARI RAD TERTINGGI", false, uraniumMeter / 100f, uraniumMeter.ToString());
                 case UraniumPhase.Done:
-                    line = "URANIUM AMAN DI WADAH TIMBAL!";
-                    warn = false;
-                    bar = 1f;
-                    label = UraniumMath.FragmentCount + "/" + UraniumMath.FragmentCount;
-                    break;
+                    return HudStatus.WithBar("URANIUM AMAN DI WADAH TIMBAL!", false, 1f, UraniumMath.FragmentCount + "/" + UraniumMath.FragmentCount);
                 case UraniumPhase.Failed:
-                    line = uraniumFailText;
-                    warn = true;
-                    bar = uraniumCollected / (float)UraniumMath.FragmentCount;
-                    label = uraniumCollected + "/" + UraniumMath.FragmentCount;
-                    break;
+                    return HudStatus.Failed(uraniumFailText, got, count);
                 default:
                     bool lost = Time.time - uraniumGripLostAt < 1f;
-                    line = lost ? "JEPITAN LEPAS! PEGANG HP STABIL"
+                    string line = lost ? "JEPITAN LEPAS! PEGANG HP STABIL"
                         : uraniumGrip > 0f ? "MENJEPIT... TAHAN"
                         : uraniumAngle <= UraniumMath.GripAngleDeg ? "TAHAN TOMBOL JEPIT"
                         : "CARI SERPIHAN · IKUTI RAD";
-                    warn = lost || uraniumDose > 0.75f;
-                    bar = uraniumCollected / (float)UraniumMath.FragmentCount;
-                    label = uraniumCollected + "/" + UraniumMath.FragmentCount;
-                    break;
+                    return HudStatus.WithBar(line, lost || uraniumDose > 0.75f, got, count);
             }
-            DrawHudBox(new Rect(x, y, w, 64f), warn ? HudWarn : HudOk);
-            GUI.Label(new Rect(x + 10f, y + 8f, w - 20f, 20f), line, warn ? styleRadarAlert : styleRadarLocked);
-            DrawHudBar(x + 20f, y + 36f, w - 40f, bar, warn ? HudWarn : HudOk, label);
         }
 
         // Small dark pill with centred white text, kept 8 px inside the screen edges; readable over the camera feed.

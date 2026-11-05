@@ -198,45 +198,26 @@ namespace EnerGo
             feedback = "CARI TITIK BOR BARU";
         }
 
-        private void DrawOilHud(float x, float y, float w)
+        private HudStatus ReadOilHud()
         {
-            string line;
-            bool warn;
-            float bar;
-            string label;
             if (oilPhase == OilPhase.Failed)
-            {
-                line = oilFailText; warn = true; bar = oilPumping ? oilDrum : oilDepth;
-                label = oilPumping ? Mathf.FloorToInt(oilDrum * 100f) + "%" : Mathf.RoundToInt(oilDepth * OilMath.DisplayDepthM) + "m";
-            }
-            else if (oilPhase == OilPhase.Done)
-            {
-                line = "DRUM MINYAK PENUH!"; warn = false; bar = 1f; label = "100%";
-            }
-            else if (oilPhase == OilPhase.Pump)
+                return HudStatus.Failed(oilFailText, oilPumping ? oilDrum : oilDepth, oilPumping ? Mathf.FloorToInt(oilDrum * 100f) + "%" : Mathf.RoundToInt(oilDepth * OilMath.DisplayDepthM) + "m");
+            if (oilPhase == OilPhase.Done)
+                return HudStatus.WithBar("DRUM MINYAK PENUH!", false, 1f, "100%");
+            if (oilPhase == OilPhase.Pump)
             {
                 bool recent = Time.time - oilLastJudgeAt < 0.6f;
-                line = !recent ? "TEKAN SAAT LINGKARAN PAS"
+                string line = !recent ? "TEKAN SAAT LINGKARAN PAS"
                     : oilLastJudge == OilMath.Stroke.Perfect ? "PAS! TERUS POMPA"
                     : oilLastJudge == OilMath.Stroke.Early ? "TERLALU CEPAT! TEKANAN NAIK" : "TERLAMBAT · IKUTI IRAMA";
-                warn = oilPumpPressure > 0.6f || (recent && oilLastJudge == OilMath.Stroke.Early);
-                bar = oilDrum;
-                label = Mathf.FloorToInt(oilDrum * 100f) + "%";
+                return HudStatus.WithBar(line, oilPumpPressure > 0.6f || (recent && oilLastJudge == OilMath.Stroke.Early), oilDrum, Mathf.FloorToInt(oilDrum * 100f) + "%");
             }
-            else
-            {
-                var layer = OilLayerNow;
-                bool gas = layer == OilMath.Layer.Gas;
-                line = gas ? "KANTONG GAS! PELAN-PELAN"
-                    : layer == OilMath.Layer.Oil ? "LAPISAN MINYAK! LEPAS SEKARANG"
-                    : "TAHAN UNTUK MENGEBOR · " + OilLayerNames[(int)layer].ToUpperInvariant();
-                warn = gas && oilGasPressure > 0.4f;
-                bar = oilDepth;
-                label = Mathf.RoundToInt(oilDepth * OilMath.DisplayDepthM) + "m";
-            }
-            DrawHudBox(new Rect(x, y, w, 64f), warn ? HudWarn : HudOk);
-            GUI.Label(new Rect(x + 10f, y + 8f, w - 20f, 20f), line, warn ? styleRadarAlert : styleRadarLocked);
-            DrawHudBar(x + 20f, y + 36f, w - 40f, bar, warn ? HudWarn : HudOk, label);
+            var layer = OilLayerNow;
+            bool gas = layer == OilMath.Layer.Gas;
+            string drill = gas ? "KANTONG GAS! PELAN-PELAN"
+                : layer == OilMath.Layer.Oil ? "LAPISAN MINYAK! LEPAS SEKARANG"
+                : "TAHAN UNTUK MENGEBOR · " + OilLayerNames[(int)layer].ToUpperInvariant();
+            return HudStatus.WithBar(drill, gas && oilGasPressure > 0.4f, oilDepth, Mathf.RoundToInt(oilDepth * OilMath.DisplayDepthM) + "m");
         }
 
         private void DrawOilOverlay(float sw, float sh)
