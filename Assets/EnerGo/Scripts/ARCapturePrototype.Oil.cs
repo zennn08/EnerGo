@@ -67,7 +67,8 @@ namespace EnerGo
             target.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up); // beam runs left-right, seen side-on
             target.transform.SetParent(compass.North, true);
             EnsureModelLight();
-            modelLight.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up) * Quaternion.Euler(35f, -30f, 0f); // lit from the viewer's side
+            oilLightRotation = Quaternion.LookRotation(fwd, Vector3.up) * Quaternion.Euler(35f, -30f, 0f); // lit from the viewer's side
+            modelLight.transform.rotation = oilLightRotation;
 
             oilLayers = OilMath.Layers(Random.Range(int.MinValue, int.MaxValue));
             oilPhase = OilPhase.Drill;
@@ -242,29 +243,38 @@ namespace EnerGo
         {
             if (oilLayerStyle == null)
                 oilLayerStyle = new GUIStyle(styleTapsCounter) { alignment = TextAnchor.MiddleLeft, normal = { textColor = Color.white } };
-            if (oilPumping) DrawOilPump(sw, sh);
+            // The section stays up a moment after striking oil, so the splash is seen.
+            if (oilPumping && !(oilPhase == OilPhase.Pump && Time.time - oilPhaseAt < OilSplashHold)) DrawOilPump(sw, sh);
             else DrawOilSection(sw, sh);
         }
 
-        // Cross-section: coloured layers, the drill string down to the bit, and the gas pressure gauge on the right.
-        private void DrawOilSection(float sw, float sh)
+        private static void OilSectionRect(float sw, float sh, out Rect p)
         {
             float pw = Mathf.Min(sw - 72f, 300f), ph = Mathf.Min(sh * 0.48f, 420f);
-            var p = new Rect((sw - pw) * 0.5f, sh * 0.3f, pw, ph);
-            EnerGoUI.DrawCard(new Rect(p.x - 6f, p.y - 6f, pw + 12f, ph + 12f));
+            p = new Rect((sw - pw) * 0.5f, sh * 0.3f, pw, ph);
+        }
+
+        // Overlays on the 3D cross-section (ARCapturePrototype.Bor.cs): layer names and the gas pressure gauge on the right.
+        private void DrawOilSection(float sw, float sh)
+        {
+            OilSectionRect(sw, sh, out Rect p);
+            float pw = p.width, ph = p.height;
             float prev = 0f;
             for (int i = 0; i < OilLayerColors.Length; i++)
             {
                 float bottom = i < oilLayers.Length ? oilLayers[i] : 1f;
                 var band = new Rect(p.x, p.y + prev * ph, pw, (bottom - prev) * ph);
-                EnerGoUI.DrawPanel(band, OilLayerColors[i], Color.clear, 0f);
-                if (band.height >= 14f) GUI.Label(new Rect(band.x + 8f, band.y, pw * 0.5f, band.height), OilLayerNames[i], oilLayerStyle);
+                if (band.height >= 14f)
+                {
+                    // Text over the camera and the textured layers always sits on a pill.
+                    var size = oilLayerStyle.CalcSize(new GUIContent(OilLayerNames[i]));
+                    float pillH = Mathf.Min(band.height - 2f, size.y + 2f);
+                    var pill = new Rect(band.x + 6f, band.center.y - pillH * 0.5f, size.x + 14f, pillH);
+                    EnerGoUI.DrawPanel(pill, new Color(EnerGoUI.Ink.r, EnerGoUI.Ink.g, EnerGoUI.Ink.b, 0.78f), Color.clear, pillH * 0.5f);
+                    GUI.Label(new Rect(pill.x + 7f, pill.y, size.x + 4f, pill.height), OilLayerNames[i], oilLayerStyle);
+                }
                 prev = bottom;
             }
-            float cx = p.x + pw * 0.68f, tip = p.y + oilDepth * ph;
-            EnerGoUI.DrawPanel(new Rect(cx - 3f, p.y - 10f, 6f, tip - p.y + 10f), EnerGoUI.Paper, EnerGoUI.Ink, 2f, 1f);
-            EnerGoUI.DrawPanel(new Rect(cx - 7f, tip - 7f, 14f, 14f), EnerGoUI.Orange, EnerGoUI.Ink, 4f, 1.5f);
-
             var gauge = new Rect(p.xMax + 14f, p.y, 12f, ph);
             EnerGoUI.DrawPanel(gauge, HudFill, HudOutline, 6f, 1.5f);
             float gh = (ph - 4f) * oilGasPressure;

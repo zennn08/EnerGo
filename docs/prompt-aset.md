@@ -85,6 +85,7 @@ Ada 12 file model untuk build sekarang ditambah 2 untuk Desa Teknik. Kirim satu 
 | Dulang | `sda_dulang.fbx` | 0,5 m | ≤ 1.000 |
 | Keping emas besar dan kecil | `sda_emas_keping_besar.fbx`, `sda_emas_keping_kecil.fbx` | 3 cm, 1,5 cm | ≤ 60 |
 | Pompa angguk | `sda_pompa.fbx` | 3,5 × 3 m | ≤ 2.500 |
+| Penampang pengeboran | `sda_bor.fbx` | 1 × 1 m | ≤ 2.000 |
 | Bijih uranium | `sda_uranium_bijih.fbx` | 0,4 m | ≤ 600 |
 | Serpihan uranium | `sda_uranium_serpihan.fbx` | 0,12 m | ≤ 150 |
 | Rumah desa (direncanakan) | `desa_rumah.fbx` | 3 m | ≤ 1.500 |
@@ -190,6 +191,7 @@ Pengaturan di Unity setelah file masuk ke `Assets/Models/`:
 
 Catatan untuk aset bergerak:
 
+- **Penampang pengeboran**: enam lapisan `sda_bor_*` masing-masing berasal dari titik atasnya dan ditebalkan lewat skala Y sesuai data sumur (`BorPose`). Teksturnya di `Art/bor/` (salinan di `Resources/Oil/`), dibuat dengan skrip, bukan dilukis. Pipa dan lubang bor panjangnya 1 m lalu diskalakan. Serpihan dan semburan adalah partikel di kode (`partikel_bor`), bukan aset. Koleksi `pratinjau_bor` di file blend hanya pratinjau.
 - **Pompa angguk**: gerak dihitung `PompaPose` dari sudut engkol, jadi semua bagian sinkron: engkol berputar, batang belakang (`sda_pompa_pitman`) panjangnya tetap, lengan berayun pada sumbu Z model, batang pompa (`sda_pompa_tali`) naik-turun, kabel (`sda_pompa_kabel`) memanjang lewat skala Y. Tiap tekan dan lepas jari memutar engkol setengah putaran. Kepala kuda ada di sisi −X model di Unity. Saat mengekspor: objek induk `sda_pompa` dilepas dulu dari bagian-bagiannya, atau outline ikut terputar 90° di Unity.
 - **Batu bara**: empat tahap jadi empat child di satu prefab; script mengaktifkan satu child sesuai jumlah ketukan.
 - **Keping emas**: 4 besar dan 14 kecil diletakkan oleh script di atas `sda_dulang_pasir`, jadi cukup dua prefab keping.
