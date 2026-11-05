@@ -84,7 +84,7 @@ Ada 12 file model untuk build sekarang ditambah 2 untuk Desa Teknik. Kirim satu 
 | Endapan emas | `sda_emas_endapan.fbx` | 0,6 m | ≤ 800 |
 | Dulang | `sda_dulang.fbx` | 0,5 m | ≤ 1.000 |
 | Keping emas besar dan kecil | `sda_emas_keping_besar.fbx`, `sda_emas_keping_kecil.fbx` | 3 cm, 1,5 cm | ≤ 60 |
-| Pompa angguk | `sda_pompa.fbx` | 2,5 m | ≤ 2.500 |
+| Pompa angguk | `sda_pompa.fbx` | 3,5 × 3 m | ≤ 2.500 |
 | Bijih uranium | `sda_uranium_bijih.fbx` | 0,4 m | ≤ 600 |
 | Serpihan uranium | `sda_uranium_serpihan.fbx` | 0,12 m | ≤ 150 |
 | Rumah desa (direncanakan) | `desa_rumah.fbx` | 3 m | ≤ 1.500 |
@@ -129,6 +129,8 @@ Origin di tengah masing-masing objek. Jalankan tambah_outline dengan tebal 0.002
 ```
 
 ### Pompa angguk
+
+Model akhir sudah dibuat di `Art/energo_gaya.blend` (koleksi `sda_pompa`) mengikuti referensi pengguna, jadi prompt di bawah hanya titik awal.
 
 ```text
 Buat pompa angguk minyak (pump jack) low-poly, tinggi total sekitar 2.5 m, flat shading, sebagai beberapa objek terpisah dalam satu koleksi sda_pompa:
@@ -188,7 +190,7 @@ Pengaturan di Unity setelah file masuk ke `Assets/Models/`:
 
 Catatan untuk aset bergerak:
 
-- **Lengan pompa**: putar `sda_pompa_lengan` di sumbu lokal X lewat script, antara −12° dan +12°, mengikuti tekanan jari. Tidak perlu animasi dari Blender.
+- **Pompa angguk**: gerak dihitung `PompaPose` dari sudut engkol, jadi semua bagian sinkron: engkol berputar, batang belakang (`sda_pompa_pitman`) panjangnya tetap, lengan berayun pada sumbu Z model, batang pompa (`sda_pompa_tali`) naik-turun, kabel (`sda_pompa_kabel`) memanjang lewat skala Y. Tiap tekan dan lepas jari memutar engkol setengah putaran. Kepala kuda ada di sisi −X model di Unity. Saat mengekspor: objek induk `sda_pompa` dilepas dulu dari bagian-bagiannya, atau outline ikut terputar 90° di Unity.
 - **Batu bara**: empat tahap jadi empat child di satu prefab; script mengaktifkan satu child sesuai jumlah ketukan.
 - **Keping emas**: 4 besar dan 14 kecil diletakkan oleh script di atas `sda_dulang_pasir`, jadi cukup dua prefab keping.
 - **Jendela desa dan lampu pembangkit**: ganti material antara menyala (`mat_oker` beremisi) dan padam (`mat_tinta`) dari script.

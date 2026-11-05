@@ -9,6 +9,8 @@ namespace EnerGo
     public partial class ARCapturePrototype
     {
         private enum OilPhase { None, Drill, Pump, Done, Failed }
+        private const float OilModelScale = 0.2f;  // sda_pompa is about 3.5 m wide; at 1.4 m this fills the view like the old rig
+        private const float OilCrankRate = 9f;     // how fast the crank catches up with the finger
 
         private static readonly Color[] OilLayerColors =
         {
@@ -31,31 +33,41 @@ namespace EnerGo
         private bool oilWasHeld, oilPumping;
         private float oilStartedAt, oilPhaseAt;
         private string oilFailText = "";
-        private Transform oilBeam;
+        private Transform oilBeam, oilCrank, oilPitman, oilRod, oilCable;
+        private float oilCrankAngle, oilCrankTarget;
         private GUIStyle oilLayerStyle;
 
         private OilMath.Layer OilLayerNow => OilMath.LayerAt(oilDepth, oilLayers);
 
         private void SpawnOil()
         {
-            // ponytail: primitive pump jack; swap for Resources/Oil/pumpjack when a real model exists.
+            var model = Resources.Load<GameObject>("Oil/sda_pompa");
+            if (model == null)
+            {
+                nextSpawnTime = float.PositiveInfinity;
+                feedback = "Aset model pompa belum tersedia di Resources.";
+                Debug.LogError("EnerGo: missing Resources/Oil/sda_pompa.");
+                return;
+            }
             target = new GameObject("Target Minyak Bumi");
-            var ink = UnlitColor(EnerGoUI.Ink);
-            var orange = UnlitColor(EnerGoUI.Orange);
-            OilPart(PrimitiveType.Cube, target.transform, new Vector3(0f, -0.45f, 0f), new Vector3(1.3f, 0.1f, 0.5f), ink);   // base
-            OilPart(PrimitiveType.Cube, target.transform, new Vector3(0f, -0.1f, 0f), new Vector3(0.1f, 0.7f, 0.1f), ink);    // post
-            OilPart(PrimitiveType.Cylinder, target.transform, new Vector3(0.68f, -0.3f, 0f), new Vector3(0.05f, 0.15f, 0.05f), ink); // well rod
-            oilBeam = new GameObject("Beam").transform;
-            oilBeam.SetParent(target.transform, false);
-            oilBeam.localPosition = new Vector3(0f, 0.25f, 0f);
-            OilPart(PrimitiveType.Cube, oilBeam, Vector3.zero, new Vector3(1.4f, 0.08f, 0.12f), orange);                     // walking beam
-            OilPart(PrimitiveType.Cube, oilBeam, new Vector3(0.7f, -0.08f, 0f), new Vector3(0.12f, 0.3f, 0.16f), orange);     // horse head
-            target.transform.localScale = Vector3.one * 0.35f;
+            var visual = Instantiate(model, target.transform);
+            oilBeam = visual.transform.Find("sda_pompa_lengan");
+            oilCrank = visual.transform.Find("sda_pompa_engkol");
+            oilPitman = visual.transform.Find("sda_pompa_pitman");
+            oilRod = visual.transform.Find("sda_pompa_tali");
+            oilCable = visual.transform.Find("sda_pompa_kabel");
+            oilCrankAngle = oilCrankTarget = Mathf.PI * 1.5f; // rests with the head up
+            PoseOilPump();
+            // Target sits at the model's centre, so the radar and aiming point at the middle of the rig.
+            if (TryGetBounds(visual, out var bounds)) visual.transform.position -= bounds.center;
+            target.transform.localScale = Vector3.one * OilModelScale;
 
             Vector3 fwd = compass.Direction(captureBearing, 0f);
             target.transform.position = arCamera.transform.position + fwd * 1.4f + Vector3.up * 0.05f;
             target.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up); // beam runs left-right, seen side-on
             target.transform.SetParent(compass.North, true);
+            EnsureModelLight();
+            modelLight.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up) * Quaternion.Euler(35f, -30f, 0f); // lit from the viewer's side
 
             oilLayers = OilMath.Layers(Random.Range(int.MinValue, int.MaxValue));
             oilPhase = OilPhase.Drill;
@@ -70,15 +82,16 @@ namespace EnerGo
             feedback = "TAHAN LAYAR UNTUK MENGEBOR";
         }
 
-        private Transform OilPart(PrimitiveType type, Transform parent, Vector3 pos, Vector3 scale, Material mat)
+        // Puts the moving parts where the crank angle says; the mechanism itself is in PompaPose.
+        private void PoseOilPump()
         {
-            var go = GameObject.CreatePrimitive(type);
-            Destroy(go.GetComponent<Collider>());
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = pos;
-            go.transform.localScale = scale;
-            go.GetComponent<Renderer>().sharedMaterial = mat;
-            return go.transform;
+            var pose = PompaPose.At(oilCrankAngle);
+            oilBeam.localRotation = Quaternion.Euler(0f, 0f, pose.HeadDownDeg);
+            oilCrank.localRotation = Quaternion.Euler(0f, 0f, pose.CrankDeg);
+            oilPitman.localPosition = new Vector3(pose.Pin.x, pose.Pin.y, 0f);
+            oilPitman.localRotation = Quaternion.Euler(0f, 0f, pose.PitmanDeg);
+            var rod = oilRod.localPosition; rod.y = pose.CarrierY; oilRod.localPosition = rod;
+            oilCable.localScale = new Vector3(1f, pose.CableLength, 1f);
         }
 
         // Finger (or mouse / Space in the editor) held anywhere except the top and bottom HUD bars.
@@ -115,8 +128,10 @@ namespace EnerGo
                 case OilPhase.Pump:
                     if (held && !oilWasHeld) OilStroke();
                     OilMath.StepPumpIdle(ref oilDrum, ref oilPumpPressure, Time.time - oilLastStrokeAt, dt);
-                    if (oilBeam != null)
-                        oilBeam.localRotation = Quaternion.Slerp(oilBeam.localRotation, Quaternion.Euler(0f, 0f, held ? -14f : 14f), 1f - Mathf.Exp(-12f * dt));
+                    // The rig follows the finger: each press or release turns the crank half a turn, always forward.
+                    if (held != oilWasHeld) oilCrankTarget = PompaPose.NextCrankTarget(oilCrankTarget, held);
+                    oilCrankAngle = Mathf.Lerp(oilCrankAngle, oilCrankTarget, 1f - Mathf.Exp(-OilCrankRate * dt));
+                    if (target != null) PoseOilPump();
                     if (oilPumpPressure >= 1f) FailOil("OVERPRESSURE!");
                     else if (oilDrum >= 1f)
                     {
