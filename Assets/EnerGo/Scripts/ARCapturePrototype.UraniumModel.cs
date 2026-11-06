@@ -136,8 +136,7 @@ namespace EnerGo
                 wadahLandedAt = float.NegativeInfinity;
             }
             // Bottom-left, above the RAD meter and clear of the JEPIT button; tipped so its mouth shows.
-            float sh = Screen.height / HudScale;
-            wadah.position = arCamera.ScreenToWorldPoint(new Vector3(72f * HudScale, Screen.height - (sh - 256f) * HudScale, WadahDistance));
+            wadah.position = arCamera.ScreenToWorldPoint(new Vector3(72f * HudScale, Screen.height - UraniumMath.FlaskCentreGuiY(UraniumHudTop) * HudScale, WadahDistance));
             wadah.localRotation = Quaternion.Euler(20f, 180f, 0f);
             wadah.localScale = Vector3.one * (DulangPose.WorldRadius(92f * HudScale, WadahDistance, arCamera.fieldOfView, Screen.height) / WadahModelHeight);
             float bump = UraniumVisual.FlaskBump(Time.time - wadahLandedAt);

@@ -97,11 +97,15 @@ namespace EnerGo
         public float UraniumDose => uraniumDose;
         public string UraniumCount => uraniumCollected + "/" + UraniumMath.FragmentCount;
 
+        // Top of the RAD card in HUD units, reported by the view; the stack is about 250 units tall until it does.
+        public float UraniumHudTopGui { get; set; }
+        private float UraniumHudTop => UraniumHudTopGui > 0f ? UraniumHudTopGui : GuiH - 250f;
+
         public Rect UraniumCloseGui
         {
             get
             {
-                UraniumCloseRect(GuiH, out Rect btn);
+                UraniumCloseRect(UraniumHudTop, out Rect btn);
                 return btn;
             }
         }

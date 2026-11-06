@@ -8,6 +8,11 @@ namespace EnerGo
     {
         // Search: the ore sits at the radar bearing, a little above or below eye level.
         public const float HideMinPitchDeg = -5f, HideMaxPitchDeg = 15f;
+        public const float FlaskHalfGui = 62f, FlaskGapGui = 8f, CloseButtonGui = 104f; // HUD units; half height as drawn, tipped
+
+        // The flask stands right above the RAD card, wherever the safe area puts that card, and TUTUP right above the flask.
+        public static float FlaskCentreGuiY(float hudTop) => hudTop - FlaskGapGui - FlaskHalfGui;
+        public static float CloseButtonGuiY(float hudTop) => FlaskCentreGuiY(hudTop) - FlaskHalfGui - FlaskGapGui - CloseButtonGui;
         public const float RevealAngleDeg = 20f, RevealHoldSec = 0.8f;
         public const float FarClicksPerSec = 2f, NearClicksPerSec = 20f; // regular ticks so the change is easy to hear
         public const float MaxPulsesPerSec = 12f;   // vibration pulses blur together faster than this

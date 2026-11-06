@@ -219,8 +219,8 @@ namespace EnerGo
             btn = new Rect(sw - 16f - 104f, sh * 0.52f, 104f, 104f);
 
         // Left side, just above the flask (see PoseWadah).
-        private static void UraniumCloseRect(float sh, out Rect btn) =>
-            btn = new Rect(16f, sh - 456f, 104f, 104f);
+        private static void UraniumCloseRect(float hudTop, out Rect btn) =>
+            btn = new Rect(16f, UraniumMath.CloseButtonGuiY(hudTop), UraniumMath.CloseButtonGui, UraniumMath.CloseButtonGui);
 
         // Fragments are invisible until aimed close to, then glow; a grabbed one flies into the lead flask and disappears.
         private void AnimateUraniumFragments(float dt)

@@ -231,6 +231,7 @@ namespace EnerGo.UI
         {
             bool aiming = controller.UraniumAiming, collecting = controller.UraniumCollecting;
             Show(radBawah, aiming);
+            if (aiming && radBawah.worldBound.height > 0f) controller.UraniumHudTopGui = radBawah.worldBound.yMin;
             Show(btnJepit, collecting);
             Show(btnTutupWadah, controller.UraniumBoxCloseable);
             if (!aiming) return;

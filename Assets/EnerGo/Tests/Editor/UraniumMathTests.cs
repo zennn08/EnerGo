@@ -5,6 +5,17 @@ namespace EnerGo.Tests
     public class UraniumMathTests
     {
         [Test]
+        public void FlaskSitsFullyAboveTheRadCardAndCloseButtonAboveTheFlask()
+        {
+            foreach (float hudTop in new[] { 603f, 580f, 817f })
+            {
+                float centre = UraniumMath.FlaskCentreGuiY(hudTop);
+                Assert.LessOrEqual(centre + UraniumMath.FlaskHalfGui, hudTop);
+                Assert.LessOrEqual(UraniumMath.CloseButtonGuiY(hudTop) + UraniumMath.CloseButtonGui, centre - UraniumMath.FlaskHalfGui);
+            }
+        }
+
+        [Test]
         public void GeigerTicksFasterTheCloserTheAim()
         {
             Assert.AreEqual(1f / 20f, UraniumMath.GeigerInterval(0f), 1e-4f);
