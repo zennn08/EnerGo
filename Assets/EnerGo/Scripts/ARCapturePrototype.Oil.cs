@@ -115,7 +115,8 @@ namespace EnerGo
                     OilMath.StepDrill(ref oilDepth, ref oilSpeed, held, OilMath.SpeedMul(OilLayerNow), dt);
                     var layer = OilLayerNow;
                     oilGasPressure = OilMath.StepGasPressure(oilGasPressure, oilSpeed, layer == OilMath.Layer.Gas, dt);
-                    if (held && Time.time - oilLastRumbleAt > 0.25f) { Haptics.Pulse(8); oilLastRumbleAt = Time.time; }
+                    OilMath.DrillRumble(layer, out long rumbleMs, out float rumbleGap);
+                    if (held && Time.time - oilLastRumbleAt > rumbleGap) { Haptics.Pulse(rumbleMs); oilLastRumbleAt = Time.time; }
                     switch (OilMath.CheckDrill(layer, oilSpeed, held, oilGasPressure))
                     {
                         case OilMath.DrillOutcome.Blowout: FailOil("BLOWOUT!"); break;

@@ -574,7 +574,8 @@ Volume utama diatur di Pengaturan dan disimpan.
 
 | Durasi | Kapan |
 |---|---|
-| 8-15 ms | Tick halus: matahari terkunci, mengebor, menjepit, Geiger, pompa biasa |
+| 8-15 ms | Tick halus: matahari terkunci, menjepit, Geiger, pompa biasa |
+| 25-60 ms berulang | Mengebor: makin keras lapisannya makin kuat (tanah 30 ms, batuan 45 ms, penutup 60 ms), lapisan gas ringan dan cepat |
 | 20-30 ms | Ketukan batu bara, jawaban benar, pompa tepat |
 | 40-80 ms | HP datar, jepitan lepas, serpihan masuk, berhasil |
 | 120 ms | Emas tumpah per keping, semua batu bara hancur |

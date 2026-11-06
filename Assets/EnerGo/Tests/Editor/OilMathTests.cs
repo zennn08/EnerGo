@@ -7,6 +7,23 @@ namespace EnerGo.Tests
         static readonly float[] Fixed = { 0.1f, 0.3f, 0.45f, 0.55f, 0.62f };
 
         [Test]
+        public void DrillRumbleIsLongEnoughToFeelAndHardestInRock()
+        {
+            foreach (OilMath.Layer layer in System.Enum.GetValues(typeof(OilMath.Layer)))
+            {
+                OilMath.DrillRumble(layer, out long ms, out float gap);
+                Assert.GreaterOrEqual(ms, 25, layer.ToString()); // shorter pulses barely spin a phone's motor
+                Assert.Greater(gap * 1000f, ms, layer.ToString()); // a gap stays, so it reads as drilling and not one long buzz
+            }
+            OilMath.DrillRumble(OilMath.Layer.Soil, out long soil, out float soilGap);
+            OilMath.DrillRumble(OilMath.Layer.Rock, out long rock, out float rockGap);
+            OilMath.DrillRumble(OilMath.Layer.CapRock, out long cap, out float capGap);
+            Assert.Greater(rock, soil);
+            Assert.Less(rockGap, soilGap);
+            Assert.GreaterOrEqual(cap, rock);
+        }
+
+        [Test]
         public void LayersAreDeterministicPerSeed()
         {
             CollectionAssert.AreEqual(OilMath.Layers(42), OilMath.Layers(42));

@@ -49,6 +49,18 @@ namespace EnerGo
             return Layer.Brine;
         }
 
+        // How the drill feels in the hand: harder ground kicks longer and faster, so the player feels the layer change.
+        public static void DrillRumble(Layer layer, out long pulseMs, out float gapSec)
+        {
+            switch (layer)
+            {
+                case Layer.Rock: pulseMs = 45; gapSec = 0.11f; break;
+                case Layer.CapRock: pulseMs = 60; gapSec = 0.09f; break;
+                case Layer.Gas: pulseMs = 25; gapSec = 0.08f; break; // light and quick: the drill runs free, a warning
+                default: pulseMs = 30; gapSec = 0.18f; break;
+            }
+        }
+
         public static float SpeedMul(Layer layer)
         {
             switch (layer)
