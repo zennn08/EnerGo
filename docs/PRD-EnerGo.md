@@ -392,7 +392,7 @@ Pesan error simpan (jika ada) tampil di bawah kartu kuis, umpan balik, dan hasil
 
 Rancangan: `docs/superpowers/specs/2026-11-06-desa-teknik-design.md`.
 
-**Prolog.** Muncul sekali setelah Splash pada pembukaan pertama, 5 panel ilustrasi dengan teks di kartu kertas. LEWATI melompat ke panel nama. Panel 4 meminta nama desa (1-16 karakter, kosong menjadi "Desa Teknik"). Tangkapan yang masih tertunda di save diselesaikan lebih dulu.
+**Prolog.** Muncul sekali setelah Splash pada pembukaan pertama, 5 panel ilustrasi dengan teks di kartu kertas. LEWATI melompat ke panel nama. Panel 4 meminta nama desa (1-16 karakter, kosong menjadi "Desa Teknik"). Tangkapan yang terputus karena aplikasi ditutup dibuang saat aplikasi dibuka lagi.
 
 **Pemandu.** Sya, ahli geologi muda, 2D chibi. Tampil di prolog dan layar Desa. Pose dan potret: `docs/prompt-karakter.md`.
 
@@ -540,7 +540,7 @@ SDA ditempatkan sesuai arah kompas sebenarnya. Kompas dikalibrasi saat mulai, la
 
 | Data | Tempat |
 |---|---|
-| Progres (koleksi, kuis yang sedang berjalan, SDA yang sudah ditangkap) | File JSON `energo-demo-v1.json` di penyimpanan aplikasi, dengan cadangan `.bak` |
+| Progres (koleksi, kuis yang sedang berjalan, SDA yang sudah ditangkap). Kuis yang terputus karena aplikasi ditutup direset saat dibuka lagi: unit dibayar di jawaban terakhir, jadi kuis yang belum selesai tidak memberi unit dan SDA-nya tetap ada di radar | File JSON `energo-demo-v1.json` di penyimpanan aplikasi, dengan cadangan `.bak` |
 | Pengaturan (mode AR, volume, getaran, SDA latihan terpilih) | PlayerPrefs |
 | Peringatan keselamatan sudah dibaca | PlayerPrefs |
 | "Jangan ingatkan lagi" per SDA | PlayerPrefs |

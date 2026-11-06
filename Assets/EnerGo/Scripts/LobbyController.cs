@@ -122,16 +122,10 @@ namespace EnerGo
 
         private void Start()
         {
-            if (EnerGoProgress.Current.pendingCapture != null)
+            // The capture screens cannot leave while a capture is pending, so one found here was cut off by closing the app.
+            EnerGoProgress.DiscardPendingCapture();
+            if (currentState == ScreenState.Lobby)
             {
-                ResourceIds.Selected = EnerGoProgress.Current.pendingCapture.resourceId;
-                hasShownSplash = true;
-                transitionScene = CaptureSceneName();
-                currentState = ScreenState.TransitioningToAR;
-            }
-            else if (currentState == ScreenState.Lobby)
-            {
-                // A capture left pending by an older save finishes first; its return to the lobby lands here.
                 if (NeedsProlog) currentState = ScreenState.Prolog;
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayLobbyMusic();
             }

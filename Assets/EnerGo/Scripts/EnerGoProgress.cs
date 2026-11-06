@@ -286,6 +286,17 @@ namespace EnerGo
             return Commit(next);
         }
 
+        // Drops a capture cut off by closing the app. A finished quiz was already paid on its last answer, and an
+        // unfinished one pays nothing and leaves its radar spawn free. Cleared in memory even if saving fails,
+        // so the player is never pulled back into the old quiz this session.
+        public static void DiscardPendingCapture()
+        {
+            if (Current.pendingCapture == null) return;
+            var next = Copy();
+            next.pendingCapture = null;
+            if (!Commit(next)) current.pendingCapture = null;
+        }
+
         // Puts units into the village plant. Units and stock are saved in one commit, so neither can be lost alone.
         // Returns the units actually used: 0 when none fits or saving failed.
         public static int FillPlant(string resourceId, int units, long nowUtc)
