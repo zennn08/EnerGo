@@ -7,6 +7,24 @@ namespace EnerGo.Tests
         static readonly float[] Fixed = { 0.1f, 0.3f, 0.45f, 0.55f, 0.62f };
 
         [Test]
+        public void APerfectStrokeSquirtsTheMostOil()
+        {
+            Assert.Greater(OilMath.SquirtDrops(OilMath.Stroke.Perfect), OilMath.SquirtDrops(OilMath.Stroke.Late));
+            Assert.Greater(OilMath.SquirtDrops(OilMath.Stroke.Late), 0);
+            Assert.GreaterOrEqual(OilMath.SquirtDrops(OilMath.Stroke.Early), OilMath.SquirtDrops(OilMath.Stroke.Late));
+            Assert.Greater(OilMath.SquirtSpeed(OilMath.Stroke.Perfect), OilMath.SquirtSpeed(OilMath.Stroke.Late));
+        }
+
+        [Test]
+        public void TheSpillGrowsAsTheDrumFills()
+        {
+            Assert.AreEqual(0f, OilMath.SpillScale(0f, false), 1e-3f);
+            Assert.Greater(OilMath.SpillScale(0.5f, false), OilMath.SpillScale(0.1f, false));
+            Assert.Greater(OilMath.SpillScale(1f, false), 1f);
+            Assert.Greater(OilMath.SpillScale(0.2f, true), OilMath.SpillScale(1f, false)); // an overpressure burst floods the ground
+        }
+
+        [Test]
         public void DrillRumbleIsLongEnoughToFeelAndHardestInRock()
         {
             foreach (OilMath.Layer layer in System.Enum.GetValues(typeof(OilMath.Layer)))

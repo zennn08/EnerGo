@@ -126,6 +126,8 @@ Sheet kartu kertas dari bawah, pita judul "PENGATURAN".
 | Reset | Tombol | "RESET PROGRES" (teks merah). Ketuk pertama berubah jadi tombol merah "TEKAN LAGI UNTUK MENGHAPUS" selama 3,5 detik | Ketuk kedua dalam 3,5 detik menghapus semua progres |
 | Selesai | Tombol oranye | "SELESAI" | Menutup sheet |
 
+Semua sheet (Pengaturan, Latihan, Panduan, ISI PEMBANGKIT) bisa ditutup dengan menggeser ke bawah, mengetuk di luar kartu, atau tombolnya, dan selalu meluncur keluar dengan animasi.
+
 ### 3.4 Sheet Latihan (Ada)
 
 Pita judul "LATIHAN". Sub: "Pilih sumber daya, main tanpa GPS".
@@ -346,6 +348,8 @@ Fase Ambil:
 Edukasi yang dibawa: tiga prinsip keselamatan radiasi (waktu, jarak, perisai).
 
 Catatan tuning (Direncanakan, dari dokumen tuning): dosis dipercepat menjadi penuh dalam 22 detik dan dosis mulai berjalan pelan (1/4 kecepatan) sejak fase cari.
+
+Pompa minyak: setiap tekanan menyemburkan minyak dari kepala sumur. Tepat irama menyembur paling banyak, terlalu cepat menyebar lebar, terlambat menetes. Tumpahan di tanah membesar seiring drum terisi, dan overpressure menyembur terus sampai percobaan diulang.
 
 ### 3.11 Kuis (Ada)
 

@@ -80,6 +80,55 @@ namespace EnerGo
             oilStartedAt = Time.time;
             oilFailText = "";
             feedback = "TAHAN LAYAR UNTUK MENGEBOR";
+            BuildOilGusher(visual.transform);
+        }
+
+        private const float OilSquirtGravity = 7f; // pump model units
+        private static readonly Color OilColor = new Color(0.1f, 0.07f, 0.05f), OilSheen = new Color(0.26f, 0.17f, 0.1f);
+        private ParticleSystem oilSquirt;
+        private Vector3 oilWellTop;
+        private Transform oilSpill;
+        private float oilSpillNow;
+        private bool oilBursting;
+
+        // Oil jets from the wellhead, in the pump's own space so it stays put as the phone turns.
+        private void BuildOilGusher(Transform visual)
+        {
+            oilBursting = false;
+            oilSpillNow = 0f;
+            var well = visual.Find("sda_pompa_sumur");
+            var renderer = well != null ? well.GetComponent<Renderer>() : null;
+            if (renderer == null) return;
+            var b = renderer.bounds;
+            oilWellTop = target.transform.InverseTransformPoint(new Vector3(b.center.x, b.max.y, b.center.z));
+            oilSquirt = MakeBorParticles(target.transform, "Muncrat Minyak", PrimitiveType.Sphere, -OilSquirtGravity, Resources.Load<Material>("Oil/partikel_bor"));
+            // The spill mesh sits away from its origin: hang it on a pivot at its own centre so it grows in place.
+            var spill = visual.Find("sda_pompa_tumpahan");
+            var spillRenderer = spill != null ? spill.GetComponent<Renderer>() : null;
+            if (spillRenderer == null) return;
+            oilSpill = new GameObject("Pivot Tumpahan").transform;
+            oilSpill.SetParent(visual, false);
+            oilSpill.position = spillRenderer.bounds.center;
+            spill.SetParent(oilSpill, true);
+            oilSpill.localScale = Vector3.zero;
+        }
+
+        private void SquirtOil(int drops, float speed, float spread)
+        {
+            if (oilSquirt == null) return;
+            for (int i = 0; i < drops; i++)
+            {
+                var v = new Vector3(Random.Range(-spread, spread), speed * Random.Range(0.72f, 1.1f), Random.Range(-spread, spread) * 0.5f);
+                EmitBor(oilSquirt, oilWellTop, v, Color.Lerp(OilColor, OilSheen, Random.value * 0.5f), Random.Range(0.05f, 0.14f), Random.Range(0.8f, 1.5f));
+            }
+        }
+
+        private void AnimateOilSpill(float dt)
+        {
+            if (oilBursting) SquirtOil(3, 6.5f, 1.8f); // overpressure: the wellhead keeps gushing until the retry
+            if (oilSpill == null) return;
+            oilSpillNow = Mathf.MoveTowards(oilSpillNow, OilMath.SpillScale(oilDrum, oilBursting), dt * 1.6f);
+            oilSpill.localScale = new Vector3(oilSpillNow, 1f, oilSpillNow);
         }
 
         // Puts the moving parts where the crank angle says; the mechanism itself is in PompaPose.
@@ -137,6 +186,7 @@ namespace EnerGo
                     {
                         oilPhase = OilPhase.Done;
                         oilPhaseAt = Time.time;
+                        SquirtOil(45, 6.5f, 1.3f); // the drum is full: one last big gush
                         capturePerformance = OilMath.Performance(Time.time - oilStartedAt, oilPerfects, oilStrokes);
                         finishAt = Time.time + FinishDelay;
                         feedback = "DRUM MINYAK PENUH";
@@ -146,6 +196,7 @@ namespace EnerGo
                     if (Time.time - oilPhaseAt >= OilMath.FailShowSec) RetryOil();
                     break;
             }
+            if (target != null && oilPumping) AnimateOilSpill(dt);
             oilWasHeld = held;
         }
 
@@ -165,6 +216,7 @@ namespace EnerGo
                 oilLastStrokeAt = Time.time;
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayPumpBeat();
                 Haptics.Pulse(15);
+                SquirtOil(OilMath.SquirtDrops(OilMath.Stroke.Late), OilMath.SquirtSpeed(OilMath.Stroke.Late), 0.5f);
                 return;
             }
             var judge = OilMath.JudgeStroke(Time.time - oilLastStrokeAt, OilMath.BeatFor(oilDrum));
@@ -175,6 +227,7 @@ namespace EnerGo
             oilLastJudge = judge;
             if (SFXManager.Instance != null) SFXManager.Instance.PlayPumpBeat();
             Haptics.Pulse(judge == OilMath.Stroke.Perfect ? 30 : 15);
+            SquirtOil(OilMath.SquirtDrops(judge), OilMath.SquirtSpeed(judge), judge == OilMath.Stroke.Early ? 1.8f : 1.1f); // too early sprays wide
         }
 
         private void FailOil(string text)
@@ -183,6 +236,7 @@ namespace EnerGo
             oilPhaseAt = Time.time;
             oilFailText = text;
             feedback = text;
+            oilBursting = oilPumping;
             Haptics.Pulse(300);
             if (SFXManager.Instance != null) SFXManager.Instance.PlayQuizSalah();
         }

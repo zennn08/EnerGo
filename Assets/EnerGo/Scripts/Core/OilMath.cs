@@ -49,6 +49,14 @@ namespace EnerGo
             return Layer.Brine;
         }
 
+        // How much oil each pump stroke throws out of the wellhead: a stroke on the beat gushes, a late one dribbles.
+        public static int SquirtDrops(Stroke stroke) => stroke == Stroke.Perfect ? 30 : stroke == Stroke.Early ? 16 : 8;
+
+        public static float SquirtSpeed(Stroke stroke) => stroke == Stroke.Perfect ? 5.2f : stroke == Stroke.Early ? 3.6f : 2.4f;
+
+        // The spill on the ground grows with the drum, and an overpressure burst floods it.
+        public static float SpillScale(float drum, bool burst) => burst ? 2.6f : Mathf.Clamp01(drum) * 1.8f;
+
         // How the drill feels in the hand: harder ground kicks longer and faster, so the player feels the layer change.
         public static void DrillRumble(Layer layer, out long pulseMs, out float gapSec)
         {
