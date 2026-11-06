@@ -10,7 +10,7 @@
                 <ui:VisualElement class="eg-pil__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/petir.svg&quot;);" />
                 <ui:Label name="total-unit" text="0 unit" />
             </ui:VisualElement>
-            <ui:VisualElement style="width: 44px; height: 44px; background-image: url(&quot;project://database/Assets/UI/Logo/energo-mark.svg&quot;);" />
+            <ui:VisualElement style="width: 44px; height: 44px; background-image: url(&quot;project://database/Assets/UI/Logo/energo-mark.png&quot;);" />
         </ui:VisualElement>
         <ui:Label name="judul" class="eg-judul-layar lobby__judul" text="ENER&lt;color=#a6481a&gt;GO!&lt;/color&gt;" />
         <ui:VisualElement class="eg-kartu lobby__koleksi">
