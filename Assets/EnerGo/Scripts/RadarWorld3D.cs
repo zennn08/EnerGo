@@ -8,7 +8,7 @@ namespace EnerGo
     public class RadarWorld3D : MonoBehaviour
     {
         private const int ViewCells = 3;
-        private const float PropSize = 8f, MarkerSize = 30f, MarkerLift = 8f, GroundY = 2f, TileM = 60f;
+        private const float PropSize = 8f, MarkerSize = 30f, MarkerLift = 8f, GroundY = RadarWorld.RingHeightM, TileM = 60f;
         private const float CameraPitch = 58f, CameraDistance = 1140f, CameraFov = 28f, AimAhead = -55f;
         private const float RangeM = 150f, SweepDegPerSec = 90f, SweepWidthDeg = 40f;
         private const float DayLight = 0.85f, NightLight = 0.45f;

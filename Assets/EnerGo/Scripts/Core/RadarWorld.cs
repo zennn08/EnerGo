@@ -17,6 +17,8 @@ namespace EnerGo
 
         public const float CellM = 120f;
         private const int MaxPropsPerCell = 7;
+        public const float TallestHillM = 3.2f;  // radar_tanah is 1.6 m at its peak and drawn at double size
+        public const float RingHeightM = 3.8f;   // rings and markers float just above the hills, so no hill cuts a ring
 
         // Metres east and north. The east scale uses the whole-degree latitude, so a place keeps its cell between sessions.
         public static void ToMetres(double lat, double lon, out double east, out double north)

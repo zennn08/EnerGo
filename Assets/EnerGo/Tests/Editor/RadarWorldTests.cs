@@ -90,6 +90,10 @@ namespace EnerGo.Tests
         }
 
         [Test]
+        public void RadarRingsFloatAboveTheTallestHill() =>
+            Assert.Greater(RadarWorld.RingHeightM, RadarWorld.TallestHillM);
+
+        [Test]
         public void ATapPicksTheNearestMarkerWithinReach()
         {
             var points = new[] { new Vector2(100, 100), new Vector2(200, 100) };
