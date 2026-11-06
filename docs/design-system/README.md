@@ -72,9 +72,9 @@ Unity IMGUI belum memakai sumbu variable font, jadi ekspor instance statis dari 
 
 ## Ikonografi
 
-Set ikon sendiri di `assets/Ikon`: garis `tinta` 2 unit di kotak 24 × 24, ujung bulat, dengan isian kertas/kraft/oker di bagian yang perlu bobot. Ikon SDA (`sda-*`) berwarna penuh dengan garis tinta dan selalu dipakai untuk mewakili SDA; jangan diganti emoji atau foto. Ikon tidak bisa diwarnai ulang lewat `<img>`, jadi di atas isian gelap (tombol ok/bahaya) pakai versi terang atau filter invert, dan selalu dengan label.
+Set ikon sendiri di `assets/Ikon`: garis `tinta` 1,2 unit di kotak 24 × 24, ujung bulat, dengan isian kertas/kraft/oker di bagian yang perlu bobot. Ikon SDA (`sda-*`, sumbernya di `Art/ikon/`) berwarna penuh dengan garis tinta tipis dan gradasi 2-3 warna berdekatan, dan selalu dipakai untuk mewakili SDA; jangan diganti emoji atau foto. Ikon tidak bisa diwarnai ulang lewat `<img>`, jadi di atas isian gelap (tombol ok/bahaya) pakai versi terang atau filter invert, dan selalu dengan label.
 
-Tanda EnerGo ada di `assets/Logo`. Wordmark "EnerGo" diset dengan huruf `judul`, "Go" berwarna `oranye-tua`.
+Tanda EnerGo adalah radar yang sapuannya menangkap huruf e kecil (`Art/logo/`, dibuat oleh `gen_logo.py`, menggantikan `assets/Logo`). Gradasi logo adalah pengecualian dari aturan gradasi: hanya 2-3 warna yang berdekatan, tidak warna-warni. Wordmark "EnerGo" diset dengan huruf `judul`, "Go" berwarna `oranye-tua`.
 
 ## Layar
 
