@@ -3,7 +3,7 @@
     <ui:Template name="Tile" src="project://database/Assets/UI/Screens/Tile.uxml" />
     <ui:VisualElement name="sheet-latihan" class="eg-kartu eg-sheet sheet--latihan">
         <ui:Label class="eg-selotip" text="LATIHAN" />
-        <ui:Label class="eg-kecil sheet__sub" text="Pilih sumber daya, main tanpa GPS" />
+        <ui:Label class="eg-kecil sheet__sub" text="Pilih sumber daya, main tanpa GPS · 1 unit per ronde" />
         <ui:VisualElement class="sheet__grid">
             <ui:Instance template="Tile" name="latihan-sun" />
             <ui:Instance template="Tile" name="latihan-coal" />

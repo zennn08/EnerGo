@@ -26,6 +26,10 @@ namespace EnerGo.Tests
                 "mode-kamera", "btn-berburu", "btn-panduan", "btn-latihan", "btn-pengaturan");
 
         [Test]
+        public void PracticeSheetSaysItPaysOneUnit() =>
+            StringAssert.Contains("1 unit", Clone("Assets/UI/Screens/SheetLatihan.uxml").Q<Label>(className: "sheet__sub").text);
+
+        [Test]
         public void RadarHasEveryNamedElement() =>
             AssertNames(Clone("Assets/UI/Screens/Radar.uxml"),
                 "btn-kembali", "pil-spawn", "radar-disk", "info-kompas", "info-gps", "kartu-target", "target-ikon", "target-nama",

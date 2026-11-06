@@ -1557,7 +1557,7 @@ namespace EnerGo
         }
 
         // Where the units came from: 1 base + 1 per correct answer + the mini-game bonus.
-        public string[] ResultChips(CaptureSession session, int right) => new[] { "Dasar +1", "Kuis +" + right, MiniGameName(session.resourceId) + " " + EnerGoProgress.GradeFor(session.performanceBonus) + " +" + session.performanceBonus };
+        public string[] ResultChips(CaptureSession session, int right) => string.IsNullOrEmpty(session.spawnId) ? new[] { "Mode Latihan +" + DesaMath.PracticeUnits } : new[] { "Dasar +1", "Kuis +" + right, MiniGameName(session.resourceId) + " " + EnerGoProgress.GradeFor(session.performanceBonus) + " +" + session.performanceBonus };
 
         // What the status box says right now.
         public HudStatus ReadHud()

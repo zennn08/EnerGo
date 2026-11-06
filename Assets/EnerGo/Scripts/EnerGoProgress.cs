@@ -56,6 +56,10 @@ namespace EnerGo
         public string lastCommittedCaptureId = "";
         public bool legacyGoldImported;
         public string[] capturedSpawns = new string[0]; // radar spawns this player already caught (recent windows only)
+        public long plantEndsUtc;        // unix seconds when the village plant runs out; 0 = never filled or long empty
+        public string villageName = "";  // typed in the prologue; empty until then
+        public bool prologSeen;
+        public bool plantEverFilled;     // the first fill plays once
 
         public InventoryEntry Get(string id)
         {
@@ -140,6 +144,7 @@ namespace EnerGo
             foreach (string id in SaveGame.RequiredResources) { int n = Entries(id); if (n != 1) return false; known += n; }
             foreach (string id in SaveGame.AddedResources) { int n = Entries(id); if (n > 1) return false; known += n; }
             if (known != value.inventory.Length) return false; // no null, unknown or duplicate entries
+            if (value.plantEndsUtc < 0 || (value.villageName != null && value.villageName.Length > DesaMath.NameMaxLength)) return false;
             var session = value.pendingCapture;
             if (session == null) return true;
             if (string.IsNullOrEmpty(session.sessionId) || QuizBank.Find(session.questionId, session.resourceId) == null) return false;
@@ -190,7 +195,13 @@ namespace EnerGo
             }
         }
 
-        private static SaveGame Copy() => JsonUtility.FromJson<SaveGame>(JsonUtility.ToJson(Current));
+        private static SaveGame Copy()
+        {
+            var copy = JsonUtility.FromJson<SaveGame>(JsonUtility.ToJson(Current));
+            // JsonUtility materializes a null nested class as an empty object, which Valid would reject.
+            if (Current.pendingCapture == null) copy.pendingCapture = null;
+            return copy;
+        }
 
         // `performance` is how well the mini-game went (0..1); it is turned into bonus units now and paid out with the quiz reward.
         public static bool BeginAnalysis(string resourceId, float performance = 0f, string spawnId = "")
@@ -227,8 +238,8 @@ namespace EnerGo
             if (session.IsLastQuestion)
             {
                 // Reward is granted together with the last answer: 1 unit + 1 per correct answer + the mini-game bonus,
-                // "Murni" only if all answers are correct.
-                session.rewardQuantity = RewardFor(session.correctCount, session.performanceBonus);
+                // or one unit for a practice round, "Murni" only if all answers are correct.
+                session.rewardQuantity = DesaMath.CaptureReward(!string.IsNullOrEmpty(session.spawnId), session.correctCount, session.performanceBonus);
                 var entry = next.Get(session.resourceId);
                 if (session.Pure) entry.pureQuantity += session.rewardQuantity;
                 else entry.normalQuantity += session.rewardQuantity;
@@ -242,7 +253,7 @@ namespace EnerGo
 
         public const int MaxPerformanceBonus = 2;
 
-        public static int RewardFor(int correctCount, int performanceBonus = 0) => 1 + correctCount + performanceBonus;
+        public static int RewardFor(int correctCount, int performanceBonus = 0) => DesaMath.CaptureReward(true, correctCount, performanceBonus);
 
         // Mini-game score 0..1 -> bonus units: great (>= 0.75) +2, good (>= 0.4) +1.
         public static int BonusFor(float performance) => performance >= 0.75f ? 2 : performance >= 0.4f ? 1 : 0;
@@ -271,6 +282,36 @@ namespace EnerGo
             if (Current.pendingCapture == null || Current.pendingCapture.state != "result") return false;
             var next = Copy();
             next.pendingCapture = null;
+            return Commit(next);
+        }
+
+        // Puts units into the village plant. Units and stock are saved in one commit, so neither can be lost alone.
+        // Returns the units actually used: 0 when none fits or saving failed.
+        public static int FillPlant(string resourceId, int units, long nowUtc)
+        {
+            var next = Copy();
+            var entry = next.Get(resourceId);
+            long perUnit = DesaMath.SecondsPerUnit(resourceId);
+            int used = Mathf.Min(units, DesaMath.UnitsThatFit(DesaMath.Remaining(next.plantEndsUtc, nowUtc), perUnit, entry.Total));
+            if (used <= 0) return 0;
+            DesaMath.Spend(ref entry.normalQuantity, ref entry.pureQuantity, used);
+            next.plantEndsUtc = DesaMath.EndsAfterFill(next.plantEndsUtc, nowUtc, perUnit, used);
+            next.plantEverFilled = true;
+            return Commit(next) ? used : 0;
+        }
+
+        public static bool FinishProlog(string rawName)
+        {
+            var next = Copy();
+            next.villageName = DesaMath.CleanName(rawName);
+            next.prologSeen = true;
+            return Commit(next);
+        }
+
+        public static bool RenameVillage(string rawName)
+        {
+            var next = Copy();
+            next.villageName = DesaMath.CleanName(rawName);
             return Commit(next);
         }
 
