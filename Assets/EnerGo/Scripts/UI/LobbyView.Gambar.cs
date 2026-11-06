@@ -15,5 +15,22 @@ namespace EnerGo.UI
             target.style.backgroundImage = texture != null ? new StyleBackground(texture) : new StyleBackground(StyleKeyword.None);
             target.style.backgroundColor = texture != null ? new StyleColor(Color.clear) : new StyleColor(fallback);
         }
+
+        // For small moving pieces: hidden when null or when the picture does not exist yet.
+        private static void SetOptionalGambar(VisualElement target, string resourcePath)
+        {
+            if (target.userData as string == resourcePath && resourcePath != null) return;
+            var texture = resourcePath == null ? null : Resources.Load<Texture2D>(resourcePath);
+            target.userData = texture != null ? resourcePath : null;
+            target.style.backgroundImage = texture != null ? new StyleBackground(texture) : new StyleBackground(StyleKeyword.None);
+            target.style.display = texture != null ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        // Lets Resources.UnloadUnusedAssets free the picture.
+        private static void ClearGambar(VisualElement target)
+        {
+            target.userData = null;
+            target.style.backgroundImage = new StyleBackground(StyleKeyword.None);
+        }
     }
 }

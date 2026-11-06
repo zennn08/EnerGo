@@ -35,6 +35,7 @@ namespace EnerGo.UI
         {
             bool on = state == LobbyController.ScreenState.Prolog;
             if (on && !prologActive) ShowPanel(0);
+            if (!on && prologActive) ClearGambar(prologGambar);
             prologActive = on;
         }
 
@@ -64,14 +65,14 @@ namespace EnerGo.UI
                 }
                 return;
             }
-            controller.PrologTap();
+            controller.Tap();
             ShowPanel(prologPanel + 1);
         }
 
         private void PrologSkip()
         {
             if (!controller.InputReady) return;
-            controller.PrologTap();
+            controller.Tap();
             ShowPanel(DesaText.PrologNamePanel);
         }
 

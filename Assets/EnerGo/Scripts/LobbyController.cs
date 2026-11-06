@@ -230,6 +230,22 @@ namespace EnerGo
             Changed();
         }
 
+        // Fired once, right after the very first units go into the plant.
+        public event System.Action FirstFill;
+
+        // One tap spends one unit, or every unit of this SDA that still fits. Returns the units used.
+        public int FillPlant(string id, bool all)
+        {
+            if (currentState != ScreenState.Desa || !InputReady) return 0;
+            bool first = !EnerGoProgress.Current.plantEverFilled;
+            int used = EnerGoProgress.FillPlant(id, all ? int.MaxValue : 1, NowUtc);
+            if (used == 0) return 0;
+            Click();
+            Changed();
+            if (first) FirstFill?.Invoke();
+            return used;
+        }
+
         public void CloseDesa()
         {
             if (currentState != ScreenState.Desa || !InputReady) return;
@@ -254,7 +270,7 @@ namespace EnerGo
             Changed();
         }
 
-        public void PrologTap() { BlockTaps(); if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick(); }
+        public void Tap() { BlockTaps(); if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick(); }
 
         // ── Pengaturan ────────────────────────────────────────────────
         // Toggle rows: the whole row is the button; it clicks and holds input for 0.15 s before the effect.
