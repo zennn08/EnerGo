@@ -28,8 +28,8 @@
     --sda-batubara-muda: #dcdde0;
     --sda-emas: #c99a2e;
     --sda-emas-muda: #f4e5bd;
-    --sda-minyak: #5b4bb5;
-    --sda-minyak-muda: #e0dcf4;
+    --sda-minyak: #3a2f27;
+    --sda-minyak-muda: #efe6dc;
     --sda-uranium: #4fa83a;
     --sda-uranium-muda: #dcefd3;
     --uranium-nyala: #39ff14;

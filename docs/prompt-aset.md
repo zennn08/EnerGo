@@ -29,7 +29,7 @@ Palet warna yang dipakai di semua prompt:
 | mat\_batubara | #4B4F58 | sda-batubara | Bongkahan batu bara |
 | mat\_batubara\_terang | #7A808A | (turunan) | Kilau batu bara, batuan |
 | mat\_emas | #C99A2E | sda-emas | Keping dan bongkah emas |
-| mat\_minyak | #5B4BB5 | sda-minyak | Lengan pompa |
+| mat\_minyak | #5B4BB5 | (warna lama, sda-minyak kini #3A2F27) | Lengan pompa |
 | mat\_uranium | #4FA83A | sda-uranium | Badan kristal uranium |
 | mat\_uranium\_nyala | #39FF14 | uranium-nyala | Emisi kristal dan serpihan uranium |
 | mat\_matahari | #F2B33D | sda-matahari | Bola matahari (beremisi) |

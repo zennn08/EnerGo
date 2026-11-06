@@ -21,21 +21,21 @@
                 <ui:VisualElement class="eg-tengah" style="flex-wrap: wrap;">
                     <ui:VisualElement class="eg-tile eg-tile--ringkas eg-muda--sun" style="margin: 7px 5px;">
                         <ui:Label class="eg-tile__no" text="No.01" />
-                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-matahari.svg&quot;);" />
+                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-matahari.png&quot;);" />
                         <ui:Label class="eg-tile__nama" text="Matahari" />
                         <ui:Label class="eg-badge" text="12" />
                     </ui:VisualElement>
                     <ui:VisualElement class="eg-tile eg-tile--ringkas eg-muda--gold is-terpilih" style="margin: 7px 5px;">
                         <ui:VisualElement class="eg-tile__cincin" />
                         <ui:Label class="eg-tile__no" text="No.03" />
-                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-emas.svg&quot;);" />
+                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-emas.png&quot;);" />
                         <ui:Label class="eg-tile__nama" text="Emas" />
                         <ui:Label class="eg-badge" text="99+" />
                         <ui:Label class="eg-tile__dipilih" text="DIPILIH" />
                     </ui:VisualElement>
                     <ui:VisualElement class="eg-tile eg-tile--ringkas eg-muda--uranium is-terkunci" style="margin: 7px 5px;">
                         <ui:Label class="eg-tile__no" text="No.05" />
-                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-uranium.svg&quot;);" />
+                        <ui:VisualElement class="eg-tile__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/sda-uranium.png&quot;);" />
                         <ui:Label class="eg-tile__nama" text="Uranium" />
                         <ui:Label class="eg-badge" text="0" />
                         <ui:VisualElement class="eg-tile__gembok" style="background-image: url(&quot;project://database/Assets/UI/Icons/gembok.svg&quot;);" />

@@ -435,7 +435,7 @@ Warna gradasi tile per SDA (atas ke bawah):
 | Matahari | #FFF0A0 | #FFC93C |
 | Batu Bara | #B9BFCC | #6B7180 |
 | Emas | #FFE9A0 | #F0B52A |
-| Minyak Bumi | #A99BFF | #5A49D6 |
+| Minyak Bumi | #8A7563 | #3A2F27 |
 | Uranium | #D6FF9C | #58C23A |
 | Acak | #FFB3E0 | #D1409F |
 
