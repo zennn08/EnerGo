@@ -30,14 +30,14 @@ Semua angka di dokumen ini diambil langsung dari kode, jadi bisa dipakai sebagai
 4. Setelah mini-game berhasil, pemain menjawab 3 soal benar/salah tentang SDA itu.
 5. Pemain mendapat unit SDA (1-6 unit). SDA itu hilang dari radar pemain.
 6. Kembali ke radar dan berburu lagi.
-7. (Direncanakan) Unit SDA dipakai sebagai bahan bakar pembangkit listrik di Desa Teknik.
+7. Unit SDA dipakai untuk menyalakan pembangkit listrik di desa pemain.
 
 ### Mode bermain
 
 | Mode | Cara masuk | GPS | Hasil |
 |---|---|---|---|
 | Berburu (utama) | Lobby, tombol BERBURU! | Wajib | Unit masuk koleksi, SDA hilang dari radar |
-| Latihan | Lobby, dock Latihan; atau Pengaturan; atau radar saat GPS gagal | Tidak perlu | Unit tetap masuk koleksi, tidak terkait node radar |
+| Latihan | Lobby, dock Latihan; atau Pengaturan; atau radar saat GPS gagal | Tidak perlu | Hanya 1 unit per ronde, tidak terkait node radar |
 
 ---
 
@@ -47,7 +47,7 @@ Semua angka di dokumen ini diambil langsung dari kode, jadi bisa dipakai sebagai
 
 | Scene | Isi |
 |---|---|
-| LobbyScene | Splash, Lobby, sheet Pengaturan, sheet Latihan, sheet Panduan, transisi |
+| LobbyScene | Splash, prolog, Lobby, Desa, sheet Pengaturan, sheet Latihan, sheet Panduan, transisi |
 | ExploreScene | Radar GPS |
 | ARPrototype | Layar tangkap memakai ARCore (kamera + tracking ARCore) |
 | Sensor360Scene | Layar tangkap memakai Sensor 360 (giroskop + feed kamera biasa) |
@@ -110,7 +110,7 @@ Susunan dari atas ke bawah:
 | Grid koleksi | 5 tile SDA (3 + 2, baris kedua di tengah). Tiap tile: ikon SDA, gradasi warna SDA, badge jumlah unit. Tile tidak bisa diketuk (hanya tampilan) |
 | Info mode | "Mode kamera: AR (ARCore)" atau "Mode kamera: Sensor 360" |
 | Tombol utama | "BERBURU!" (oranye, besar) |
-| Dock | 3 tombol bulat dengan label: Panduan (ikon buku, kuning), Latihan (ikon target, biru), Pengaturan (ikon gir, kertas) |
+| Dock | 4 tombol bulat dengan label: Desa (ikon rumah, kertas, titik oranye saat perlu perhatian), Panduan (ikon buku, kuning), Latihan (ikon target, biru), Pengaturan (ikon gir, kertas) |
 
 Tile yang terkunci (SDA tanpa mini-game) tampil pudar 45% dengan ikon gembok. Saat ini kelima SDA sudah bisa dimainkan, jadi tidak ada yang terkunci, tetapi state ini harus tetap didesain.
 
@@ -380,7 +380,7 @@ Kartu umpan balik setelah tiap jawaban:
 | Bintang | 3 bintang (tengah lebih besar), terisi sesuai jumlah benar |
 | Skor | "n/3 BENAR" |
 | Hadiah | Ikon SDA + "+N" besar + chip kualitas "Murni" (semua benar) atau "Normal" |
-| Rincian | Chip "Dasar +1", "Kuis +n", "[Nama mini-game] [Hebat/Bagus/Cukup] +b" |
+| Rincian | Chip "Dasar +1", "Kuis +n", "[Nama mini-game] [Hebat/Bagus/Cukup] +b". Mode Latihan: satu chip "Mode Latihan +1" |
 | Pesan | Semua benar: "Sempurna! Semua jawaban tepat." 0 benar: "Belum ada yang tepat. Coba lagi di tangkapan berikutnya." Lainnya: "Bagus! Jawab semua dengan tepat untuk hasil Murni." |
 | Tombol | "LANJUT BERBURU" (dari radar) atau "LANJUT KE LOBBY" (latihan) |
 
@@ -388,29 +388,33 @@ Nama mini-game di chip: Ekstraksi (Matahari), Tambang (Batu Bara), Dulang (Emas)
 
 Pesan error simpan (jika ada) tampil di bawah kartu kuis, umpan balik, dan hasil.
 
-### 3.13 Desa Teknik dan Pembangkit Listrik (Direncanakan)
+### 3.13 Desa, Prolog, dan Pemandu Sya (Ada)
 
-Belum ada di build. Diputuskan di GDD dan dokumen tuning:
+Rancangan: `docs/superpowers/specs/2026-11-06-desa-teknik-design.md`.
 
-- Desa Teknik punya satu pembangkit listrik.
-- Unit SDA menjadi bahan bakar. Setiap unit menambah "durasi menyala":
+**Prolog.** Muncul sekali setelah Splash pada pembukaan pertama, 5 panel ilustrasi dengan teks di kartu kertas. LEWATI melompat ke panel nama. Panel 4 meminta nama desa (1-16 karakter, kosong menjadi "Desa Teknik"). Tangkapan yang masih tertunda di save diselesaikan lebih dulu.
 
-| SDA | Durasi per unit |
-|---|---|
-| Batu Bara | 20 menit |
-| Emas | 30 menit |
-| Matahari | 20 menit |
-| Minyak Bumi | 45 menit |
-| Uranium | 3 jam |
+**Pemandu.** Sya, ahli geologi muda, 2D chibi. Tampil di prolog dan layar Desa. Pose dan potret: `docs/prompt-karakter.md`.
 
-- Stok durasi berkurang mengikuti waktu nyata, termasuk saat aplikasi ditutup.
-- Kapasitas maksimal stok 24 jam.
-- Stok habis: desa padam sampai pemain menangkap SDA lagi. Tidak ada hukuman lain.
-- Peringatan saat sisa stok kurang dari 3 jam, ditampilkan di "Laporan Singkat".
-- Level 1-3 hanya memunculkan Emas dan Batu Bara (GDD).
-- Tidak ada mata uang Gulden (dibatalkan).
+**Pembangkit.** Pemain membuka Desa dari dock Lobby, lalu memasukkan unit SDA sendiri lewat sheet ISI PEMBANGKIT. Setiap unit menambah durasi menyala:
 
-Kebutuhan desain: layar Desa Teknik (desa terang vs padam), pembangkit dengan indikator stok durasi, aksi memasukkan unit SDA ke pembangkit, Laporan Singkat, dan indikator level.
+| SDA | Durasi per unit | Peran |
+|---|---|---|
+| Batu Bara | 20 menit | Bahan bakar pembangkit |
+| Matahari | 20 menit | Dialirkan dari panel surya |
+| Emas | 30 menit | Memperbaiki kabel dan sambungan, bukan bahan bakar |
+| Minyak Bumi | 45 menit | Bahan bakar pembangkit |
+| Uranium | 3 jam | Bahan bakar reaktor |
+
+- Stok disimpan sebagai satu waktu habis (UTC) dan berkurang mengikuti waktu nyata, termasuk saat aplikasi ditutup.
+- Kapasitas maksimal 24 jam. Unit yang membuat stok melebihi kapasitas ditolak dan tidak berkurang.
+- Unit Normal dipakai lebih dulu, baru Murni.
+- Menipis: sisa kurang dari 3 jam, tampil di kartu stok dan sebagai titik di tombol Desa.
+- Padam: sisa 0. Desa gelap sampai diisi lagi, tanpa hukuman lain.
+
+**Layar Desa.** Latar mengikuti jam HP: siang `desa_siang`, malam `desa_malam_terang` atau `desa_malam_padam`. Pengisian pertama selalu memutar adegan malam dari gelap ke terang, jam berapa pun, sekali saja.
+
+Belum ada: level, desa yang tumbuh, Gulden (dibatalkan), notifikasi HP. Pemandu di layar lain menyusul.
 
 ---
 
@@ -462,7 +466,7 @@ Unit = 1 (dasar) + jumlah jawaban benar (0-3) + bonus mini-game (0-2)
 | 0,40 sampai di bawah 0,75 | Bagus | +1 |
 | Di bawah 0,40 | Cukup | +0 |
 
-- Minimal 1 unit, maksimal 6 unit per tangkapan.
+- Minimal 1 unit, maksimal 6 unit per tangkapan dari radar. Mode Latihan selalu 1 unit, supaya berburu di luar tetap lebih menguntungkan.
 - Kualitas "Murni" jika ketiga jawaban benar, selain itu "Normal". Koleksi menyimpan jumlah Murni dan Normal secara terpisah (tampilan saat ini menjumlahkan keduanya).
 - Unit dan penghapusan SDA dari radar disimpan bersamaan saat jawaban terakhir masuk.
 
@@ -670,4 +674,5 @@ Semua layar dan state yang harus punya desain:
 - [ ] Umpan balik: benar, salah, waktu habis, tombol terkunci "BACA DULU..."
 - [ ] Hasil: Sempurna, Bagus, Coba Lagi, Murni/Normal, rincian bonus
 - [ ] Pesan error simpan
-- [ ] (Direncanakan) Desa Teknik terang dan padam, pembangkit dengan stok durasi, memasukkan SDA, Laporan Singkat, peringatan stok, level
+- [x] Desa menyala dan padam, pembangkit dengan stok durasi, memasukkan SDA, peringatan stok, prolog
+- [ ] (Direncanakan) Level

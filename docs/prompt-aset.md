@@ -75,7 +75,7 @@ Setelah itu simpan file. Untuk setiap aset baru: buat file baru, lalu minta Clau
 
 ## Blender MCP: prompt per aset
 
-Ada 12 file model untuk build sekarang ditambah 2 untuk Desa Teknik. Kirim satu blok per pesan, lalu minta screenshot viewport sebelum lanjut ke aset berikutnya.
+Ada 12 file model untuk build sekarang. Model desa di bawah dibatalkan: desa memakai gambar 2D dari `docs/prompt-karakter.md`. Kirim satu blok per pesan, lalu minta screenshot viewport sebelum lanjut ke aset berikutnya.
 
 | Aset | File | Ukuran | Segitiga |
 | --- | --- | --- | --- |
@@ -90,8 +90,8 @@ Ada 12 file model untuk build sekarang ditambah 2 untuk Desa Teknik. Kirim satu 
 | Serpihan uranium | `sda_uranium_serpihan.fbx` | 0,12 m | ≤ 150 |
 | Wadah timbal dan tutup | `sda_uranium_wadah.fbx` | 0,3 m | ≤ 800 |
 | Pecahan bijih (4 bagian) | `sda_uranium_pecah.fbx` | 0,4 m | ≤ 300 |
-| Rumah desa (direncanakan) | `desa_rumah.fbx` | 3 m | ≤ 1.500 |
-| Pembangkit (direncanakan) | `desa_pembangkit.fbx` | 6 m | ≤ 3.000 |
+| Rumah desa (dibatalkan) | `desa_rumah.fbx` | 3 m | ≤ 1.500 |
+| Pembangkit (dibatalkan) | `desa_pembangkit.fbx` | 6 m | ≤ 3.000 |
 
 ### Matahari
 
@@ -155,13 +155,13 @@ Buat 2 objek kristal uranium low-poly dengan flat shading:
 Tampilkan screenshot viewport.
 ```
 
-### Rumah desa (direncanakan)
+### Rumah desa (dibatalkan, diganti gambar 2D)
 
 ```text
 Buat rumah desa low-poly bernama desa_rumah dengan flat shading: badan rumah 3 x 2.5 x 2 m material mat_kertas, atap pelana material mat_oranye, satu pintu material mat_tinta, dan dua jendela sebagai objek terpisah desa_rumah_jendela dengan material mat_oker (supaya di Unity bisa diganti antara menyala dan padam). Origin di tengah dasar. Jalankan tambah_outline(desa_rumah, 0.03). Tampilkan screenshot viewport.
 ```
 
-### Pembangkit listrik (direncanakan)
+### Pembangkit listrik (dibatalkan, diganti gambar 2D)
 
 ```text
 Buat bangunan pembangkit listrik low-poly bernama desa_pembangkit dengan flat shading: gedung utama 5 x 4 x 3.5 m dengan atap gergaji (3 gigi) material mat_kertas dan mat_laut, cerobong silinder 8 sisi setinggi 6 m material mat_tinta, dan satu panel lambang petir di dinding depan sebagai objek terpisah desa_pembangkit_lampu dengan material mat_oker. Origin di tengah dasar. Jalankan tambah_outline(desa_pembangkit, 0.04). Tampilkan screenshot viewport.
@@ -284,4 +284,4 @@ Checklist:
 - [ ] Samakan kerasnya dan import dengan pengaturan di atas
 - [ ] Ganti placeholder detak pompa dan hapus `sfx_batu_jatuh`, `sfx_pickaxe`
 - [ ] Cek lisensi komersial paket ElevenLabs
-- [ ] (Nanti) Rumah desa dan pembangkit untuk Desa Teknik
+- [x] Rumah desa dan pembangkit dibatalkan, desa memakai gambar 2D

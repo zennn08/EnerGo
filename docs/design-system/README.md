@@ -78,4 +78,4 @@ Tanda EnerGo adalah radar yang sapuannya menangkap huruf e kecil (`Art/logo/`, d
 
 ## Layar
 
-Grup **Layar** berisi mockup lengkap di bingkai 480 × 800: Splash, Lobby, transisi, sheet Pengaturan/Latihan/Panduan, Radar, peringatan keselamatan, GPS gagal, kelima mini-game, kuis, umpan balik, hasil, dan Desa Teknik (direncanakan). Pakai komponen di grup lain untuk membangunnya; kelas `.eg-hp`, `.eg-layar`, dan `.eg-baris-hp` hanya untuk bingkai mockup.
+Grup **Layar** berisi mockup lengkap di bingkai 480 × 800: Splash, Lobby, transisi, sheet Pengaturan/Latihan/Panduan, Radar, peringatan keselamatan, GPS gagal, kelima mini-game, kuis, umpan balik, hasil, dan Desa Teknik. Layar Desa di game memakai gambar 2D penuh, bukan latar peta. Pakai komponen di grup lain untuk membangunnya; kelas `.eg-hp`, `.eg-layar`, dan `.eg-baris-hp` hanya untuk bingkai mockup.

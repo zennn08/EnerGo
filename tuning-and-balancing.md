@@ -1,5 +1,8 @@
 # **Tuning dan Balancing**
 
+> Catatan 2026-11-06: rencana pembangkit, Gulden, dan distrik di dokumen ini digantikan oleh `tuning-and-balancing-ringkas.md` dan `docs/PRD-EnerGo.md` 3.13.
+
+
 Bab ini menjelaskan proses tuning dan balancing EnerGo, mengikuti alur Markas → Penangkapan → Markas → My Village.
 
 **Tuning** adalah proses menyesuaikan nilai parameter (angka, kurva, durasi) pada mekanik yang sudah ada sampai terasa dan berjalan sesuai tujuan desain. Mekaniknya tidak berubah, hanya nilainya yang disetel. **Balancing** mengatur hubungan antar-elemen (SDA, pembangkit, sumber daya, level) supaya tantangan terasa adil, beragam, dan tidak ada satu pilihan yang mendominasi.

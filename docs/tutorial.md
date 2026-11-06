@@ -407,7 +407,7 @@ Tahap ini tidak menambah fitur; semua isinya merapikan dan memastikan game aman 
 - [ ] Cek lisensi font (keempatnya dari Google Fonts, berlisensi OFL) dan cantumkan di halaman kredit
 - [ ] Naikkan versi aplikasi dari 0.1.0 dan buat build rilis
 
-Setelah game inti stabil, Desa Teknik dikerjakan sebagai tahap terpisah: model rumah dan pembangkit dari dokumen prompt, layar Desa menyala dan padam dari design system, plus logika stok durasi dari GDD.
+Desa dan prolog dikerjakan sebagai tahap terpisah dengan gambar 2D chibi, lihat `docs/superpowers/specs/2026-11-06-desa-teknik-design.md`.
 
 ## Masalah umum dan solusinya
 

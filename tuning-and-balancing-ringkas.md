@@ -66,7 +66,7 @@ Waktu menjawab 15 detik per soal sudah sesuai berdasarkan uji coba tim, sehingga
 
 ## [D] Balancing Antar-SDA
 
-Semua SDA hasil tangkapan dipakai sebagai bahan bakar untuk satu pembangkit listrik di Desa Teknik. Setiap unit SDA menambah "durasi menyala" pembangkit. Kelima SDA diseimbangkan dengan pola "biaya vs manfaat". "Biaya" bagi pemain adalah usaha untuk mendapatkan SDA, yaitu seberapa jauh harus berjalan (kelangkaan) dan seberapa sulit mekanik AR-nya. "Manfaat" adalah berapa lama pembangkit menyala dari satu unit SDA tersebut.
+Semua SDA hasil tangkapan dipakai untuk menyalakan satu pembangkit listrik di desa pemain (emas memperbaiki kabel dan sambungan, bukan bahan bakar). Setiap unit SDA menambah "durasi menyala" pembangkit. Kelima SDA diseimbangkan dengan pola "biaya vs manfaat". "Biaya" bagi pemain adalah usaha untuk mendapatkan SDA, yaitu seberapa jauh harus berjalan (kelangkaan) dan seberapa sulit mekanik AR-nya. "Manfaat" adalah berapa lama pembangkit menyala dari satu unit SDA tersebut.
 
 | SDA | Peluang muncul | Kesulitan | Durasi per unit (rencana) | Sumbangan rata-rata |
 |---|---|---|---|---|
@@ -90,9 +90,13 @@ Di build sekarang semua SDA memberi hasil yang sama (1-6 unit), sehingga uranium
 
 Durasi yang masuk ke pembangkit = jumlah unit × durasi per unit. Contoh: menangkap uranium dengan hasil 4 unit menambah 4 × 3 jam = 12 jam, sedangkan batu bara dengan hasil 4 unit menambah 4 × 20 menit = 1 jam 20 menit.
 
+### Mode Latihan
+
+Mode Latihan selalu memberi 1 unit per ronde. Mode ini tidak butuh GPS dan SDA-nya bebas dipilih, jadi hadiah penuh akan membuat pemain bisa menyalakan desa dari sofa. Pemain yang GPS-nya gagal tetap bisa mengisi pembangkit, dan semua target balancing di bawah hanya berlaku untuk bermain lewat radar.
+
 ### Level awal
 
-Sesuai GDD, Level 1-3 hanya memunculkan emas dan batu bara. Keduanya punya mekanik paling sederhana, sehingga pemain baru bisa memahami alur tangkap → kuis → hasil lebih dulu sebelum bertemu SDA yang lebih rumit.
+Sesuai GDD, Level 1-3 hanya memunculkan emas dan batu bara (belum dibuat, saat ini kelima SDA langsung terbuka). Keduanya punya mekanik paling sederhana, sehingga pemain baru bisa memahami alur tangkap → kuis → hasil lebih dulu sebelum bertemu SDA yang lebih rumit.
 
 ---
 
