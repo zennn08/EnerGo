@@ -13,6 +13,10 @@ namespace EnerGo
         // The flask stands right above the RAD card, wherever the safe area puts that card, and TUTUP right above the flask.
         public static float FlaskCentreGuiY(float hudTop) => hudTop - FlaskGapGui - FlaskHalfGui;
         public static float CloseButtonGuiY(float hudTop) => FlaskCentreGuiY(hudTop) - FlaskHalfGui - FlaskGapGui - CloseButtonGui;
+        // Uranium is aimed with the phone while the thumb grips, so a finger must not also turn the view. Without motion
+        // sensors dragging is the only way to look around.
+        public static bool FingerTurnsView(bool isUranium, bool hasMotionSensor) => !isUranium || !hasMotionSensor;
+
         public const float RevealAngleDeg = 20f, RevealHoldSec = 0.8f;
         public const float FarClicksPerSec = 2f, NearClicksPerSec = 20f; // regular ticks so the change is easy to hear
         public const float MaxPulsesPerSec = 12f;   // vibration pulses blur together faster than this

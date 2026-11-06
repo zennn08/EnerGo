@@ -182,6 +182,11 @@ namespace EnerGo
         private void EnableMotionSensors()
         {
             attitudeSensor = AttitudeSensor.current;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Prefer the sensor without the magnetometer: indoors a magnetic one drags the view while turning, and objects seem to run away.
+            var noMagnet = InputSystem.GetDevice<UnityEngine.InputSystem.Android.AndroidGameRotationVector>();
+            if (noMagnet != null) attitudeSensor = noMagnet;
+#endif
             angularGyro = UnityEngine.InputSystem.Gyroscope.current;
             if (attitudeSensor != null && !attitudeSensor.enabled) InputSystem.EnableDevice(attitudeSensor);
             if (angularGyro != null && !angularGyro.enabled) InputSystem.EnableDevice(angularGyro);
@@ -504,10 +509,13 @@ namespace EnerGo
                     bool hitTarget = CheckTapOnTarget(touch.screenPosition);
                     isDraggingLook = !hitTarget;
                 }
-                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Moved && isDraggingLook && isUsingGyro && !goldPanning && !uraniumGripHeld)
+                else if (touch.phase == UnityEngine.InputSystem.TouchPhase.Moved && isDraggingLook)
                 {
+                    // Always track the finger, so a drag that was blocked for a while cannot jump the view when it is allowed again.
                     Vector2 delta = touch.screenPosition - previousTouchPos;
                     previousTouchPos = touch.screenPosition;
+                    if (!isUsingGyro || goldPanning || uraniumGripHeld) continue;
+                    if (!UraniumMath.FingerTurnsView(resourceId == ResourceIds.Uranium, attitudeSensor != null)) continue;
                     lookYaw += delta.x * 0.12f;
                     lookPitch -= delta.y * 0.12f;
                     lookPitch = Mathf.Clamp(lookPitch, -60f, 60f);

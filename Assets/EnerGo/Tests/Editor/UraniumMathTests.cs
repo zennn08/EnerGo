@@ -16,6 +16,14 @@ namespace EnerGo.Tests
         }
 
         [Test]
+        public void AFingerOnTheScreenNeverTurnsTheViewWhileAimingWithThePhone()
+        {
+            Assert.IsFalse(UraniumMath.FingerTurnsView(true, true));  // uranium with motion sensors: the phone aims, the thumb only grips
+            Assert.IsTrue(UraniumMath.FingerTurnsView(true, false));  // no sensors: dragging is the only way to look around
+            Assert.IsTrue(UraniumMath.FingerTurnsView(false, true));  // other mini-games keep the extra drag
+        }
+
+        [Test]
         public void GeigerTicksFasterTheCloserTheAim()
         {
             Assert.AreEqual(1f / 20f, UraniumMath.GeigerInterval(0f), 1e-4f);
