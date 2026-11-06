@@ -95,12 +95,46 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void DoseFillsInFortySecondsWithEverythingOut()
+        public void DoseFillsInSixtySecondsWithEverythingOut()
         {
-            Assert.AreEqual(1f / 40f, UraniumMath.StepDose(0f, 3, 1f), 1e-5f);
+            Assert.AreEqual(1f / 60f, UraniumMath.StepDose(0f, 3, 1f), 1e-5f);
             float d = 0f;
-            for (int i = 0; i < 400; i++) d = UraniumMath.StepDose(d, 3, 0.1f);
+            for (int i = 0; i < 600; i++) d = UraniumMath.StepDose(d, 3, 0.1f);
             Assert.AreEqual(1f, d, 1e-4f);
+        }
+
+        [Test]
+        public void OnlyAClosedBoxShieldsItsFragments()
+        {
+            Assert.AreEqual(2, UraniumMath.Shielded(2, false));
+            Assert.AreEqual(0, UraniumMath.Shielded(2, true));
+        }
+
+        [Test]
+        public void AnOpenBoxDrownsOutAFarSignal()
+        {
+            Assert.AreEqual(UraniumMath.LeakAngleDeg, UraniumMath.SignalAngle(120f, true), 1e-4f);
+            Assert.AreEqual(120f, UraniumMath.SignalAngle(120f, false), 1e-4f);
+            Assert.AreEqual(5f, UraniumMath.SignalAngle(5f, true), 1e-4f); // aimed right at a fragment, it still reads
+            Assert.Greater(UraniumMath.Meter(UraniumMath.SignalAngle(170f, true)), 80);
+        }
+
+        [Test]
+        public void TheLastFragmentOnlyCountsOnceTheBoxIsClosed()
+        {
+            Assert.AreEqual(UraniumMath.Outcome.None, UraniumMath.Check(0.5f, UraniumMath.Shielded(3, true)));
+            Assert.AreEqual(UraniumMath.Outcome.Overdose, UraniumMath.Check(1f, UraniumMath.Shielded(3, true)));
+            Assert.AreEqual(UraniumMath.Outcome.Captured, UraniumMath.Check(0.5f, UraniumMath.Shielded(3, false)));
+        }
+
+        [Test]
+        public void FragmentsAreHiddenUntilTheAimIsClose()
+        {
+            Assert.AreEqual(0f, UraniumVisual.FragmentReveal(90f), 1e-4f);
+            Assert.AreEqual(0f, UraniumVisual.FragmentReveal(UraniumVisual.RevealFromDeg), 1e-4f);
+            Assert.AreEqual(1f, UraniumVisual.FragmentReveal(UraniumMath.GripAngleDeg), 1e-4f); // anything grippable is fully visible
+            float mid = UraniumVisual.FragmentReveal((UraniumVisual.RevealFromDeg + UraniumMath.GripAngleDeg) * 0.5f);
+            Assert.That(mid, Is.InRange(0.1f, 0.9f));
         }
 
         [Test]
@@ -111,7 +145,7 @@ namespace EnerGo.Tests
             Assert.Greater(d3, d2);
             Assert.Greater(d2, d1);
             Assert.Greater(d1, d0);
-            Assert.AreEqual(0.25f / 40f, d0, 1e-5f);
+            Assert.AreEqual(0.25f / 60f, d0, 1e-5f);
         }
 
         [Test]

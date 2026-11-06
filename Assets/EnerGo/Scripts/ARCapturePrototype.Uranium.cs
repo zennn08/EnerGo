@@ -3,8 +3,9 @@ using UnityEngine.InputSystem;
 
 namespace EnerGo
 {
-    // Uranium "Pemburu Geiger" (v3, Ambil dengan Aman): follow the compass sector and the RAD meter to the hidden ore,
-    // then pick its fragments up with the tongs (hold JEPIT while aiming) before the radiation dose fills up.
+    // Uranium "Pemburu Geiger" (v4): follow the compass sector and the RAD meter to the hidden ore, then find its invisible
+    // fragments the same way, pick each up with the tongs (hold JEPIT while aiming) and close the lead box after it.
+    // An open box drowns out the Geiger counter and shields nothing, so the dose keeps climbing until it is closed.
     public partial class ARCapturePrototype
     {
         public enum UraniumPhase { None, Search, Collect, Done, Failed }
@@ -24,6 +25,8 @@ namespace EnerGo
         private float uraniumNextClickAt, uraniumLastPulseAt = -10f, uraniumLastGripTickAt = -10f;
         private float uraniumGrip, uraniumDose, uraniumGripLostAt = -10f;
         private bool uraniumGripHeld;               // finger on JEPIT (also blocks drag-look)
+        private bool uraniumBoxOpen;                // a fragment went in and the lid is still off
+        private float uraniumBoxOpenedAt;
         private float uraniumGravity;
         private int uraniumMeter, uraniumTrendFrom, uraniumTrend;   // RAD 0..100, value at the start of the trend window, -1/0/+1
         private float uraniumTrendAt;
@@ -53,6 +56,7 @@ namespace EnerGo
             uraniumGrip = 0f;
             uraniumGripHeld = false;
             uraniumGripLostAt = -10f;
+            uraniumBoxOpen = false;
             uraniumDose = 0f;
             uraniumMeter = uraniumTrendFrom = 0;
             uraniumTrend = 0;
@@ -70,7 +74,7 @@ namespace EnerGo
             {
                 case UraniumPhase.Search:
                     uraniumAngle = AngleTo(uraniumOre.position);
-                    UpdateRadMeter();
+                    UpdateRadMeter(uraniumAngle);
                     TickGeiger(UraniumMath.GeigerInterval(uraniumAngle));
                     uraniumLockHold = uraniumAngle <= UraniumMath.RevealAngleDeg ? uraniumLockHold + dt : 0f;
                     if (uraniumLockHold >= UraniumMath.RevealHoldSec) BeginUraniumCollect();
@@ -88,9 +92,9 @@ namespace EnerGo
         private float AngleTo(Vector3 worldPos) =>
             Vector3.Angle(arCamera.transform.forward, worldPos - arCamera.transform.position);
 
-        private void UpdateRadMeter()
+        private void UpdateRadMeter(float signalAngle)
         {
-            uraniumMeter = UraniumMath.Meter(uraniumAngle);
+            uraniumMeter = UraniumMath.Meter(signalAngle);
             if (Time.time - uraniumTrendAt < UraniumMath.TrendWindowSec) return;
             uraniumTrend = UraniumMath.Trend(uraniumTrendFrom, uraniumMeter);
             uraniumTrendFrom = uraniumMeter;
@@ -144,8 +148,9 @@ namespace EnerGo
                 uraniumFragAngles[i] = uraniumTaken[i] ? 180f : AngleTo(uraniumFragments[i].position);
             uraniumNearest = UraniumMath.Nearest(uraniumFragAngles, uraniumTaken);
             uraniumAngle = uraniumNearest >= 0 ? uraniumFragAngles[uraniumNearest] : 180f;
-            UpdateRadMeter();
-            TickGeiger(UraniumMath.GeigerInterval(uraniumAngle));
+            float signal = UraniumMath.SignalAngle(uraniumAngle, uraniumBoxOpen);
+            UpdateRadMeter(signal);
+            TickGeiger(UraniumMath.GeigerInterval(signal));
 
             uraniumGripHeld = ReadUraniumGrip(out float jolt);
             float before = uraniumGrip;
@@ -158,13 +163,16 @@ namespace EnerGo
                 uraniumTakenAt[uraniumNearest] = Time.time;
                 uraniumCollected++;
                 uraniumGrip = 0f;
+                uraniumBoxOpen = true;
+                uraniumBoxOpenedAt = Time.time;
                 Haptics.Pulse(60);
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
                 feedback = "SERPIHAN MASUK WADAH TIMBAL";
             }
 
-            uraniumDose = UraniumMath.StepDose(uraniumDose, UraniumMath.FragmentCount - uraniumCollected, dt);
-            switch (UraniumMath.Check(uraniumDose, uraniumCollected))
+            int shielded = UraniumMath.Shielded(uraniumCollected, uraniumBoxOpen);
+            uraniumDose = UraniumMath.StepDose(uraniumDose, UraniumMath.FragmentCount - shielded, dt);
+            switch (UraniumMath.Check(uraniumDose, shielded))
             {
                 case UraniumMath.Outcome.Overdose: FailUranium("DOSIS BERLEBIH!"); break;
                 case UraniumMath.Outcome.Captured:
@@ -176,6 +184,17 @@ namespace EnerGo
                     feedback = "URANIUM AMAN DI WADAH TIMBAL";
                     break;
             }
+        }
+
+        // TUTUP appears once the fragment has landed in the box.
+        public bool UraniumBoxCloseable => uraniumPhase == UraniumPhase.Collect && uraniumBoxOpen && Time.time - uraniumBoxOpenedAt >= UraniumFlySec;
+
+        public void CloseUraniumBox()
+        {
+            if (!UraniumBoxCloseable) return;
+            uraniumBoxOpen = false;
+            Haptics.Pulse(40);
+            if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick();
         }
 
         // JEPIT is held by a finger (or the mouse / Space in the editor); the accelerometer measures shaking.
@@ -199,7 +218,11 @@ namespace EnerGo
         private static void UraniumGripRect(float sw, float sh, out Rect btn) =>
             btn = new Rect(sw - 16f - 104f, sh * 0.52f, 104f, 104f);
 
-        // Fragments pop in and glow; a grabbed one flies into the lead flask and disappears.
+        // Left side, just above the flask (see PoseWadah).
+        private static void UraniumCloseRect(float sh, out Rect btn) =>
+            btn = new Rect(16f, sh - 456f, 104f, 104f);
+
+        // Fragments are invisible until aimed close to, then glow; a grabbed one flies into the lead flask and disappears.
         private void AnimateUraniumFragments(float dt)
         {
             if (uraniumFragments == null) return;
@@ -218,7 +241,8 @@ namespace EnerGo
                 }
                 float pop = UraniumVisual.FragmentPop(Time.time - uraniumRevealAt);
                 bool gripping = i == uraniumNearest && uraniumGrip > 0f;
-                f.localScale = Vector3.one * UraniumFragmentSize * pop * (1f + 0.08f * Mathf.Sin(Time.time * (gripping ? 18f : 6f)));
+                float reveal = UraniumVisual.FragmentReveal(uraniumFragAngles[i]);
+                f.localScale = Vector3.one * UraniumFragmentSize * pop * reveal * (1f + 0.08f * Mathf.Sin(Time.time * (gripping ? 18f : 6f)));
                 f.Rotate(0f, 20f * dt, 0f, Space.Self);
             }
         }
@@ -260,9 +284,10 @@ namespace EnerGo
                     bool lost = Time.time - uraniumGripLostAt < 1f;
                     string line = lost ? "JEPITAN LEPAS! PEGANG HP STABIL"
                         : uraniumGrip > 0f ? "MENJEPIT... TAHAN"
+                        : uraniumBoxOpen ? "TUTUP WADAH! RADIASI BOCOR"
                         : uraniumAngle <= UraniumMath.GripAngleDeg ? "TAHAN TOMBOL JEPIT"
                         : "CARI SERPIHAN · IKUTI RAD";
-                    return HudStatus.WithBar(line, lost || uraniumDose > 0.75f, got, count);
+                    return HudStatus.WithBar(line, lost || uraniumBoxOpen || uraniumDose > 0.75f, got, count);
             }
         }
 

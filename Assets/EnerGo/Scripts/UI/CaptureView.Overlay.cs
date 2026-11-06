@@ -12,6 +12,7 @@ namespace EnerGo.UI
 
         private VisualElement lapisOverlay, pipBatu, dulang, waterpass, gelembung, hitung, terbuang, bor, borLabel, borGas, gasIsi, pompa, pompaTarget, pompaBawah, drumIsi, tekananIsi,
             btnJepit, jepitIsi, radBawah, radIsi, dosisBaris, dosisIsi;
+        private Button btnTutupWadah;
         private LingkaranBidik bidik, pompaCincin;
         private PanduanDulang panduanDulang;
         private Label bidikPersen, dulangPil, dulangAngka, dulangMulai, pompaTag, pompaMulai, radAngka, radTren, dosisHitung;
@@ -37,6 +38,8 @@ namespace EnerGo.UI
             drumIsi = root.Q("pompa-drum").Q(className: "eg-bar__isi");
             tekananIsi = root.Q("pompa-tekanan").Q(className: "eg-bar__isi");
             btnJepit = root.Q("btn-jepit");
+            btnTutupWadah = root.Q<Button>("btn-tutup-wadah");
+            btnTutupWadah.clicked += () => controller.CloseUraniumBox();
             jepitIsi = root.Q("jepit-isi");
             radBawah = root.Q("rad-bawah");
             radIsi = root.Q("rad-bar").Q(className: "eg-bar__isi");
@@ -229,6 +232,7 @@ namespace EnerGo.UI
             bool aiming = controller.UraniumAiming, collecting = controller.UraniumCollecting;
             Show(radBawah, aiming);
             Show(btnJepit, collecting);
+            Show(btnTutupWadah, controller.UraniumBoxCloseable);
             if (!aiming) return;
 
             radAngka.text = controller.UraniumMeter.ToString();
@@ -240,6 +244,7 @@ namespace EnerGo.UI
             if (!collecting) return;
 
             Place(btnJepit, controller.UraniumGripGui);
+            Place(btnTutupWadah, controller.UraniumCloseGui);
             btnJepit.EnableInClassList("is-tekan", controller.UraniumGripHeld);
             float size = 100f * Mathf.Clamp01(controller.UraniumGrip);
             jepitIsi.style.width = Length.Percent(size);

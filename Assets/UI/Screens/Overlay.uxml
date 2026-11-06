@@ -38,6 +38,7 @@
             <ui:VisualElement name="jepit-isi" class="overlay__bulat overlay__jepit-isi" picking-mode="Ignore" />
             <ui:Label class="eg-judul overlay__jepit-teks" picking-mode="Ignore" text="JEPIT" />
         </ui:VisualElement>
+        <ui:Button name="btn-tutup-wadah" class="eg-judul overlay__mutlak overlay__bulat overlay__jepit overlay__jepit-teks overlay__tutup-wadah" text="TUTUP" />
 
         <ui:VisualElement class="eg-layar eg-aman" picking-mode="Ignore">
             <ui:VisualElement class="eg-isi" picking-mode="Ignore" />

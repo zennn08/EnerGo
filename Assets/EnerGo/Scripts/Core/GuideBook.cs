@@ -45,8 +45,8 @@ namespace EnerGo
                 case ResourceIds.Uranium: return new[]
                 {
                     new Card("Ikuti sinyal RAD", "Hadap ke sektor hijau di kompas, lalu putar pelan sampai angka RAD paling tinggi.", Art.RadMeter),
-                    new Card("Jepit serpihan", "Bijih pecah jadi 3 serpihan di sekelilingmu. Arahkan lingkaran ke serpihan, lalu tahan JEPIT. Penjepit menjaga jarak tanganmu dari radiasi.", Art.Hold),
-                    new Card("Cepat & stabil", "Dosis terus naik, tiap serpihan di wadah timbal memperlambatnya. HP terguncang, jepitan lepas.", Art.Shake)
+                    new Card("Cari & jepit serpihan", "Bijih pecah jadi 3 serpihan tak terlihat di sekelilingmu. Ikuti RAD sampai serpihan berpendar, lalu tahan JEPIT. Penjepit menjaga jarak tanganmu dari radiasi.", Art.Hold),
+                    new Card("Tutup wadah timbal", "Wadah terbuka membuat RAD bising dan dosis naik cepat. Tekan TUTUP tiap serpihan masuk, karena timbal adalah perisai. HP terguncang, jepitan lepas.", Art.Shake)
                 };
                 default: return new Card[0];
             }

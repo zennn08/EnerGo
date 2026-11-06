@@ -193,6 +193,7 @@
 .overlay__jepit.is-tekan { border-bottom-width: var(--garis-tebal); translate: 0 3px; }
 .overlay__jepit-isi { position: absolute; left: 50%; top: 50%; translate: -50% -50%; background-color: var(--sda-uranium); }
 .overlay__jepit-teks { font-size: 20px; margin: 0; padding: 0; -unity-text-align: middle-center; }
+.overlay__tutup-wadah, .overlay__tutup-wadah:hover, .overlay__tutup-wadah:active { background-color: var(--oker); color: var(--tinta); }
 .overlay__bawah { flex-shrink: 0; margin-bottom: 56px; padding: 8px 12px; }
 .overlay__meter { align-items: center; margin: 2px 0; }
 .overlay__meter-nama { width: 78px; margin: 0; padding: 0; color: var(--tinta); font-size: 14px; }

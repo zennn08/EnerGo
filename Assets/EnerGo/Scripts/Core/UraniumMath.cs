@@ -19,10 +19,17 @@ namespace EnerGo
         public const float GripAngleDeg = RevealAngleDeg; // the fragment has to sit inside the reticle
         public const float GripSec = 1f;
         public const float GripShakeMax = 0.35f;    // accelerometer jolt (|a| / g - 1) that knocks a fragment out of the tongs
-        public const float DoseBasePerSec = 1f / 40f; // every fragment still out
+        public const float DoseBasePerSec = 1f / 60f; // every fragment still out; tune on the device
         public const float DoseFloorShare = 0.25f;  // what is left of the dose rate with everything in the lead box
-        public const float ParSec = 20f;            // a good collect phase, for the speed score
+        public const float LeakAngleDeg = 27f;      // an open box reads like a fragment this close (RAD 85)
+        public const float ParSec = 35f;            // a good collect phase, for the speed score; tune on the device
         public const float FailShowSec = 1.5f;
+
+        // Lead only shields what it surrounds: fragments in an open box count as still out.
+        public static int Shielded(int collected, bool boxOpen) => boxOpen ? 0 : collected;
+
+        // What the Geiger counter hears: an open box drowns out everything weaker than itself.
+        public static float SignalAngle(float angleDeg, bool boxOpen) => boxOpen ? Mathf.Min(angleDeg, LeakAngleDeg) : angleDeg;
 
         // Seconds between Geiger clicks: 1/20 s straight at the ore, 1/2 s at 150° or more away.
         public static float GeigerInterval(float angleDeg) =>
@@ -77,9 +84,9 @@ namespace EnerGo
 
         public enum Outcome { None, Captured, Overdose }
 
-        // Grabbing the last fragment on the frame the dose fills still counts.
-        public static Outcome Check(float dose, int collected) =>
-            collected >= FragmentCount ? Outcome.Captured : dose >= 1f ? Outcome.Overdose : Outcome.None;
+        // Shielding the last fragment on the frame the dose fills still counts.
+        public static Outcome Check(float dose, int shielded) =>
+            shielded >= FragmentCount ? Outcome.Captured : dose >= 1f ? Outcome.Overdose : Outcome.None;
 
         // Half speed, half dose left.
         public static float Performance(float elapsed, float dose) =>

@@ -15,6 +15,11 @@ namespace EnerGo
         // Seconds since the ore was found -> fragment size 0..1.
         public static float FragmentPop(float t) => t < BreakSec ? 0f : Mathf.SmoothStep(0f, 1f, (t - BreakSec) / PopSec);
 
+        // Fragments are invisible until the aim is close; anything inside the grip angle shows in full.
+        public const float RevealFromDeg = 28f;
+        public static float FragmentReveal(float angleDeg) =>
+            1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(UraniumMath.GripAngleDeg, RevealFromDeg, angleDeg));
+
         public static float OreShake(float t)
         {
             float k = Mathf.Clamp01(t / BreakSec);

@@ -97,6 +97,15 @@ namespace EnerGo
         public float UraniumDose => uraniumDose;
         public string UraniumCount => uraniumCollected + "/" + UraniumMath.FragmentCount;
 
+        public Rect UraniumCloseGui
+        {
+            get
+            {
+                UraniumCloseRect(GuiH, out Rect btn);
+                return btn;
+            }
+        }
+
         public Rect UraniumGripGui
         {
             get

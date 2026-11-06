@@ -173,8 +173,8 @@ Isi kartu per SDA:
 | | 2 | Lepas di lapisan minyak | Pelan-pelan di kantong gas, lalu lepas tepat di lapisan minyak. | Lapisan tanah |
 | | 3 | Pompa ikuti lingkaran | Tekan saat lingkaran mengecil pas di target. Terlalu cepat, tekanan naik. | Cincin pompa |
 | Uranium | 1 | Ikuti sinyal RAD | Hadap ke sektor hijau di kompas, lalu putar pelan sampai angka RAD paling tinggi. | Meter RAD |
-| | 2 | Jepit serpihan | Bijih pecah jadi 3 serpihan di sekelilingmu. Arahkan lingkaran ke serpihan, lalu tahan JEPIT. Penjepit menjaga jarak tanganmu dari radiasi. | Penjepit |
-| | 3 | Cepat & stabil | Dosis terus naik, tiap serpihan di wadah timbal memperlambatnya. HP terguncang, jepitan lepas. | HP bergetar |
+| | 2 | Cari & jepit serpihan | Bijih pecah jadi 3 serpihan tak terlihat di sekelilingmu. Ikuti RAD sampai serpihan berpendar, lalu tahan JEPIT. Penjepit menjaga jarak tanganmu dari radiasi. | Penjepit |
+| | 3 | Tutup wadah timbal | Wadah terbuka membuat RAD bising dan dosis naik cepat. Tekan TUTUP tiap serpihan masuk, karena timbal adalah perisai. HP terguncang, jepitan lepas. | HP bergetar |
 
 Ilustrasi saat ini masih bentuk sederhana (placeholder) dan perlu digambar ulang.
 
@@ -330,14 +330,16 @@ Fase Cari:
 
 Fase Ambil:
 - Bijih pecah menjadi 3 serpihan hijau menyala (#39FF14): satu di tempat bijih, dua lainnya di sekeliling pemain (minimal 80 derajat terpisah). "BIJIH PECAH! AMBIL SERPIHANNYA".
+- Serpihan tidak terlihat. Serpihan mulai berpendar saat arah pandang kurang dari 28 derajat dan tampak penuh pada 20 derajat, lalu hilang lagi kalau arah pandang menjauh.
 - Meter RAD sekarang menunjuk serpihan terdekat.
 - Tombol bulat "JEPIT" di kanan layar setinggi ibu jari (area sentuh dilebarkan). Tahan JEPIT sambil membidik serpihan (dalam 20 derajat) selama 1 detik. Lingkaran dalam tombol membesar sesuai progres jepit.
 - HP terguncang (lebih dari 0,35 g): jepitan lepas, "JEPITAN LEPAS! PEGANG HP STABIL".
-- Serpihan yang terjepit terbang ke bawah layar (wadah timbal) dan hilang. "SERPIHAN MASUK WADAH TIMBAL".
-- Bar "DOSIS" di bawah terus naik (penuh dalam 40 detik jika 3 serpihan masih di luar). Tiap serpihan yang masuk wadah memperlambat dosis, tetapi tidak pernah berhenti (minimal 25%). Merah di atas 75%.
+- Serpihan yang terjepit terbang ke wadah timbal di kiri bawah dan hilang. "SERPIHAN MASUK WADAH TIMBAL". Tutup wadah terlepas.
+- Tombol bulat "TUTUP" muncul di atas wadah setelah serpihan mendarat. Selama wadah terbuka: serpihan di dalamnya ikut terbaca sehingga meter RAD minimal 85 dan Geiger tetap cepat, serpihan di wadah tidak melindungi sehingga dosis naik secepat saat semua serpihan di luar, dan kotak status "TUTUP WADAH! RADIASI BOCOR".
+- Bar "DOSIS" di bawah terus naik (penuh dalam 60 detik jika 3 serpihan masih di luar). Tiap serpihan di wadah yang tertutup memperlambat dosis, tetapi tidak pernah berhenti (minimal 25%). Merah di atas 75%.
 - Saat menahan JEPIT, layar tidak bisa digeser.
-- Kotak status: "CARI SERPIHAN · IKUTI RAD", "TAHAN TOMBOL JEPIT", "MENJEPIT... TAHAN", "JEPITAN LEPAS! PEGANG HP STABIL", bar "n/3".
-- Berhasil: 3 serpihan masuk ("URANIUM AMAN DI WADAH TIMBAL"). Skor = setengah dari kecepatan (target 20 detik) + setengah dari sisa dosis.
+- Kotak status: "CARI SERPIHAN · IKUTI RAD", "TAHAN TOMBOL JEPIT", "MENJEPIT... TAHAN", "JEPITAN LEPAS! PEGANG HP STABIL", "TUTUP WADAH! RADIASI BOCOR", bar "n/3".
+- Berhasil: 3 serpihan masuk dan wadah ditutup ("URANIUM AMAN DI WADAH TIMBAL"). Skor = setengah dari kecepatan (target 35 detik) + setengah dari sisa dosis.
 - Gagal: dosis penuh ("DOSIS BERLEBIH!"). Setelah 1,5 detik, bijih baru disembunyikan ("CARI BIJIH URANIUM BARU").
 
 Edukasi yang dibawa: tiga prinsip keselamatan radiasi (waktu, jarak, perisai).
@@ -472,7 +474,7 @@ Unit = 1 (dasar) + jumlah jawaban benar (0-3) + bonus mini-game (0-2)
 | Batu Bara | Tidak ada | Kecepatan terhadap target waktu |
 | Emas | Sisa emas < 40% | Sisa emas, 40% = 0 sampai 100% = 1 |
 | Minyak | Blowout, kena air, overpressure | 50% kecepatan (target 25 dtk) + 50% rasio tekanan tepat |
-| Uranium | Dosis penuh | 50% kecepatan (target 20 dtk) + 50% sisa dosis |
+| Uranium | Dosis penuh | 50% kecepatan (target 35 dtk) + 50% sisa dosis |
 
 Skor kecepatan: selesai pada atau di bawah target = 1, selesai pada 2,5 kali target atau lebih = 0, linier di antaranya.
 

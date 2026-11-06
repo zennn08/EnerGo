@@ -143,15 +143,14 @@ namespace EnerGo
             float bump = UraniumVisual.FlaskBump(Time.time - wadahLandedAt);
             wadahModel.localScale = new Vector3(1f - 0.05f * bump, 1f + 0.08f * bump, 1f - 0.05f * bump);
 
-            if (uraniumPhase == UraniumPhase.Done)
+            // The lid drops on when TUTUP is pressed and comes off again for the next fragment.
+            bool closed = uraniumCollected > 0 && !uraniumBoxOpen;
+            if (closed != wadahTutup.gameObject.activeSelf)
             {
-                if (!wadahTutup.gameObject.activeSelf)
-                {
-                    wadahTutup.gameObject.SetActive(true);
-                    wadahLidAt = Time.time;
-                }
-                wadahTutup.localPosition = new Vector3(0f, UraniumVisual.LidY(Time.time - wadahLidAt), 0f);
+                wadahTutup.gameObject.SetActive(closed);
+                wadahLidAt = Time.time;
             }
+            if (closed) wadahTutup.localPosition = new Vector3(0f, UraniumVisual.LidY(Time.time - wadahLidAt), 0f);
         }
 
         // Where a grabbed fragment flies to: the flask's mouth, or low in the view before the flask has appeared.
