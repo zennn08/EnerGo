@@ -80,6 +80,14 @@ namespace EnerGo.Tests
         }
 
         [Test]
+        public void PrologNeverBlocksAPlayerWhoseSaveNeedsAReset()
+        {
+            Assert.IsTrue(DesaMath.PrologNeeded(false, false));
+            Assert.IsFalse(DesaMath.PrologNeeded(true, false));
+            Assert.IsFalse(DesaMath.PrologNeeded(false, true)); // corrupt save: saving is locked until reset, which lives in the lobby
+        }
+
+        [Test]
         public void CoverPointCropsTheLongerSide()
         {
             // A 9:16 image in a taller 480 x 1067 box scales by height and crops the sides.

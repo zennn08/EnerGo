@@ -63,6 +63,9 @@ namespace EnerGo
         public static int CaptureReward(bool fromRadar, int correct, int bonus) =>
             fromRadar ? 1 + correct + bonus : PracticeUnits;
 
+        // A save that needs a reset refuses every write, and reset lives in the lobby, so the prologue must not stand in front of it.
+        public static bool PrologNeeded(bool prologSeen, bool saveLocked) => !prologSeen && !saveLocked;
+
         // Where the point (u, v) of an image lands when it is drawn "cover" inside a box, in box units.
         public static Vector2 CoverPoint(float imgW, float imgH, float boxW, float boxH, float u, float v)
         {

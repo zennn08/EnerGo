@@ -83,6 +83,7 @@ namespace EnerGo
         private static SaveGame current;
         private static bool recoveryRequired;
         public static string Error { get; private set; }
+        public static bool RecoveryRequired { get { var _ = Current; return recoveryRequired; } }
         public static string SavePath => Path.Combine(Application.persistentDataPath, FileName);
         private static string BackupPath => SavePath + ".bak";
 

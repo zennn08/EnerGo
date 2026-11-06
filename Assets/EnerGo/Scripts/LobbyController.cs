@@ -79,7 +79,7 @@ namespace EnerGo
         public float ResetConfirmRemaining => isConfirmingReset ? Mathf.Max(0f, resetConfirmTimer) : 0f;
         public bool GuidesResetNoticeVisible => Time.time - guidesResetAt < 2f;
         public string OpenGuideId { get; private set; } // guide card open over the PANDUAN sheet, or null
-        public bool NeedsProlog => !EnerGoProgress.Current.prologSeen;
+        public bool NeedsProlog => DesaMath.PrologNeeded(EnerGoProgress.Current.prologSeen, EnerGoProgress.RecoveryRequired);
         public long NowUtc => System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         public long PlantRemaining => DesaMath.Remaining(EnerGoProgress.Current.plantEndsUtc, NowUtc);
         public DesaStatus PlantStatus => DesaMath.StatusOf(PlantRemaining);
@@ -261,14 +261,19 @@ namespace EnerGo
         {
             if (currentState != ScreenState.Prolog || !InputReady) return;
             Click();
-            if (EnerGoProgress.FinishProlog(rawName))
+            // Saving can fail (full storage). The error shows once, and the next tap goes on anyway, so the
+            // prologue never traps the player; it simply returns on the next launch.
+            if (EnerGoProgress.FinishProlog(rawName) || prologSaveFailed)
             {
                 currentState = ScreenState.Lobby;
                 inputCooldownTimer = 0.25f;
                 Resources.UnloadUnusedAssets();
             }
+            else prologSaveFailed = true;
             Changed();
         }
+
+        private bool prologSaveFailed;
 
         public void Tap() { BlockTaps(); if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick(); }
 
