@@ -131,6 +131,8 @@ namespace EnerGo
             }
             else if (currentState == ScreenState.Lobby)
             {
+                // A capture left pending by an older save finishes first; its return to the lobby lands here.
+                if (NeedsProlog) currentState = ScreenState.Prolog;
                 if (SFXManager.Instance != null) SFXManager.Instance.PlayLobbyMusic();
             }
             Changed();
@@ -161,7 +163,7 @@ namespace EnerGo
                 if (tapped || splashTimer >= SplashDuration)
                 {
                     hasShownSplash = true;
-                    currentState = ScreenState.Lobby;
+                    currentState = NeedsProlog ? ScreenState.Prolog : ScreenState.Lobby;
                     inputCooldownTimer = 0.25f;
                     if (SFXManager.Instance != null) SFXManager.Instance.PlayLobbyMusic();
                     Changed();

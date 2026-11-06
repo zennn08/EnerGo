@@ -47,6 +47,10 @@ namespace EnerGo.Tests
             Assert.IsFalse(Clone("Assets/UI/Screens/Desa.uxml").Q<Label>("desa-nama").enableRichText);
 
         [Test]
+        public void PrologStoryIsPlainTextBecauseItHoldsTheVillageName() =>
+            Assert.IsFalse(Clone("Assets/UI/Screens/Prolog.uxml").Q<Label>("prolog-teks").enableRichText);
+
+        [Test]
         public void PracticeSheetSaysItPaysOneUnit() =>
             StringAssert.Contains("1 unit", Clone("Assets/UI/Screens/SheetLatihan.uxml").Q<Label>(className: "sheet__sub").text);
 
