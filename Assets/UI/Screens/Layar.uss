@@ -22,12 +22,12 @@
 /* Village */
 .desa { background-color: var(--peta-air); }
 .desa__gambar { -unity-background-scale-mode: scale-and-crop; }
-.desa__awan { position: absolute; left: 0; top: 40px; width: 480px; height: 150px; -unity-background-scale-mode: scale-to-fit; }
+.desa__awan { position: absolute; left: 160px; top: 176px; width: 300px; height: 84px; -unity-background-scale-mode: scale-to-fit; }
 .desa__kerbau { position: absolute; left: 24px; width: 120px; height: 84px; -unity-background-scale-mode: scale-to-fit; }
-.desa__pembangkit { position: absolute; width: 104px; height: 104px; margin: 0; padding: 0; background-color: rgba(0, 0, 0, 0); border-width: 0; }
+.desa__pembangkit { position: absolute; width: 130px; height: 130px; margin: 0; padding: 0; background-color: rgba(0, 0, 0, 0); border-width: 0; }
 .desa__pembangkit:hover { background-color: rgba(0, 0, 0, 0); }
 .desa__mati { position: absolute; -unity-font-definition: var(--font-judul-sempit); font-size: 14px; letter-spacing: 1.4px; padding: 4px 10px; color: var(--kertas-100); background-color: var(--stempel); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: var(--radius-sm); rotate: -4deg; }
-.desa__sya { position: absolute; right: 4px; bottom: 150px; width: 170px; height: 252px; -unity-background-scale-mode: scale-to-fit; }
+.desa__sya { position: absolute; left: 4px; bottom: 196px; width: 146px; height: 216px; -unity-background-scale-mode: scale-to-fit; }
 .desa__stok { padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4); }
 .desa__atas { margin-bottom: var(--space-2); }
 .desa__nama-tombol { flex-grow: 1; flex-shrink: 1; margin: 0 0 0 var(--space-3); padding: 0; min-height: 44px; background-color: rgba(0, 0, 0, 0); border-width: 0; align-items: flex-start; justify-content: center; }
@@ -38,9 +38,9 @@
 .desa__sisa { font-size: 22px; flex-grow: 1; color: var(--tinta); }
 .desa__menipis { -unity-font-definition: var(--font-judul-sempit); font-size: 15px; letter-spacing: 1.5px; padding: 4px 10px; color: var(--tinta); background-color: var(--oker); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: var(--radius-sm); }
 .desa__cap { -unity-font-definition: var(--font-judul-sempit); font-size: 22px; letter-spacing: 2.2px; padding: 2px 12px; color: var(--stempel); border-width: var(--garis-tebal); border-color: var(--stempel); border-radius: var(--radius-sm); rotate: -5deg; }
-.desa__isi { margin-top: var(--space-3); }
-.desa__dialog { flex-direction: row; align-items: center; margin-top: auto; padding: var(--space-3); }
-.desa__wajah { width: 76px; height: 84px; margin-right: var(--space-3); flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
+.desa__isi { margin-top: var(--space-2); }
+.desa__dialog { margin-top: auto; padding: var(--space-3); }
+.desa__wajah { width: 60px; height: 66px; margin-right: var(--space-3); flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
 .desa__dialog-teks { flex-grow: 1; flex-shrink: 1; font-size: 16px; }
 .desa__tengah { align-items: center; justify-content: center; }
 .desa__kartu-kecil { width: 400px; padding: var(--space-6) var(--space-4) var(--space-4) var(--space-4); }

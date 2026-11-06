@@ -23,11 +23,13 @@
                     <ui:Label name="desa-padam" class="desa__cap" text="PADAM" />
                 </ui:VisualElement>
                 <ui:VisualElement name="desa-bar" class="eg-bar"><ui:VisualElement class="eg-bar__isi eg-isi--oker" /></ui:VisualElement>
-                <ui:Button name="btn-isi" class="eg-btn eg-btn--utama eg-btn--penuh desa__isi" text="ISI PEMBANGKIT" />
             </ui:VisualElement>
             <ui:VisualElement class="eg-kartu desa__dialog" picking-mode="Ignore">
-                <ui:VisualElement name="dialog-wajah" class="desa__wajah" picking-mode="Ignore" />
-                <ui:Label name="dialog-teks" class="eg-isi-teks desa__dialog-teks" picking-mode="Ignore" />
+                <ui:VisualElement class="eg-baris" picking-mode="Ignore">
+                    <ui:VisualElement name="dialog-wajah" class="desa__wajah" picking-mode="Ignore" />
+                    <ui:Label name="dialog-teks" class="eg-isi-teks desa__dialog-teks" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:Button name="btn-isi" class="eg-btn eg-btn--utama eg-btn--penuh desa__isi" text="ISI PEMBANGKIT" />
             </ui:VisualElement>
         </ui:VisualElement>
 

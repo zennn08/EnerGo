@@ -7,10 +7,11 @@ namespace EnerGo.UI
     // Village screen: the picture follows the phone clock and the stock, and the fill sheet spends SDA on the plant.
     public partial class LobbyView
     {
-        // Where the plant stands in the picture (0..1). Tuned when the final desa_siang arrives.
-        private const float PlantU = 0.62f, PlantV = 0.48f;
-        private const float PictureW = 1080f, PictureH = 1920f;
-        private const float BuffaloU = 0.2f, BuffaloV = 0.72f;
+        // Where things stand in the village pictures (0..1). All three pictures line up exactly.
+        private const float PlantU = 0.72f, PlantV = 0.575f;
+        private const float PictureW = 1536f, PictureH = 2752f;
+        private const float BuffaloU = 0.6f, BuffaloV = 0.63f;
+        private static readonly Color BuffaloNightTint = new Color(0.45f, 0.5f, 0.7f);
         private const float RefreshSeconds = 1f;
 
         private static readonly Color FallbackDay = new Color(0.61f, 0.76f, 0.83f);
@@ -175,6 +176,7 @@ namespace EnerGo.UI
             if (desaIsNightOn) SetGambar(desaTerang, "Desa/desa_malam_terang", FallbackNightOn);
             SetOptionalGambar(desaAwan, isDay ? "Desa/desa_awan" : null);
             SetOptionalGambar(desaKerbau, "Desa/desa_kerbau");
+            desaKerbau.style.unityBackgroundImageTintColor = isDay ? Color.white : BuffaloNightTint;
 
             SetGambar(desaSya, "Pemandu/" + DesaText.PoseFor(status, isDay, save.plantEverFilled), Color.clear);
             SetGambar(dialogWajah, "Pemandu/" + DesaText.WajahFor(status, save.plantEverFilled), Color.clear);
@@ -200,10 +202,10 @@ namespace EnerGo.UI
             var box = desaLatar.contentRect;
             if (box.width <= 0f || float.IsNaN(box.width)) return;
             var plant = DesaMath.CoverPoint(PictureW, PictureH, box.width, box.height, PlantU, PlantV);
-            btnPembangkit.style.left = plant.x - 52f;
-            btnPembangkit.style.top = plant.y - 52f;
+            btnPembangkit.style.left = plant.x - 65f;
+            btnPembangkit.style.top = plant.y - 65f;
             pembangkitMati.style.left = plant.x - 28f;
-            pembangkitMati.style.top = plant.y - 70f;
+            pembangkitMati.style.top = plant.y - 74f;
             var buffalo = DesaMath.CoverPoint(PictureW, PictureH, box.width, box.height, BuffaloU, BuffaloV);
             desaKerbau.style.left = buffalo.x;
             desaKerbau.style.top = buffalo.y;
@@ -218,7 +220,7 @@ namespace EnerGo.UI
                 nextDesaRefresh = t + RefreshSeconds;
                 RefreshDesa(); // the stock may run out, or night may fall, while this screen is open
             }
-            desaAwan.style.translate = new Translate(Mathf.Sin(t * 0.05f) * 60f, 0f);
+            desaAwan.style.translate = new Translate(Mathf.Sin(t * 0.05f) * 30f, 0f); // small, so the clouds never cross the palm in front
             desaKerbau.style.translate = new Translate(0f, -Mathf.Abs(Mathf.Sin(t * 1.2f)) * 2f);
             if (desaIsNightOn) desaTerang.style.opacity = 0.96f + 0.04f * Mathf.Sin(t * 1.5f);
             UpdateSorak(t);
