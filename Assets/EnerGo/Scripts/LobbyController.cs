@@ -18,7 +18,9 @@ namespace EnerGo
             Settings,
             Practice,
             Guides,
-            TransitioningToAR
+            TransitioningToAR,
+            Prolog,
+            Desa
         }
 
         [Header("State")]
@@ -77,6 +79,23 @@ namespace EnerGo
         public float ResetConfirmRemaining => isConfirmingReset ? Mathf.Max(0f, resetConfirmTimer) : 0f;
         public bool GuidesResetNoticeVisible => Time.time - guidesResetAt < 2f;
         public string OpenGuideId { get; private set; } // guide card open over the PANDUAN sheet, or null
+        public bool NeedsProlog => !EnerGoProgress.Current.prologSeen;
+        public long NowUtc => System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        public long PlantRemaining => DesaMath.Remaining(EnerGoProgress.Current.plantEndsUtc, NowUtc);
+        public DesaStatus PlantStatus => DesaMath.StatusOf(PlantRemaining);
+
+        // The lobby's village button draws the eye when the first fill is waiting, or the stock runs low.
+        public bool DesaMarked
+        {
+            get
+            {
+                var save = EnerGoProgress.Current;
+                if (save.plantEverFilled) return PlantStatus == DesaStatus.Menipis;
+                foreach (var id in AllResources)
+                    if (save.Get(id).Total > 0) return true;
+                return false;
+            }
+        }
 
         // Mini-games are played by tilting and aiming, often without touching the screen, so never let it dim.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -198,6 +217,42 @@ namespace EnerGo
         }
 
         private static bool IsSheet(ScreenState s) => s == ScreenState.Settings || s == ScreenState.Practice || s == ScreenState.Guides;
+
+        // ── Desa ──────────────────────────────────────────────────────
+        public void OpenDesa()
+        {
+            if (currentState != ScreenState.Lobby || !InputReady) return;
+            Click();
+            currentState = ScreenState.Desa;
+            inputCooldownTimer = 0.2f;
+            Changed();
+        }
+
+        public void CloseDesa()
+        {
+            if (currentState != ScreenState.Desa || !InputReady) return;
+            Back();
+            currentState = ScreenState.Lobby;
+            inputCooldownTimer = 0.2f;
+            Changed();
+            Resources.UnloadUnusedAssets();
+        }
+
+        // ── Prolog ────────────────────────────────────────────────────
+        public void FinishProlog(string rawName)
+        {
+            if (currentState != ScreenState.Prolog || !InputReady) return;
+            Click();
+            if (EnerGoProgress.FinishProlog(rawName))
+            {
+                currentState = ScreenState.Lobby;
+                inputCooldownTimer = 0.25f;
+                Resources.UnloadUnusedAssets();
+            }
+            Changed();
+        }
+
+        public void PrologTap() { BlockTaps(); if (SFXManager.Instance != null) SFXManager.Instance.PlayButtonClick(); }
 
         // ── Pengaturan ────────────────────────────────────────────────
         // Toggle rows: the whole row is the button; it clicks and holds input for 0.15 s before the effect.

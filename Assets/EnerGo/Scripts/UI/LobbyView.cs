@@ -10,7 +10,7 @@ namespace EnerGo.UI
     {
         [SerializeField] private LobbyController controller;
 
-        private VisualElement root, lapisLobby, lapisSheet, lapisPanduan, lapisSplash, lapisTransisi;
+        private VisualElement root, lapisLobby, lapisSheet, lapisPanduan, lapisSplash, lapisTransisi, lapisProlog, lapisDesa, desaTanda;
         private Label totalUnit, modeKamera;
 
         private void OnEnable()
@@ -21,6 +21,9 @@ namespace EnerGo.UI
             lapisPanduan = root.Q("lapis-panduan");
             lapisSplash = root.Q("lapis-splash");
             lapisTransisi = root.Q("lapis-transisi");
+            lapisProlog = root.Q("lapis-prolog");
+            lapisDesa = root.Q("lapis-desa");
+            desaTanda = root.Q("desa-tanda");
             totalUnit = root.Q<Label>("total-unit");
             modeKamera = root.Q<Label>("mode-kamera");
 
@@ -28,9 +31,12 @@ namespace EnerGo.UI
             root.Q<Button>("btn-panduan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Guides);
             root.Q<Button>("btn-latihan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Practice);
             root.Q<Button>("btn-pengaturan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Settings);
+            root.Q<Button>("btn-desa").clicked += () => controller.OpenDesa();
 
             BindSheets();
             BindGuide();
+            BindProlog();
+            BindDesa();
             controller.StateChanged += OnStateChanged;
             OnStateChanged();
         }
@@ -45,6 +51,8 @@ namespace EnerGo.UI
             AnimateSplashAndTransition();
             UpdateSheets();
             UpdateGuide();
+            UpdateProlog();
+            UpdateDesa();
         }
 
         private void OnStateChanged()
@@ -65,7 +73,9 @@ namespace EnerGo.UI
             }
             totalUnit.text = LobbyText.TotalUnits(UiLayout.TotalUnits(totals));
             modeKamera.text = LobbyText.CameraMode(controller.UseARCore);
+            desaTanda.style.display = controller.DesaMarked ? DisplayStyle.Flex : DisplayStyle.None;
             RefreshSheets();
+            RefreshDesa();
         }
 
         // Specimen tile: catalogue number, icon, name, unit badge (count < 0 hides it), locked state.
@@ -99,8 +109,13 @@ namespace EnerGo.UI
         {
             var s = controller.State;
             bool sheet = s == LobbyController.ScreenState.Settings || s == LobbyController.ScreenState.Practice || s == LobbyController.ScreenState.Guides;
-            Show(lapisLobby, s != LobbyController.ScreenState.Splash);
+            Show(lapisLobby, s != LobbyController.ScreenState.Splash && s != LobbyController.ScreenState.Prolog && s != LobbyController.ScreenState.Desa);
             lapisLobby.pickingMode = PickingMode.Ignore; // its buttons still pick; the layer itself never does
+            Show(lapisProlog, s == LobbyController.ScreenState.Prolog);
+            Show(lapisDesa, s == LobbyController.ScreenState.Desa);
+            lapisProlog.pickingMode = PickingMode.Ignore;
+            lapisDesa.pickingMode = PickingMode.Ignore;
+            ShowProlog(s);
             Show(lapisSheet, sheet);
             Show(lapisPanduan, controller.OpenGuideId != null);
             Show(lapisSplash, s == LobbyController.ScreenState.Splash);
@@ -115,5 +130,11 @@ namespace EnerGo.UI
         partial void BindGuide();
         partial void UpdateGuide();
         partial void AnimateSplashAndTransition();
+        partial void BindProlog();
+        partial void UpdateProlog();
+        partial void ShowProlog(LobbyController.ScreenState state);
+        partial void BindDesa();
+        partial void UpdateDesa();
+        partial void RefreshDesa();
     }
 }

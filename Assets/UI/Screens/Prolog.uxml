@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- First-launch prologue: one full picture per panel with the story on a paper card. Filled by LobbyView.Prolog. -->
+    <ui:VisualElement class="eg-lapis prolog">
+        <ui:VisualElement name="prolog-gambar" class="eg-lapis desa__gambar" picking-mode="Ignore" />
+        <ui:VisualElement class="eg-layar eg-aman" picking-mode="Ignore">
+            <ui:Button name="btn-prolog-lewati" class="eg-btn eg-btn--kecil eg-btn--kertas prolog__lewati" text="LEWATI" />
+            <ui:VisualElement name="prolog-kartu" class="eg-kartu prolog__kartu">
+                <ui:Label name="prolog-teks" class="eg-isi-teks" />
+                <ui:VisualElement name="prolog-nama" class="prolog__nama">
+                    <ui:TextField name="input-nama" class="desa__input" max-length="16" />
+                    <ui:Label class="eg-kecil" text="Boleh dikosongkan. Bisa diubah nanti." />
+                </ui:VisualElement>
+                <ui:Label name="prolog-error" class="eg-kecil prolog__error" />
+                <ui:Button name="btn-prolog-lanjut" class="eg-btn eg-btn--utama eg-btn--penuh prolog__lanjut" text="LANJUT" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

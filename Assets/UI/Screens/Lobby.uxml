@@ -34,6 +34,13 @@
             <ui:Label text="BERBURU!" />
         </ui:Button>
         <ui:VisualElement class="lobby__dock">
+            <ui:VisualElement class="eg-bulat">
+                <ui:Button name="btn-desa" class="eg-bulat__tombol">
+                    <ui:VisualElement class="eg-bulat__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/rumah.svg&quot;);" />
+                    <ui:VisualElement name="desa-tanda" class="lobby__tanda" picking-mode="Ignore" />
+                </ui:Button>
+                <ui:Label text="Desa" />
+            </ui:VisualElement>
             <ui:VisualElement class="eg-bulat eg-bulat--oker">
                 <ui:Button name="btn-panduan" class="eg-bulat__tombol"><ui:VisualElement class="eg-bulat__ikon" style="background-image: url(&quot;project://database/Assets/UI/Icons/buku.svg&quot;);" /></ui:Button>
                 <ui:Label text="Panduan" />

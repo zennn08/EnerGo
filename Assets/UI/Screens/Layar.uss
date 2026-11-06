@@ -9,6 +9,56 @@
 .lobby__tiles .eg-tile { margin: 7px 5px; }
 .lobby__mode { min-height: 32px; font-size: 13px; align-self: center; margin-bottom: 12px; }
 .lobby__dock { flex-direction: row; justify-content: space-around; margin-top: auto; }
+.lobby__tanda { position: absolute; top: 0; right: 0; width: 20px; height: 20px; border-radius: 10px; background-color: var(--oranye); border-width: var(--garis-tinta); border-color: var(--tinta); }
+
+/* Prologue */
+.prolog { background-color: var(--tinta); }
+.prolog__lewati { align-self: flex-end; }
+.prolog__kartu { margin-top: auto; padding: var(--space-4); }
+.prolog__nama { margin-top: var(--space-3); }
+.prolog__error { color: var(--stempel); margin-top: var(--space-2); }
+.prolog__lanjut { margin-top: var(--space-3); }
+
+/* Village */
+.desa { background-color: var(--peta-air); }
+.desa__gambar { -unity-background-scale-mode: scale-and-crop; }
+.desa__awan { position: absolute; left: 0; top: 40px; width: 480px; height: 150px; -unity-background-scale-mode: scale-to-fit; }
+.desa__kerbau { position: absolute; left: 24px; width: 120px; height: 84px; -unity-background-scale-mode: scale-to-fit; }
+.desa__pembangkit { position: absolute; width: 104px; height: 104px; margin: 0; padding: 0; background-color: rgba(0, 0, 0, 0); border-width: 0; }
+.desa__pembangkit:hover { background-color: rgba(0, 0, 0, 0); }
+.desa__mati { position: absolute; -unity-font-definition: var(--font-judul-sempit); font-size: 14px; letter-spacing: 1.4px; padding: 4px 10px; color: var(--kertas-100); background-color: var(--stempel); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: var(--radius-sm); rotate: -4deg; }
+.desa__sya { position: absolute; right: 4px; bottom: 150px; width: 170px; height: 252px; -unity-background-scale-mode: scale-to-fit; }
+.desa__stok { padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4); }
+.desa__atas { margin-bottom: var(--space-2); }
+.desa__nama-tombol { flex-grow: 1; flex-shrink: 1; margin: 0 0 0 var(--space-3); padding: 0; min-height: 44px; background-color: rgba(0, 0, 0, 0); border-width: 0; align-items: flex-start; justify-content: center; }
+.desa__nama-tombol:hover { background-color: rgba(0, 0, 0, 0); }
+.desa__nama { font-size: 26px; -unity-text-align: middle-left; }
+.desa__baris-sisa { min-height: 36px; margin-bottom: var(--space-2); }
+.desa__ikon-petir { width: 24px; height: 24px; margin-right: var(--space-2); background-image: url("project://database/Assets/UI/Icons/petir.svg"); }
+.desa__sisa { font-size: 22px; flex-grow: 1; color: var(--tinta); }
+.desa__menipis { -unity-font-definition: var(--font-judul-sempit); font-size: 15px; letter-spacing: 1.5px; padding: 4px 10px; color: var(--tinta); background-color: var(--oker); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: var(--radius-sm); }
+.desa__cap { -unity-font-definition: var(--font-judul-sempit); font-size: 22px; letter-spacing: 2.2px; padding: 2px 12px; color: var(--stempel); border-width: var(--garis-tebal); border-color: var(--stempel); border-radius: var(--radius-sm); rotate: -5deg; }
+.desa__isi { margin-top: var(--space-3); }
+.desa__dialog { flex-direction: row; align-items: center; margin-top: auto; padding: var(--space-3); }
+.desa__wajah { width: 76px; height: 84px; margin-right: var(--space-3); flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
+.desa__dialog-teks { flex-grow: 1; flex-shrink: 1; font-size: 16px; }
+.desa__tengah { align-items: center; justify-content: center; }
+.desa__kartu-kecil { width: 400px; padding: var(--space-6) var(--space-4) var(--space-4) var(--space-4); }
+.desa__input { margin: 0; font-size: 20px; min-height: 48px; color: var(--tinta); }
+.desa__baris-tombol { margin-top: var(--space-3); }
+.desa__tombol-kanan { margin-left: var(--space-3); }
+.isi__sisa { -unity-text-align: middle-center; color: var(--tinta); margin-bottom: var(--space-2); }
+.isi__baris { flex-direction: row; align-items: center; padding: var(--space-2) 0; border-bottom-width: var(--garis-tipis); border-color: var(--garis-kertas); }
+.isi__ikon { width: 44px; height: 44px; margin-right: var(--space-2); flex-shrink: 0; }
+.isi__teks { flex-grow: 1; flex-shrink: 1; }
+.isi__nama { -unity-font-definition: var(--font-isi-tebal); font-size: 16px; color: var(--tinta); }
+.isi__sub { font-size: 13px; color: var(--tinta-pudar); white-space: normal; }
+.isi__tombol { min-height: 44px; font-size: 15px; padding: 0 var(--space-2); margin-left: var(--space-2); border-bottom-width: 5px; }
+.isi__tutup { margin-top: var(--space-3); }
+.desa__sorak { background-color: var(--tinta); }
+.desa__sorak-sya { position: absolute; left: 90px; right: 90px; top: 110px; bottom: 260px; -unity-background-scale-mode: scale-to-fit; }
+.desa__sorak-kartu { position: absolute; left: 16px; right: 16px; bottom: 40px; padding: var(--space-4); }
+.desa__sorak-teks { -unity-text-align: middle-center; margin-bottom: var(--space-3); }
 
 /* Sheets: paper card rising from the bottom over the shared curtain (LayarSheet preview) */
 .eg-sheet {

@@ -26,6 +26,27 @@ namespace EnerGo.Tests
                 "mode-kamera", "btn-berburu", "btn-panduan", "btn-latihan", "btn-pengaturan");
 
         [Test]
+        public void LobbyHasDesaButton() => AssertNames(Clone("Assets/UI/Screens/Lobby.uxml"), "btn-desa", "desa-tanda");
+
+        [Test]
+        public void PrologHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Prolog.uxml"),
+                "prolog-gambar", "prolog-kartu", "prolog-teks", "prolog-nama", "input-nama", "prolog-error", "btn-prolog-lanjut", "btn-prolog-lewati");
+
+        [Test]
+        public void DesaHasEveryNamedElement() =>
+            AssertNames(Clone("Assets/UI/Screens/Desa.uxml"),
+                "desa-latar", "desa-malam-terang", "desa-awan", "desa-kerbau", "desa-sya", "btn-pembangkit", "pembangkit-mati",
+                "desa-nama", "btn-ganti-nama", "desa-sisa", "desa-bar", "desa-padam", "desa-menipis", "btn-isi", "btn-desa-kembali",
+                "dialog-wajah", "dialog-teks", "lapis-isi", "desa-tirai", "sheet-isi", "isi-sisa", "isi-daftar", "btn-isi-tutup",
+                "lapis-nama", "input-nama-desa", "btn-nama-simpan", "btn-nama-batal",
+                "lapis-sorak", "sorak-gelap", "sorak-terang", "sorak-sya", "sorak-kartu", "sorak-teks", "btn-sorak-lanjut");
+
+        [Test]
+        public void VillageNameIsPlainText() =>
+            Assert.IsFalse(Clone("Assets/UI/Screens/Desa.uxml").Q<Label>("desa-nama").enableRichText);
+
+        [Test]
         public void PracticeSheetSaysItPaysOneUnit() =>
             StringAssert.Contains("1 unit", Clone("Assets/UI/Screens/SheetLatihan.uxml").Q<Label>(className: "sheet__sub").text);
 

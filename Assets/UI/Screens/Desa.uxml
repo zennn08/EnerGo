@@ -1,0 +1,66 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- Village screen: full picture, plant, stock card and Sya's dialogue. Filled by LobbyView.Desa. -->
+    <ui:VisualElement class="eg-lapis desa">
+        <ui:VisualElement name="desa-latar" class="eg-lapis desa__gambar" picking-mode="Ignore" />
+        <ui:VisualElement name="desa-malam-terang" class="eg-lapis desa__gambar" picking-mode="Ignore" />
+        <ui:VisualElement name="desa-awan" class="desa__awan" picking-mode="Ignore" />
+        <ui:VisualElement name="desa-kerbau" class="desa__kerbau" picking-mode="Ignore" />
+        <ui:Button name="btn-pembangkit" class="desa__pembangkit" />
+        <ui:Label name="pembangkit-mati" class="desa__mati" text="MATI" picking-mode="Ignore" />
+        <ui:VisualElement name="desa-sya" class="desa__sya" picking-mode="Ignore" />
+        <ui:VisualElement class="eg-layar eg-aman" picking-mode="Ignore">
+            <ui:VisualElement class="eg-kartu desa__stok">
+                <ui:VisualElement class="eg-baris desa__atas">
+                    <ui:Button name="btn-desa-kembali" class="eg-btn eg-btn--kecil eg-btn--kertas" text="KEMBALI" />
+                    <ui:Button name="btn-ganti-nama" class="desa__nama-tombol">
+                        <ui:Label name="desa-nama" class="eg-judul desa__nama" enable-rich-text="false" />
+                    </ui:Button>
+                </ui:VisualElement>
+                <ui:VisualElement class="eg-baris desa__baris-sisa">
+                    <ui:VisualElement class="desa__ikon-petir" />
+                    <ui:Label name="desa-sisa" class="eg-data-tebal desa__sisa" />
+                    <ui:Label name="desa-menipis" class="desa__menipis" text="MENIPIS" />
+                    <ui:Label name="desa-padam" class="desa__cap" text="PADAM" />
+                </ui:VisualElement>
+                <ui:VisualElement name="desa-bar" class="eg-bar"><ui:VisualElement class="eg-bar__isi eg-isi--oker" /></ui:VisualElement>
+                <ui:Button name="btn-isi" class="eg-btn eg-btn--utama eg-btn--penuh desa__isi" text="ISI PEMBANGKIT" />
+            </ui:VisualElement>
+            <ui:VisualElement class="eg-kartu desa__dialog" picking-mode="Ignore">
+                <ui:VisualElement name="dialog-wajah" class="desa__wajah" picking-mode="Ignore" />
+                <ui:Label name="dialog-teks" class="eg-isi-teks desa__dialog-teks" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="lapis-isi" class="eg-lapis" picking-mode="Ignore">
+            <ui:VisualElement name="desa-tirai" class="eg-redup" />
+            <ui:VisualElement name="sheet-isi" class="eg-kartu eg-sheet">
+                <ui:Label class="eg-selotip" text="ISI PEMBANGKIT" />
+                <ui:Label name="isi-sisa" class="eg-data-tebal isi__sisa" />
+                <ui:VisualElement name="isi-daftar" />
+                <ui:Button name="btn-isi-tutup" class="eg-btn eg-btn--kertas eg-btn--penuh isi__tutup" text="SELESAI" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="lapis-nama" class="eg-lapis desa__tengah" picking-mode="Ignore">
+            <ui:VisualElement class="eg-redup" />
+            <ui:VisualElement class="eg-kartu desa__kartu-kecil">
+                <ui:Label class="eg-selotip" text="NAMA DESA" />
+                <ui:TextField name="input-nama-desa" class="desa__input" max-length="16" />
+                <ui:VisualElement class="eg-baris desa__baris-tombol">
+                    <ui:Button name="btn-nama-batal" class="eg-btn eg-btn--kertas eg-isi" text="BATAL" />
+                    <ui:Button name="btn-nama-simpan" class="eg-btn eg-btn--utama eg-isi desa__tombol-kanan" text="SIMPAN" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="lapis-sorak" class="eg-lapis desa__sorak" picking-mode="Ignore">
+            <ui:VisualElement name="sorak-gelap" class="eg-lapis desa__gambar" picking-mode="Ignore" />
+            <ui:VisualElement name="sorak-terang" class="eg-lapis desa__gambar" picking-mode="Ignore" />
+            <ui:VisualElement name="sorak-sya" class="desa__sorak-sya" picking-mode="Ignore" />
+            <ui:VisualElement name="sorak-kartu" class="eg-kartu desa__sorak-kartu">
+                <ui:Label name="sorak-teks" class="eg-judul-kartu desa__sorak-teks" enable-rich-text="false" />
+                <ui:Button name="btn-sorak-lanjut" class="eg-btn eg-btn--utama eg-btn--penuh" text="LANJUT" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

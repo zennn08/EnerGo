@@ -7,6 +7,8 @@
     <ui:Template name="KartuPanduan" src="project://database/Assets/UI/Screens/KartuPanduan.uxml" />
     <ui:Template name="Splash" src="project://database/Assets/UI/Screens/Splash.uxml" />
     <ui:Template name="Transisi" src="project://database/Assets/UI/Screens/Transisi.uxml" />
+    <ui:Template name="Prolog" src="project://database/Assets/UI/Screens/Prolog.uxml" />
+    <ui:Template name="Desa" src="project://database/Assets/UI/Screens/Desa.uxml" />
     <Style src="project://database/Assets/UI/Theme.uss" />
     <Style src="project://database/Assets/UI/Components.uss" />
     <Style src="project://database/Assets/UI/Screens/Layar.uss" />
@@ -22,6 +24,8 @@
         <ui:VisualElement name="lapis-panduan" class="eg-lapis" picking-mode="Ignore">
             <ui:Instance template="KartuPanduan" class="eg-lapis" picking-mode="Ignore" />
         </ui:VisualElement>
+        <ui:VisualElement name="lapis-desa" class="eg-lapis" picking-mode="Ignore"><ui:Instance template="Desa" class="eg-lapis" /></ui:VisualElement>
+        <ui:VisualElement name="lapis-prolog" class="eg-lapis" picking-mode="Ignore"><ui:Instance template="Prolog" class="eg-lapis" /></ui:VisualElement>
         <ui:VisualElement name="lapis-splash" class="eg-lapis" picking-mode="Ignore"><ui:Instance template="Splash" class="eg-lapis" /></ui:VisualElement>
         <ui:VisualElement name="lapis-transisi" class="eg-lapis" picking-mode="Ignore"><ui:Instance template="Transisi" class="eg-lapis" /></ui:VisualElement>
     </ui:VisualElement>
