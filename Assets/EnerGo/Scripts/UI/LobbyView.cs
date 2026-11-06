@@ -10,28 +10,22 @@ namespace EnerGo.UI
     {
         [SerializeField] private LobbyController controller;
 
-        private VisualElement root, lapisLobby, lapisSheet, lapisPanduan, lapisSplash, lapisTransisi, lapisProlog, lapisDesa, desaTanda;
-        private Label totalUnit, modeKamera;
+        private VisualElement root, lapisSheet, lapisPanduan, lapisSplash, lapisTransisi, lapisProlog, lapisDesa;
 
         private void OnEnable()
         {
             root = GetComponent<UIDocument>().rootVisualElement;
-            lapisLobby = root.Q("lapis-lobby");
             lapisSheet = root.Q("lapis-sheet");
             lapisPanduan = root.Q("lapis-panduan");
             lapisSplash = root.Q("lapis-splash");
             lapisTransisi = root.Q("lapis-transisi");
             lapisProlog = root.Q("lapis-prolog");
             lapisDesa = root.Q("lapis-desa");
-            desaTanda = root.Q("desa-tanda");
-            totalUnit = root.Q<Label>("total-unit");
-            modeKamera = root.Q<Label>("mode-kamera");
 
             root.Q<Button>("btn-berburu").clicked += () => controller.StartHunt();
             root.Q<Button>("btn-panduan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Guides);
             root.Q<Button>("btn-latihan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Practice);
             root.Q<Button>("btn-pengaturan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Settings);
-            root.Q<Button>("btn-desa").clicked += () => controller.OpenDesa();
 
             BindSheets();
             BindGuide();
@@ -65,16 +59,6 @@ namespace EnerGo.UI
         // Every value on the lobby, read again from its source (progress, settings).
         public void Refresh()
         {
-            var ids = LobbyController.AllResources;
-            var totals = new int[ids.Length];
-            for (int i = 0; i < ids.Length; i++)
-            {
-                totals[i] = EnerGoProgress.Current.Get(ids[i]).Total;
-                FillTile(root.Q("tile-" + ids[i]), ids[i], totals[i], !ResourceIds.IsPlayable(ids[i]), ringkas: true);
-            }
-            totalUnit.text = LobbyText.TotalUnits(UiLayout.TotalUnits(totals));
-            modeKamera.text = LobbyText.CameraMode(controller.UseARCore);
-            desaTanda.style.display = controller.DesaMarked ? DisplayStyle.Flex : DisplayStyle.None;
             RefreshSheets();
             RefreshDesa();
         }
@@ -105,15 +89,13 @@ namespace EnerGo.UI
             layer.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
         }
 
-        // One layer takes taps at a time: the lobby sits under the sheets, splash and transition cover everything.
+        // One layer takes taps at a time: the village sits under the sheets, splash and transition cover everything.
         private void ShowLayers()
         {
             var s = controller.State;
             bool sheet = s == LobbyController.ScreenState.Settings || s == LobbyController.ScreenState.Practice || s == LobbyController.ScreenState.Guides;
-            Show(lapisLobby, s != LobbyController.ScreenState.Splash && s != LobbyController.ScreenState.Prolog && s != LobbyController.ScreenState.Desa);
-            lapisLobby.pickingMode = PickingMode.Ignore; // its buttons still pick; the layer itself never does
             Show(lapisProlog, s == LobbyController.ScreenState.Prolog);
-            Show(lapisDesa, s == LobbyController.ScreenState.Desa);
+            Show(lapisDesa, controller.HomeVisible);
             lapisProlog.pickingMode = PickingMode.Ignore;
             lapisDesa.pickingMode = PickingMode.Ignore;
             ShowProlog(s);

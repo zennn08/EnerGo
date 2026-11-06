@@ -20,15 +20,6 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void LobbyHasEveryNamedElement() =>
-            AssertNames(Clone("Assets/UI/Screens/Lobby.uxml"),
-                "total-unit", "judul", "tile-sun", "tile-coal", "tile-gold", "tile-oil", "tile-uranium",
-                "mode-kamera", "btn-berburu", "btn-panduan", "btn-latihan", "btn-pengaturan");
-
-        [Test]
-        public void LobbyHasDesaButton() => AssertNames(Clone("Assets/UI/Screens/Lobby.uxml"), "btn-desa", "desa-tanda");
-
-        [Test]
         public void PrologHasEveryNamedElement() =>
             AssertNames(Clone("Assets/UI/Screens/Prolog.uxml"),
                 "prolog-gambar", "prolog-kartu", "prolog-teks", "prolog-nama", "input-nama", "prolog-error", "btn-prolog-lanjut", "btn-prolog-lewati");
@@ -37,7 +28,7 @@ namespace EnerGo.Tests
         public void DesaHasEveryNamedElement() =>
             AssertNames(Clone("Assets/UI/Screens/Desa.uxml"),
                 "desa-latar", "desa-malam-terang", "desa-awan", "desa-kerbau", "desa-sya", "btn-pembangkit", "pembangkit-mati",
-                "desa-nama", "btn-ganti-nama", "desa-sisa", "desa-bar", "desa-padam", "desa-menipis", "btn-isi", "btn-desa-kembali",
+                "desa-nama", "btn-ganti-nama", "desa-sisa", "desa-bar", "desa-padam", "desa-menipis", "btn-isi", "btn-berburu", "btn-panduan", "btn-latihan", "btn-pengaturan",
                 "dialog-wajah", "dialog-teks", "lapis-isi", "desa-tirai", "sheet-isi", "isi-sisa", "isi-daftar", "btn-isi-tutup",
                 "lapis-nama", "input-nama-desa", "btn-nama-simpan", "btn-nama-batal",
                 "lapis-sorak", "sorak-gelap", "sorak-terang", "sorak-sya", "sorak-kartu", "sorak-teks", "btn-sorak-lanjut");
@@ -100,7 +91,16 @@ namespace EnerGo.Tests
         [Test]
         public void SceneRootHasEveryLayer() =>
             AssertNames(Clone("Assets/UI/Screens/LobbyScene.uxml"),
-                "lapis-splash", "lapis-lobby", "lapis-sheet", "lapis-panduan", "lapis-transisi");
+                "lapis-splash", "lapis-desa", "lapis-prolog", "lapis-sheet", "lapis-panduan", "lapis-transisi");
+
+        [Test]
+        public void HomeSitsUnderTheSheetsThatOpenFromIt()
+        {
+            var root = Clone("Assets/UI/Screens/LobbyScene.uxml");
+            var akar = root.Q("akar");
+            Assert.Less(akar.IndexOf(root.Q("lapis-desa")), akar.IndexOf(root.Q("lapis-sheet")));
+            Assert.Less(akar.IndexOf(root.Q("lapis-sheet")), akar.IndexOf(root.Q("lapis-panduan")));
+        }
 
         [Test]
         public void SheetsHaveEveryNamedElement()

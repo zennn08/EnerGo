@@ -54,7 +54,7 @@
                     </ui:VisualElement>
                     <ui:VisualElement name="hasil-rincian" class="kuis__rincian" picking-mode="Ignore" />
                     <ui:Label name="hasil-pesan" class="eg-isi-teks kuis__penjelasan" text="" />
-                    <ui:Button name="btn-selesai-hasil" class="eg-btn eg-btn--utama eg-btn--penuh kuis__tombol" text="LANJUT KE LOBBY" />
+                    <ui:Button name="btn-selesai-hasil" class="eg-btn eg-btn--utama eg-btn--penuh kuis__tombol" text="LANJUT KE DESA" />
                 </ui:VisualElement>
             </ui:VisualElement>
 

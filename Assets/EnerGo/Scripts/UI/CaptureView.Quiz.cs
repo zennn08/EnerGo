@@ -200,7 +200,7 @@ namespace EnerGo.UI
             hasilPlus.text = "+" + session.rewardQuantity;
             hasilMutu.text = pure ? "Murni" : "Normal";
             hasilPesan.text = CaptureScreens.ResultMessage(right, count);
-            btnSelesai.text = string.IsNullOrEmpty(session.spawnId) ? "LANJUT KE LOBBY" : "LANJUT BERBURU";
+            btnSelesai.text = string.IsNullOrEmpty(session.spawnId) ? "LANJUT KE DESA" : "LANJUT BERBURU";
             hasilRincian.Clear();
             foreach (var chip in controller.ResultChips(session, right))
             {

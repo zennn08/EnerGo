@@ -1442,7 +1442,7 @@ namespace EnerGo
         public bool GuideOpen => guideOpen;
         public bool HasARSession => FindFirstObjectByType<ARSession>() != null;
         public string ResourceId => resourceId;
-        public string BackLabel => ExploreSession.PendingSpawnId != null ? "‹ RADAR" : "‹ LOBBY";
+        public string BackLabel => ExploreSession.PendingSpawnId != null ? "‹ RADAR" : "‹ DESA";
         public string ModeLabel => isUsingGyro ? (attitudeSensor != null || angularGyro != null ? "SENSOR 360" : "DRAG 360") : "ARCORE";
         public string ResourceUnitsLabel => EnerGoProgress.Current.Get(resourceId).Total + " UNIT";
         public float LastHitTime => lastHitTime;

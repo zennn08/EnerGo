@@ -19,9 +19,9 @@ namespace EnerGo
 
         public const int PrologNamePanel = 3;
 
-        public static string Status(DesaStatus status, bool everFilled)
+        public static string Status(DesaStatus status, bool everFilled, bool hasUnits)
         {
-            if (!everFilled) return "Kamu sudah bawa SDA? Ketuk pembangkit, yuk kita isi.";
+            if (!everFilled) return hasUnits ? "Kamu sudah bawa SDA! Ketuk pembangkit, yuk kita isi." : "Desa masih gelap. Tekan BERBURU untuk mencari SDA di sekitarmu.";
             switch (status)
             {
                 case DesaStatus.Padam: return "Desa gelap lagi. Tenang, begitu ada SDA kita nyalakan lagi.";

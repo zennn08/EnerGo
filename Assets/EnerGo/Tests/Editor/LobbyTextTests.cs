@@ -13,16 +13,6 @@ namespace EnerGo.Tests
         }
 
         [Test]
-        public void TotalUnitsReadsAsUnits() => Assert.AreEqual("63 unit", LobbyText.TotalUnits(63));
-
-        [Test]
-        public void CameraModeNamesTheScene()
-        {
-            Assert.AreEqual("Mode kamera: AR (ARCore)", LobbyText.CameraMode(true));
-            Assert.AreEqual("Mode kamera: Sensor 360", LobbyText.CameraMode(false));
-        }
-
-        [Test]
         public void CatalogNumbersFollowTheSpecimenOrder()
         {
             Assert.AreEqual("No.01", LobbyText.CatalogNo(ResourceIds.Sun));

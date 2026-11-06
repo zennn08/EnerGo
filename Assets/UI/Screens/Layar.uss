@@ -2,15 +2,6 @@
 .eg-lapis { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
 .eg-layar { position: absolute; left: 0; top: 0; right: 0; bottom: 0; flex-direction: column; padding: 28px 16px 24px 16px; }
 
-/* Lobby */
-.lobby__judul { font-size: 60px; margin: 12px 0 22px 0; }
-.lobby__koleksi { padding: 28px 8px 16px 8px; margin-bottom: 12px; }
-.lobby__tiles { flex-direction: row; flex-wrap: wrap; justify-content: center; }
-.lobby__tiles .eg-tile { margin: 7px 5px; }
-.lobby__mode { min-height: 32px; font-size: 13px; align-self: center; margin-bottom: 12px; }
-.lobby__dock { flex-direction: row; justify-content: space-around; margin-top: auto; }
-.lobby__tanda { position: absolute; top: 0; right: 0; width: 20px; height: 20px; border-radius: 10px; background-color: var(--oranye); border-width: var(--garis-tinta); border-color: var(--tinta); }
-
 /* Prologue */
 .prolog { background-color: var(--tinta); }
 .prolog__lewati { align-self: flex-end; }
@@ -27,10 +18,9 @@
 .desa__pembangkit { position: absolute; width: 130px; height: 130px; margin: 0; padding: 0; background-color: rgba(0, 0, 0, 0); border-width: 0; }
 .desa__pembangkit:hover { background-color: rgba(0, 0, 0, 0); }
 .desa__mati { position: absolute; -unity-font-definition: var(--font-judul-sempit); font-size: 14px; letter-spacing: 1.4px; padding: 4px 10px; color: var(--kertas-100); background-color: var(--stempel); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: var(--radius-sm); rotate: -4deg; }
-.desa__sya { position: absolute; left: 4px; bottom: 196px; width: 146px; height: 216px; -unity-background-scale-mode: scale-to-fit; }
+.desa__sya { position: absolute; left: 2px; bottom: 318px; width: 126px; height: 186px; -unity-background-scale-mode: scale-to-fit; }
 .desa__stok { padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4); }
-.desa__atas { margin-bottom: var(--space-2); }
-.desa__nama-tombol { flex-grow: 1; flex-shrink: 1; margin: 0 0 0 var(--space-3); padding: 0; min-height: 44px; background-color: rgba(0, 0, 0, 0); border-width: 0; align-items: flex-start; justify-content: center; }
+.desa__nama-tombol { margin: 0 0 var(--space-1) 0; padding: 0; min-height: 36px; background-color: rgba(0, 0, 0, 0); border-width: 0; align-items: flex-start; justify-content: center; }
 .desa__nama-tombol:hover { background-color: rgba(0, 0, 0, 0); }
 .desa__nama { font-size: 26px; -unity-text-align: middle-left; }
 .desa__baris-sisa { min-height: 36px; margin-bottom: var(--space-2); }
@@ -38,9 +28,15 @@
 .desa__sisa { font-size: 22px; flex-grow: 1; color: var(--tinta); }
 .desa__menipis { -unity-font-definition: var(--font-judul-sempit); font-size: 15px; letter-spacing: 1.5px; padding: 4px 10px; color: var(--tinta); background-color: var(--oker); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: var(--radius-sm); }
 .desa__cap { -unity-font-definition: var(--font-judul-sempit); font-size: 22px; letter-spacing: 2.2px; padding: 2px 12px; color: var(--stempel); border-width: var(--garis-tebal); border-color: var(--stempel); border-radius: var(--radius-sm); rotate: -5deg; }
-.desa__isi { margin-top: var(--space-2); }
-.desa__dialog { margin-top: auto; padding: var(--space-3); }
-.desa__wajah { width: 60px; height: 66px; margin-right: var(--space-3); flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
+.desa__aksi { margin-top: var(--space-2); }
+.desa__berburu { margin-right: var(--space-2); }
+.desa__isi { width: 136px; padding: 0 var(--space-2); font-size: 16px; letter-spacing: 0; white-space: normal; }
+.desa__dock { flex-direction: row; justify-content: space-around; margin-top: var(--space-2); padding: var(--space-1) 0; background-color: var(--kertas-100); border-width: var(--garis-tinta); border-color: var(--tinta); border-radius: var(--radius-lg); }
+.desa__dock .eg-bulat { font-size: 13px; }
+.desa__dock .eg-bulat__tombol { width: 64px; height: 64px; margin-bottom: 2px; }
+.desa__dock .eg-bulat__ikon { width: 30px; height: 30px; }
+.desa__dialog { margin-top: auto; padding: var(--space-2) var(--space-3); }
+.desa__wajah { width: 52px; height: 56px; margin-right: var(--space-3); flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
 .desa__dialog-teks { flex-grow: 1; flex-shrink: 1; font-size: 16px; }
 .desa__tengah { align-items: center; justify-content: center; }
 .desa__kartu-kecil { width: 400px; padding: var(--space-6) var(--space-4) var(--space-4) var(--space-4); }

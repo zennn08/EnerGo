@@ -11,6 +11,7 @@ namespace EnerGo
     // Each action is the body of the matching IMGUI button from before the UI Toolkit move, unchanged.
     public class LobbyController : MonoBehaviour
     {
+        // Lobby is the home screen, which shows the village; the scene keeps its name.
         public enum ScreenState
         {
             Splash,
@@ -19,8 +20,7 @@ namespace EnerGo
             Practice,
             Guides,
             TransitioningToAR,
-            Prolog,
-            Desa
+            Prolog
         }
 
         [Header("State")]
@@ -79,23 +79,12 @@ namespace EnerGo
         public float ResetConfirmRemaining => isConfirmingReset ? Mathf.Max(0f, resetConfirmTimer) : 0f;
         public bool GuidesResetNoticeVisible => Time.time - guidesResetAt < 2f;
         public string OpenGuideId { get; private set; } // guide card open over the PANDUAN sheet, or null
+        public bool HomeVisible => currentState != ScreenState.Splash && currentState != ScreenState.Prolog;
         public bool NeedsProlog => DesaMath.PrologNeeded(EnerGoProgress.Current.prologSeen, EnerGoProgress.RecoveryRequired);
         public long NowUtc => System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         public long PlantRemaining => DesaMath.Remaining(EnerGoProgress.Current.plantEndsUtc, NowUtc);
         public DesaStatus PlantStatus => DesaMath.StatusOf(PlantRemaining);
 
-        // The lobby's village button draws the eye when the first fill is waiting, or the stock runs low.
-        public bool DesaMarked
-        {
-            get
-            {
-                var save = EnerGoProgress.Current;
-                if (save.plantEverFilled) return PlantStatus == DesaStatus.Menipis;
-                foreach (var id in AllResources)
-                    if (save.Get(id).Total > 0) return true;
-                return false;
-            }
-        }
 
         // Mini-games are played by tilting and aiming, often without touching the screen, so never let it dim.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -215,22 +204,13 @@ namespace EnerGo
         private static bool IsSheet(ScreenState s) => s == ScreenState.Settings || s == ScreenState.Practice || s == ScreenState.Guides;
 
         // ── Desa ──────────────────────────────────────────────────────
-        public void OpenDesa()
-        {
-            if (currentState != ScreenState.Lobby || !InputReady) return;
-            Click();
-            currentState = ScreenState.Desa;
-            inputCooldownTimer = 0.2f;
-            Changed();
-        }
-
         // Fired once, right after the very first units go into the plant.
         public event System.Action FirstFill;
 
         // One tap spends one unit, or every unit of this SDA that still fits. Returns the units used.
         public int FillPlant(string id, bool all)
         {
-            if (currentState != ScreenState.Desa || !InputReady) return 0;
+            if (currentState != ScreenState.Lobby || !InputReady) return 0;
             bool first = !EnerGoProgress.Current.plantEverFilled;
             int used = EnerGoProgress.FillPlant(id, all ? int.MaxValue : 1, NowUtc);
             if (used == 0) return 0;
@@ -238,16 +218,6 @@ namespace EnerGo
             Changed();
             if (first) FirstFill?.Invoke();
             return used;
-        }
-
-        public void CloseDesa()
-        {
-            if (currentState != ScreenState.Desa || !InputReady) return;
-            Back();
-            currentState = ScreenState.Lobby;
-            inputCooldownTimer = 0.2f;
-            Changed();
-            Resources.UnloadUnusedAssets();
         }
 
         // ── Prolog ────────────────────────────────────────────────────

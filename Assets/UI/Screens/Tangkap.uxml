@@ -8,7 +8,7 @@
     <Style src="project://database/Assets/UI/Screens/Layar.uss" />
     <ui:VisualElement name="lapis-hud" class="eg-layar eg-aman" picking-mode="Ignore">
         <ui:VisualElement class="eg-baris tangkap__header" picking-mode="Ignore">
-            <ui:Button name="btn-kembali" class="eg-btn eg-btn--kecil eg-btn--kertas" text="‹ LOBBY" />
+            <ui:Button name="btn-kembali" class="eg-btn eg-btn--kecil eg-btn--kertas" text="‹ DESA" />
             <ui:Button name="btn-mode" class="eg-btn eg-btn--kecil eg-btn--info tangkap__mode" text="ARCORE" />
             <ui:VisualElement class="eg-pil eg-pil--laut tangkap__mode-pil" picking-mode="Ignore"><ui:Label name="pil-mode" text="TANPA ARCORE" /></ui:VisualElement>
             <ui:VisualElement name="pil-sda" class="eg-pil eg-pil--data" picking-mode="Ignore">

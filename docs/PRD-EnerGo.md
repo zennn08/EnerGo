@@ -36,8 +36,8 @@ Semua angka di dokumen ini diambil langsung dari kode, jadi bisa dipakai sebagai
 
 | Mode | Cara masuk | GPS | Hasil |
 |---|---|---|---|
-| Berburu (utama) | Lobby, tombol BERBURU! | Wajib | Unit masuk koleksi, SDA hilang dari radar |
-| Latihan | Lobby, dock Latihan; atau Pengaturan; atau radar saat GPS gagal | Tidak perlu | Hanya 1 unit per ronde, tidak terkait node radar |
+| Berburu (utama) | Desa, tombol BERBURU! | Wajib | Unit masuk koleksi, SDA hilang dari radar |
+| Latihan | Desa, dock Latihan; atau Pengaturan; atau radar saat GPS gagal | Tidak perlu | Hanya 1 unit per ronde, tidak terkait node radar |
 
 ---
 
@@ -47,7 +47,7 @@ Semua angka di dokumen ini diambil langsung dari kode, jadi bisa dipakai sebagai
 
 | Scene | Isi |
 |---|---|
-| LobbyScene | Splash, prolog, Lobby, Desa, sheet Pengaturan, sheet Latihan, sheet Panduan, transisi |
+| LobbyScene | Splash, prolog, Desa (home), sheet Pengaturan, sheet Latihan, sheet Panduan, transisi |
 | ExploreScene | Radar GPS |
 | ARPrototype | Layar tangkap memakai ARCore (kamera + tracking ARCore) |
 | Sensor360Scene | Layar tangkap memakai Sensor 360 (giroskop + feed kamera biasa) |
@@ -58,26 +58,27 @@ Layar tangkap (mini-game, kuis, hasil) memakai satu tampilan yang sama di kedua 
 
 ```
 Splash
-  -> Lobby
+  -> Prolog (sekali)
+  -> Desa (home)
        -> [BERBURU!] -> transisi "Menyalakan radar..." -> Radar
              -> [TANGKAP] -> Layar Tangkap (dari radar)
                    -> Panduan (jika belum dimatikan) -> Mini-game -> Kuis 3 soal -> Hasil
                    -> [LANJUT BERBURU] -> Radar
              -> [< RADAR] (batal) -> Radar, SDA tetap ada
-             -> GPS gagal -> [MAIN MODE LATIHAN] -> Lobby, sheet Latihan langsung terbuka
-             -> [< LOBBY] -> Lobby
+             -> GPS gagal -> [MAIN MODE LATIHAN] -> Desa, sheet Latihan langsung terbuka
+             -> [< DESA] -> Desa
        -> [Panduan] -> sheet Panduan -> kartu panduan per SDA
        -> [Latihan] -> sheet Latihan -> [MULAI LATIHAN] -> transisi "Menyiapkan kamera..." -> Layar Tangkap
-                   -> ... -> Hasil -> [LANJUT KE LOBBY] -> Lobby
+                   -> ... -> Hasil -> [LANJUT KE DESA] -> Desa
        -> [Pengaturan] -> sheet Pengaturan
 ```
 
 ### Aturan navigasi khusus
 
-- Splash hanya tampil sekali per sesi aplikasi. Kembali ke LobbyScene setelah itu langsung membuka Lobby.
-- Jika aplikasi ditutup saat kuis atau hasil masih terbuka, saat dibuka lagi Lobby langsung melompat ke Layar Tangkap untuk menyelesaikan kuis itu (tidak bisa dihindari dengan menutup aplikasi).
+- Splash hanya tampil sekali per sesi aplikasi. Kembali ke LobbyScene setelah itu langsung membuka Desa.
+- Berburu sampai kuis adalah satu rangkaian. Jika aplikasi ditutup di tengah jalan, saat dibuka lagi pemain kembali ke Desa dan rangkaian itu dibuang. Kuis yang belum selesai tidak memberi unit dan SDA-nya tetap ada di radar. Unit dibayar pada jawaban terakhir, jadi yang sudah sampai sana tetap tersimpan.
 - Tombol kembali di Layar Tangkap hanya muncul sebelum kuis dimulai. Selama kuis dan hasil, pemain tidak bisa keluar.
-- Semua sheet di Lobby bisa ditutup dengan mengetuk area di luar kartu.
+- Semua sheet di Desa bisa ditutup dengan mengetuk area di luar kartu.
 - Setelah setiap ketukan ada jeda input 0,15-0,25 detik supaya satu ketukan tidak menekan dua tombol.
 - Layar HP tidak pernah meredup selama aplikasi terbuka (mini-game sering dimainkan tanpa menyentuh layar).
 - Frame rate target 60 fps.
@@ -96,23 +97,21 @@ Splash
 | Loading bar | Gradasi oranye, terisi selama durasi splash |
 | Ajakan | "SENTUH LAYAR UNTUK MULAI", berkedip, muncul setelah 0,35 detik |
 | Durasi | 2,4 detik (fade in 0,5 detik, fade out 0,4 detik). Ketuk layar untuk melewati |
-| Suara | SFX splash, lalu musik lobby mulai saat masuk Lobby |
+| Suara | SFX splash, lalu musik lobby mulai saat masuk Desa |
 
-### 3.2 Lobby (Ada)
+### 3.2 Home: Desa (Ada)
 
-Susunan dari atas ke bawah:
+Layar Lobby lama sudah dihapus. Home adalah layar Desa, rinciannya di 3.13. Dari atas ke bawah:
 
-| Elemen | Detail |
+| Elemen | Isi |
 |---|---|
-| Pil total | Ikon petir di lingkaran kuning + "N unit" (total unit semua SDA) |
-| Judul | "ENER" putih + "GO!" oranye, teks besar dengan outline |
-| Label seksi | Pil "KOLEKSI ENERGIMU" |
-| Grid koleksi | 5 tile SDA (3 + 2, baris kedua di tengah). Tiap tile: ikon SDA, gradasi warna SDA, badge jumlah unit. Tile tidak bisa diketuk (hanya tampilan) |
-| Info mode | "Mode kamera: AR (ARCore)" atau "Mode kamera: Sensor 360" |
-| Tombol utama | "BERBURU!" (oranye, besar) |
-| Dock | 4 tombol bulat dengan label: Desa (ikon rumah, kertas, titik oranye saat perlu perhatian), Panduan (ikon buku, kuning), Latihan (ikon target, biru), Pengaturan (ikon gir, kertas) |
+| Kartu stok | Nama desa (ketuk untuk mengganti), sisa listrik, bar stok, cap PADAM atau tanda MENIPIS |
+| Gambar desa | Latar mengikuti jam HP, Sya, kerbau, dan pembangkit yang bisa diketuk |
+| Kartu dialog | Potret dan kalimat Sya sesuai keadaan desa |
+| Aksi | BERBURU! sebagai tombol utama, ISI PEMBANGKIT sebagai tombol kedua |
+| Dock | Panduan, Latihan, Pengaturan, di atas kartu kertas |
 
-Tile yang terkunci (SDA tanpa mini-game) tampil pudar 45% dengan ikon gembok. Saat ini kelima SDA sudah bisa dimainkan, jadi tidak ada yang terkunci, tetapi state ini harus tetap didesain.
+Jumlah unit per SDA tampil di sheet ISI PEMBANGKIT.
 
 ### 3.3 Sheet Pengaturan (Ada)
 
@@ -396,7 +395,7 @@ Rancangan: `docs/superpowers/specs/2026-11-06-desa-teknik-design.md`.
 
 **Pemandu.** Sya, ahli geologi muda, 2D chibi. Tampil di prolog dan layar Desa. Pose dan potret: `docs/prompt-karakter.md`.
 
-**Pembangkit.** Pemain membuka Desa dari dock Lobby, lalu memasukkan unit SDA sendiri lewat sheet ISI PEMBANGKIT. Setiap unit menambah durasi menyala:
+**Pembangkit.** Di home, pemain memasukkan unit SDA sendiri lewat sheet ISI PEMBANGKIT. Setiap unit menambah durasi menyala:
 
 | SDA | Durasi per unit | Peran |
 |---|---|---|
@@ -409,7 +408,7 @@ Rancangan: `docs/superpowers/specs/2026-11-06-desa-teknik-design.md`.
 - Stok disimpan sebagai satu waktu habis (UTC) dan berkurang mengikuti waktu nyata, termasuk saat aplikasi ditutup.
 - Kapasitas maksimal 24 jam. Unit yang membuat stok melebihi kapasitas ditolak dan tidak berkurang.
 - Unit Normal dipakai lebih dulu, baru Murni.
-- Menipis: sisa kurang dari 3 jam, tampil di kartu stok dan sebagai titik di tombol Desa.
+- Menipis: sisa kurang dari 3 jam, tampil di kartu stok.
 - Padam: sisa 0. Desa gelap sampai diisi lagi, tanpa hukuman lain.
 
 **Layar Desa.** Latar mengikuti jam HP: siang `desa_siang`, malam `desa_malam_terang` atau `desa_malam_padam`. Pengisian pertama selalu memutar adegan malam dari gelap ke terang, jam berapa pun, sekali saja.
@@ -557,7 +556,7 @@ SDA ditempatkan sesuai arah kompas sebenarnya. Kompas dikalibrasi saat mulai, la
 | Suara | Kapan |
 |---|---|
 | sfx_splash | Splash |
-| music_lobby | Lobby (berhenti saat masuk radar/tangkap) |
+| music_lobby | Desa (berhenti saat masuk radar/tangkap) |
 | sfx_button_click / sfx_button_back | Semua tombol / tombol kembali dan menutup sheet |
 | sfx_matahari (loop) | Matahari, di-pan ke arah cahaya |
 | sfx_ekstrak_matahari | Matahari, posisi diputar sesuai bar |
@@ -617,12 +616,12 @@ Jenis tombol (gradasi atas ke bawah): Orange (#FFC04D ke #FF6B2C), Ok (#C6F58A k
 
 | Komponen | Dipakai di |
 |---|---|
-| Latar dunia (langit gradasi, bukit rumput, grid isometrik, pohon) | Splash, Lobby, Radar, Kuis |
+| Latar dunia (langit gradasi, bukit rumput, grid isometrik, pohon) | Splash, Radar, Kuis |
 | Tombol tebal dengan bibir bawah dan state ditekan | Semua tombol |
 | Kartu kertas dengan outline | Sheet, kartu radar, kuis, hasil, panduan |
 | Pita judul (ribbon) | Atas kartu |
 | Pil gelap transparan | Info radar, header layar tangkap |
-| Tile SDA dengan badge jumlah dan state terkunci | Lobby, Latihan, Panduan |
+| Tile SDA dengan badge jumlah dan state terkunci | Latihan, Panduan |
 | Toggle | Pengaturan |
 | Slider | Volume |
 | Progress bar gradasi | Splash, HUD, timer kuis, dosis, tekanan |
@@ -655,7 +654,7 @@ Rencana: semua aset 3D dibuat ulang dalam satu tema yang sama.
 Semua layar dan state yang harus punya desain:
 
 - [ ] Splash
-- [ ] Lobby (dengan tile normal dan terkunci)
+- [x] Home Desa
 - [ ] Sheet Pengaturan (toggle nyala/mati, slider, reset normal dan konfirmasi)
 - [ ] Sheet Latihan (tile terpilih, tile Acak)
 - [ ] Sheet Panduan (dengan konfirmasi reset panduan)

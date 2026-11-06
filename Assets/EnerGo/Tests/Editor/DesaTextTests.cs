@@ -51,6 +51,14 @@ namespace EnerGo.Tests
         }
 
         [Test]
+        public void HomeSendsANewPlayerHuntingAndOnlyThenToThePlant()
+        {
+            StringAssert.Contains("BERBURU", DesaText.Status(DesaStatus.Padam, false, false));
+            StringAssert.Contains("pembangkit", DesaText.Status(DesaStatus.Padam, false, true));
+            Assert.AreEqual(DesaText.Status(DesaStatus.Menyala, true, false), DesaText.Status(DesaStatus.Menyala, true, true));
+        }
+
+        [Test]
         public void PrologHasFivePanelsAndTheLastUsesTheVillageName()
         {
             Assert.AreEqual(5, DesaText.Prolog.Length);

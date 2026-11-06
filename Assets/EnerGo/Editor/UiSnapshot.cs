@@ -34,20 +34,9 @@ namespace EnerGo.EditorTools
 
         public static VisualElement Root => GameObject.Find(Name)?.GetComponent<UIDocument>().rootVisualElement;
 
-        // Fills the lobby with sample values through LobbyView's own tile code.
-        public static void FillLobbySample()
-        {
-            string[] ids = { ResourceIds.Sun, ResourceIds.Coal, ResourceIds.Gold, ResourceIds.Oil, ResourceIds.Uranium };
-            int[] n = { 12, 31, 14, 6, 0 };
-            for (int i = 0; i < ids.Length; i++) EnerGo.UI.LobbyView.FillTile(Root.Q("tile-" + ids[i]), ids[i], n[i], false, true);
-            Root.Q<Label>("total-unit").text = LobbyText.TotalUnits(63);
-            Root.Q<Label>("mode-kamera").text = LobbyText.CameraMode(true);
-        }
-
         // Shows one sheet the way the LayarSheet preview pictures it (state copied into the elements by hand).
         public static void ShowSheetSample(string which)
         {
-            FillLobbySample();
             var r = Root;
             r.Q("lapis-sheet").style.display = DisplayStyle.Flex;
             foreach (var n in new[] { "sheet-pengaturan", "sheet-latihan", "sheet-panduan" })

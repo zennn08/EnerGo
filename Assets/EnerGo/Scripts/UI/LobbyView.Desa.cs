@@ -10,7 +10,7 @@ namespace EnerGo.UI
         // Where things stand in the village pictures (0..1). All three pictures line up exactly.
         private const float PlantU = 0.72f, PlantV = 0.575f;
         private const float PictureW = 1536f, PictureH = 2752f;
-        private const float BuffaloU = 0.6f, BuffaloV = 0.63f;
+        private const float BuffaloU = 0.36f, BuffaloV = 0.55f;
         private static readonly Color BuffaloNightTint = new Color(0.45f, 0.5f, 0.7f);
         private const float RefreshSeconds = 1f;
 
@@ -54,7 +54,6 @@ namespace EnerGo.UI
             isiSisa = root.Q<Label>("isi-sisa");
             inputNamaDesa = root.Q<TextField>("input-nama-desa");
 
-            root.Q<Button>("btn-desa-kembali").clicked += () => controller.CloseDesa();
             root.Q<Button>("btn-isi").clicked += OpenIsi;
             root.Q<Button>("btn-pembangkit").clicked += OpenIsi;
             root.Q<Button>("btn-isi-tutup").clicked += CloseIsi;
@@ -149,7 +148,7 @@ namespace EnerGo.UI
 
         partial void RefreshDesa()
         {
-            if (controller.State != LobbyController.ScreenState.Desa)
+            if (!controller.HomeVisible)
             {
                 if (desaShown) ClearDesaPictures();
                 return;
@@ -180,7 +179,9 @@ namespace EnerGo.UI
 
             SetGambar(desaSya, "Pemandu/" + DesaText.PoseFor(status, isDay, save.plantEverFilled), Color.clear);
             SetGambar(dialogWajah, "Pemandu/" + DesaText.WajahFor(status, save.plantEverFilled), Color.clear);
-            dialogTeks.text = DesaText.Status(status, save.plantEverFilled);
+            bool hasUnits = false;
+            foreach (var id in LobbyController.AllResources) hasUnits |= save.Get(id).Total > 0;
+            dialogTeks.text = DesaText.Status(status, save.plantEverFilled, hasUnits);
 
             isiSisa.text = "SISA " + DesaText.FormatSisa(remaining) + " · MAKS " + DesaText.FormatSisa(DesaMath.CapacitySec);
             foreach (var row in isiRows)
@@ -213,7 +214,7 @@ namespace EnerGo.UI
 
         partial void UpdateDesa()
         {
-            if (controller.State != LobbyController.ScreenState.Desa) return;
+            if (!controller.HomeVisible) return;
             float t = Time.unscaledTime;
             if (t >= nextDesaRefresh)
             {
