@@ -56,8 +56,10 @@ namespace EnerGo.UI
 
             root.Q<Button>("btn-isi").clicked += OpenIsi;
             root.Q<Button>("btn-pembangkit").clicked += OpenIsi;
-            root.Q<Button>("btn-isi-tutup").clicked += CloseIsi;
-            root.Q("desa-tirai").RegisterCallback<PointerDownEvent>(_ => CloseIsi());
+            root.Q<Button>("btn-isi-tutup").clicked += () => CloseIsi();
+            desaTirai = root.Q("desa-tirai");
+            desaTirai.RegisterCallback<PointerDownEvent>(_ => CloseIsi());
+            geserIsi = new SheetGeser(sheetIsi, () => CloseIsi());
             root.Q<Button>("btn-ganti-nama").clicked += OpenNama;
             root.Q<Button>("btn-nama-batal").clicked += () => CloseNama(false);
             root.Q<Button>("btn-nama-simpan").clicked += () => CloseNama(true);
@@ -116,17 +118,27 @@ namespace EnerGo.UI
         {
             if (!controller.InputReady) return;
             controller.Tap();
+            isiCloseToken++;
             Show(lapisIsi, true);
+            desaTirai.style.opacity = 1f;
             sheetIsi.schedule.Execute(() => sheetIsi.AddToClassList("is-terbuka"));
             RefreshDesa();
         }
 
-        private void CloseIsi()
+        private SheetGeser geserIsi;
+        private VisualElement desaTirai;
+        private int isiCloseToken;
+
+        private bool CloseIsi()
         {
-            if (!controller.InputReady || lapisIsi.resolvedStyle.display == DisplayStyle.None) return;
+            if (!controller.InputReady || lapisIsi.resolvedStyle.display == DisplayStyle.None) return false;
             controller.Tap();
             sheetIsi.RemoveFromClassList("is-terbuka");
-            Show(lapisIsi, false);
+            desaTirai.style.opacity = 0f;
+            lapisIsi.pickingMode = PickingMode.Ignore;
+            int token = ++isiCloseToken;
+            lapisIsi.schedule.Execute(() => { if (token == isiCloseToken) Show(lapisIsi, false); }).StartingIn(SheetSlideMs);
+            return true;
         }
 
         private void OpenNama()

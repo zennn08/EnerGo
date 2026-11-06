@@ -30,6 +30,10 @@ namespace EnerGo.UI
             resetBar = root.Q("reset-bar");
             resetBarIsi = resetBar.Q(className: "eg-bar__isi");
 
+            sheetPanduan = root.Q("sheet-panduan");
+            foreach (var s in new[] { sheetPengaturan, sheetLatihan, sheetPanduan })
+                new SheetGeser(s, () => { controller.CloseSheet(); return !IsSheetState(controller.State); });
+
             // Tap outside the card closes the sheet, on touch-down like before.
             root.Q("tirai").RegisterCallback<PointerDownEvent>(_ => controller.CloseSheet());
 
@@ -111,14 +115,35 @@ namespace EnerGo.UI
             Open(sheetPengaturan, s == LobbyController.ScreenState.Settings);
             Open(sheetLatihan, s == LobbyController.ScreenState.Practice);
             Open(sheetPanduan, s == LobbyController.ScreenState.Guides);
+            bool open = IsSheetState(s);
+            var tirai = root.Q("tirai");
+            tirai.style.opacity = open ? 1f : 0f;
+            tirai.pickingMode = open ? PickingMode.Position : PickingMode.Ignore;
+            if (open) { Show(lapisSheet, true); return; }
+            // Stay on screen until the sheet has slid out.
+            lapisSheet.pickingMode = PickingMode.Ignore;
+            int token = ++sheetCloseToken;
+            lapisSheet.schedule.Execute(() => { if (token == sheetCloseToken && !IsSheetState(controller.State)) Show(lapisSheet, false); }).StartingIn(SheetSlideMs);
         }
+
+        private const int SheetSlideMs = 270; // .eg-sheet slides in 0.25 s
+        private int sheetCloseToken;
+
+        private static bool IsSheetState(LobbyController.ScreenState s) =>
+            s == LobbyController.ScreenState.Settings || s == LobbyController.ScreenState.Practice || s == LobbyController.ScreenState.Guides;
 
         private static void Open(VisualElement sheet, bool open)
         {
             if (sheet == null) return;
             bool wasOpen = sheet.style.display != DisplayStyle.None && sheet.ClassListContains("is-terbuka");
-            sheet.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!open) { sheet.RemoveFromClassList("is-terbuka"); return; }
+            if (!open)
+            {
+                if (!wasOpen) { sheet.style.display = DisplayStyle.None; return; }
+                sheet.RemoveFromClassList("is-terbuka"); // slides out, then hides unless it was reopened meanwhile
+                sheet.schedule.Execute(() => { if (!sheet.ClassListContains("is-terbuka")) sheet.style.display = DisplayStyle.None; }).StartingIn(SheetSlideMs);
+                return;
+            }
+            sheet.style.display = DisplayStyle.Flex;
             if (!wasOpen) sheet.schedule.Execute(() => sheet.AddToClassList("is-terbuka")); // next frame, so it animates
         }
     }

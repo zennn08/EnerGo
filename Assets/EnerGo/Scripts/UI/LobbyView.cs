@@ -93,13 +93,11 @@ namespace EnerGo.UI
         private void ShowLayers()
         {
             var s = controller.State;
-            bool sheet = s == LobbyController.ScreenState.Settings || s == LobbyController.ScreenState.Practice || s == LobbyController.ScreenState.Guides;
             Show(lapisProlog, s == LobbyController.ScreenState.Prolog);
             Show(lapisDesa, controller.HomeVisible);
             lapisProlog.pickingMode = PickingMode.Ignore;
             lapisDesa.pickingMode = PickingMode.Ignore;
             ShowProlog(s);
-            Show(lapisSheet, sheet);
             Show(lapisPanduan, controller.OpenGuideId != null);
             Show(lapisSplash, s == LobbyController.ScreenState.Splash);
             Show(lapisTransisi, s == LobbyController.ScreenState.TransitioningToAR);

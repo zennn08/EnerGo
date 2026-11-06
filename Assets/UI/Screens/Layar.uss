@@ -64,6 +64,8 @@
     translate: 0 100%; transition-property: translate; transition-duration: 0.25s; transition-timing-function: ease-out;
 }
 .eg-sheet.is-terbuka { translate: 0 0; }
+.eg-sheet__pegangan { position: absolute; left: 50%; top: 20px; width: 44px; height: 5px; margin-left: -22px; border-radius: 3px; background-color: var(--kertas-300); }
+#tirai, #desa-tirai { opacity: 0; transition-property: opacity; transition-duration: 0.25s; }
 .sheet--latihan { padding: 36px 16px 40px 16px; }
 .sheet__sub { -unity-text-align: middle-center; font-size: 16px; margin-bottom: 18px; }
 .sheet__grid { flex-direction: row; flex-wrap: wrap; justify-content: center; }
