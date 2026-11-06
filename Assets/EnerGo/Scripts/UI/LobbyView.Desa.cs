@@ -26,6 +26,10 @@ namespace EnerGo.UI
         private float nextDesaRefresh;
         private bool desaShown, desaIsNightOn;
         private static System.Func<int> localHour = () => System.DateTime.Now.Hour; // swapped only to check day and night looks in the editor
+        private const float SorakDarkSeconds = 0.8f, SorakFadeSeconds = 1.5f;
+        private VisualElement lapisSorak, sorakGelap, sorakTerang, sorakSya, sorakKartu;
+        private float sorakSince;
+        private bool sorakActive, sorakDone;
 
         partial void BindDesa()
         {
@@ -64,7 +68,14 @@ namespace EnerGo.UI
 
             Show(lapisIsi, false);
             Show(lapisNama, false);
-            Show(root.Q("lapis-sorak"), false);
+            lapisSorak = root.Q("lapis-sorak");
+            sorakGelap = root.Q("sorak-gelap");
+            sorakTerang = root.Q("sorak-terang");
+            sorakSya = root.Q("sorak-sya");
+            sorakKartu = root.Q("sorak-kartu");
+            root.Q<Button>("btn-sorak-lanjut").clicked += EndSorak;
+            controller.FirstFill += StartSorak;
+            Show(lapisSorak, false);
         }
 
         private VisualElement BuildIsiRow(string id)
@@ -210,10 +221,49 @@ namespace EnerGo.UI
             desaAwan.style.translate = new Translate(Mathf.Sin(t * 0.05f) * 60f, 0f);
             desaKerbau.style.translate = new Translate(0f, -Mathf.Abs(Mathf.Sin(t * 1.2f)) * 2f);
             if (desaIsNightOn) desaTerang.style.opacity = 0.96f + 0.04f * Mathf.Sin(t * 1.5f);
-            UpdateSorak();
+            UpdateSorak(t);
         }
 
-        partial void UpdateSorak();
+        // First fill: at any hour the village goes dark, then lights up, then Sya cheers. plantEverFilled was saved
+        // together with the units, so closing the app mid-scene neither repeats it nor loses anything.
+        private void StartSorak()
+        {
+            sheetIsi.RemoveFromClassList("is-terbuka");
+            Show(lapisIsi, false);
+            Show(lapisSorak, true);
+            SetGambar(sorakGelap, "Desa/desa_malam_padam", FallbackNightOff);
+            SetGambar(sorakTerang, "Desa/desa_malam_terang", FallbackNightOn);
+            SetGambar(sorakSya, "Pemandu/pemandu_bersorak", Color.clear);
+            sorakTerang.style.opacity = 0f;
+            sorakSya.style.display = DisplayStyle.None;
+            sorakKartu.style.display = DisplayStyle.None;
+            root.Q<Label>("sorak-teks").text = DesaMath.CleanName(EnerGoProgress.Current.villageName) + " menyala!";
+            sorakSince = Time.unscaledTime;
+            sorakDone = false;
+            sorakActive = true;
+        }
+
+        private void UpdateSorak(float now)
+        {
+            if (!sorakActive || sorakDone) return;
+            float t = now - sorakSince;
+            sorakTerang.style.opacity = Mathf.Clamp01((t - SorakDarkSeconds) / SorakFadeSeconds);
+            if (t < SorakDarkSeconds + SorakFadeSeconds) return;
+            sorakDone = true;
+            Haptics.Pulse(60);
+            sorakSya.style.display = DisplayStyle.Flex;
+            sorakKartu.style.display = DisplayStyle.Flex;
+        }
+
+        private void EndSorak()
+        {
+            if (!controller.InputReady) return;
+            controller.Tap();
+            sorakActive = false;
+            Show(lapisSorak, false);
+            foreach (var e in new[] { sorakGelap, sorakTerang, sorakSya }) ClearGambar(e);
+            RefreshDesa();
+        }
 
         private void ClearDesaPictures()
         {

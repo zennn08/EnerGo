@@ -44,6 +44,7 @@ namespace EnerGo.UI
         private void OnDisable()
         {
             if (controller != null) controller.StateChanged -= OnStateChanged;
+            if (controller != null) controller.FirstFill -= StartSorak;
         }
 
         private void Update()
