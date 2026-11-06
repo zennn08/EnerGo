@@ -7,23 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: mat_air
-    second: {fileID: 2100000, guid: 4016f2cc6f6b6a84387a55b3339baa90, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: mat_kraft
-    second: {fileID: 2100000, guid: 6aa520ead49d00140983f0a8ee2a179b, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: mat_kraft_tua
-    second: {fileID: 2100000, guid: 5483e8caad1eca94d94bc74804d90e93, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: mat_pasir_basah
-    second: {fileID: 2100000, guid: 30027bafeaa0d7347b3bb06b17c5d1f3, type: 2}
+      name: mat_dulang_kayu
+    second: {fileID: 2100000, guid: 62eee5023a925254b83484673ed5f38a, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule

@@ -10,7 +10,6 @@ namespace EnerGo
         private const float DulangDistance = 0.6f;    // metres in front of the camera
         private const float DulangRimRadius = 0.255f; // sda_dulang, model units
         private const float DulangGoldRadius = 0.2f;  // goldPos 1 = this far from the middle
-        private const float DulangViewTilt = 24f;     // seen from a little in front, so the bowl has depth
         private const float DulangWaterLevel = 0.05f;
         private const float GoldBuried = 0.02f;      // how far a piece sinks into the sand before it shows
         private const int WaterSegments = 40, WaterRings = 7, SandSegments = 32, SandRings = 6, GrainCount = 120;
@@ -55,13 +54,6 @@ namespace EnerGo
             dulang = new GameObject("Dulang 3D").transform;
             dulang.SetParent(arCamera.transform, false);
             dulangTilt = Instantiate(panModel, dulang).transform;
-            // The pan's own flat water and sand give way to the live meshes below.
-            foreach (var part in new[] { "sda_dulang_air", "sda_dulang_pasir" })
-            {
-                var old = dulangTilt.Find(part);
-                if (old != null) old.gameObject.SetActive(false);
-            }
-
             dulangWater = NewDulangMesh("Air", clear, WaterSegments, WaterRings, out waterVerts, out waterColors);
             dulangSand = NewDulangMesh("Pasir", opaque, SandSegments, SandRings, out sandVerts, out sandColors);
 
@@ -141,8 +133,8 @@ namespace EnerGo
             dulang.position = arCamera.ScreenToWorldPoint(px);
             float worldR = DulangPose.WorldRadius(R * HudScale, DulangDistance, arCamera.fieldOfView, Screen.height);
             dulang.localScale = Vector3.one * (worldR / DulangRimRadius);
-            // Pan-local x = screen right, z = screen up, y = toward the viewer; tipped back a little.
-            dulang.localRotation = Quaternion.LookRotation(Vector3.up, Vector3.back) * Quaternion.Euler(-DulangViewTilt, 0f, 0f);
+            // Pan-local x = screen right, z = screen up, y = toward the viewer.
+            dulang.localRotation = DulangPose.Rest;
             modelLight.transform.rotation = arCamera.transform.rotation * Quaternion.Euler(50f, -35f, 0f);
             dulangTilt.localRotation = DulangPose.Tilt(goldTilt);
         }
@@ -203,7 +195,8 @@ namespace EnerGo
         {
             float t = dulangSimTime, dir = goldSwirl >= 0f ? 1f : -1f;
             float waveHeight = 0.0012f + 0.0034f * swirlNorm;
-            var deep = new Color(0.1f, 0.42f, 0.62f, 0.3f); var shine = new Color(0.62f, 0.86f, 0.95f, 0.42f); var foam = new Color(0.9f, 0.96f, 1f, 0.5f);
+            // Thin and clear, so the sand and gold under it keep their colour.
+            var deep = new Color(0.45f, 0.68f, 0.72f, 0.1f); var shine = new Color(0.72f, 0.9f, 0.95f, 0.28f); var foam = new Color(0.92f, 0.97f, 1f, 0.38f);
             float Plane(Vector2 p) => DulangWaterLevel + Vector2.Dot(p, waterSlope);
             waterVerts[0] = new Vector3(0f, Plane(Vector2.zero), 0f);
             waterColors[0] = deep;
@@ -285,13 +278,13 @@ namespace EnerGo
             for (int i = 0; i < GoldPieces; i++)
             {
                 var p = dulangPieces[i];
-                float scale = 1.6f * goldSize[i] / (i < 4 ? 7.5f : 4f);
+                float scale = 1.2f * goldSize[i] / (i < 4 ? 7.5f : 4f);
                 if (!goldLost[i])
                 {
                     p.gameObject.SetActive(true);
                     // goldPos is in GUI space (y down); pan-local z is screen up.
                     Vector2 at = new Vector2(goldPos[i].x, -goldPos[i].y) * DulangGoldRadius;
-                    p.localPosition = new Vector3(at.x, SandTop(at) - GoldBuried + 0.004f, at.y);
+                    p.localPosition = new Vector3(at.x, DulangMath.GoldHeight(at.magnitude), at.y);
                     p.localScale = Vector3.one * scale;
                     // Rolls a little as it slides.
                     Vector2 v = goldVel[i];

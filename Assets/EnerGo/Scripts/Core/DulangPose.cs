@@ -9,6 +9,9 @@ namespace EnerGo
         public const float MaxTiltDeg = 22f;
         public const float DegPerTilt = 60f; // goldTilt is the smoothed sensor tilt (about 0.1–0.4 while panning)
 
+        // Camera-local pose of a level pan: the phone lies flat in the hand, so a level pan faces the viewer squarely.
+        public static readonly Quaternion Rest = Quaternion.LookRotation(Vector3.up, Vector3.back);
+
         // The pan's normal tips toward the low side, so that side sinks away from the viewer.
         public static Quaternion Tilt(Vector2 tilt)
         {

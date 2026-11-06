@@ -52,6 +52,9 @@ namespace EnerGo
             return Mathf.Lerp(0.045f, 0.078f, (r - 0.15f) / (InnerRim - 0.15f));
         }
 
+        // Height of a gold piece's centre at a radius: it lies on the bowl, so only the sand above it hides it.
+        public static float GoldHeight(float r) => InnerHeight(r) + 0.004f;
+
         // Radius at angle `phi` where a flat water surface (height `level` at the centre, rising by `slope` per unit) meets the wall.
         public static float WaterEdge(float phi, float level, Vector2 slope)
         {
