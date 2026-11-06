@@ -10,18 +10,19 @@ namespace EnerGo.UI
     {
         [SerializeField] private RadarController controller;
 
-        private RadarDisk disk;
-        private VisualElement info, kartuTarget, kartuTunggu, lapisGps, lapisAman, targetIkon, targetPanah, isiTarget;
+        private const float TapReachUnits = 48f, NorthLetterM = 150f;
+
+        private VisualElement peta, utara, info, kartuTarget, kartuTunggu, lapisGps, lapisAman, targetIkon, targetPanah, isiTarget;
         private Label spawn, kompas, gps, nama, jarak, kosong, gpsJudul, gpsIsi;
         private Button tangkap;
-        private readonly List<RadarDisk.Node> nodes = new List<RadarDisk.Node>();
         private string shownIcon;
         private long shownSecs = -1;
 
         private void OnEnable()
         {
             var root = GetComponent<UIDocument>().rootVisualElement;
-            disk = root.Q<RadarDisk>("radar-disk");
+            peta = root.Q("radar-tap");
+            utara = root.Q("radar-utara");
             info = root.Q("radar-info");
             kartuTarget = root.Q("kartu-target");
             kartuTunggu = root.Q("kartu-tunggu");
@@ -45,7 +46,12 @@ namespace EnerGo.UI
             root.Q<Button>("btn-coba-lagi").clicked += () => controller.Retry();
             root.Q<Button>("btn-latihan-gps").clicked += () => controller.PlayPractice();
             root.Q<Button>("btn-mengerti").clicked += () => controller.AcceptSafety();
-            disk.Tapped = id => controller.Select(id);
+            peta.RegisterCallback<ClickEvent>(e =>
+            {
+                float toScreen = Screen.width / peta.panel.visualTree.layout.width;
+                var screen = new Vector2(e.position.x * toScreen, Screen.height - e.position.y * toScreen);
+                controller.Select(controller.World.PickAt(screen, TapReachUnits * toScreen));
+            });
         }
 
         private void Update()
@@ -62,7 +68,6 @@ namespace EnerGo.UI
             Show(kartuTunggu, !running && !failed);
             Show(lapisGps, failed && controller.SafetySeen);
             Show(lapisAman, !controller.SafetySeen);
-            disk.EnableInClassList("radar__pudar", failed);
 
             if (failed)
             {
@@ -72,20 +77,25 @@ namespace EnerGo.UI
                 gpsIsi.text = RadarText.FeedBody(feed);
             }
 
-            nodes.Clear();
             if (running)
             {
                 kompas.text = RadarText.CompassLine(controller.HasCompass, controller.CompassSource, controller.Heading);
                 kompas.EnableInClassList("radar__info--awas", !controller.HasCompass);
                 gps.text = RadarText.GpsLine(controller.AccuracyM, RadarController.WeakGpsM);
                 gps.EnableInClassList("radar__info--awas", controller.AccuracyM > RadarController.WeakGpsM);
-                controller.FillNodes(nodes);
                 ShowTarget();
             }
-            disk.Heading = controller.Heading;
-            disk.Sweep = Time.unscaledTime * 90f % 360f;
-            disk.SelectedId = controller.SelectedId;
-            disk.Show(nodes, Time.unscaledTime);
+            PlaceNorthLetter();
+        }
+
+        private void PlaceNorthLetter()
+        {
+            var panel = utara.panel;
+            if (panel == null || panel.visualTree.layout.width <= 0f) return;
+            float toPanel = panel.visualTree.layout.width / Screen.width;
+            var at = controller.World.NorthOnScreen(NorthLetterM);
+            utara.style.left = at.x * toPanel - 16f;
+            utara.style.top = (Screen.height - at.y) * toPanel - 16f;
         }
 
         private void ShowTarget()
@@ -108,7 +118,7 @@ namespace EnerGo.UI
             tangkap.EnableInClassList("eg-btn--utama", on);
             tangkap.EnableInClassList("eg-btn--nonaktif", !on);
             targetPanah.EnableInClassList("is-terkunci", sel.Locked);
-            targetPanah.style.rotate = new Rotate(sel.Locked ? 0f : (float)(sel.Bearing - controller.Heading) - 90f);
+            targetPanah.style.rotate = new Rotate(sel.Locked ? 0f : RadarWorld.ArrowRotation(sel.Bearing, controller.Heading));
             targetIkon.style.opacity = sel.Locked ? 0.55f : 1f;
         }
 

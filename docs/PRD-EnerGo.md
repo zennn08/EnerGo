@@ -183,6 +183,8 @@ Layar menggelap 0,45 detik dengan simbol logo dan teks "Menyalakan radar..." (ke
 
 ### 3.8 Radar (Ada)
 
+Radar kini berupa peta 3D chibi tanpa kamera: pemain di tengah, dunia berputar mengikuti kompas, dan SDA tampil sebagai model 3D melayang dengan cincin. Lingkaran putih adalah radius 150 m, lingkaran oranye adalah jangkauan tangkap dasar 20 m. Ketuk SDA untuk memilihnya. Medan dibuat otomatis dari koordinat (`RadarWorld`), jadi tempat yang sama selalu tampak sama tetapi bukan jalan asli. Model ada di `Resources/Radar`, sumbernya koleksi `radar_peta` di `Art/energo_gaya.blend`. Bagian tentang piringan radar 2D di bawah ini sudah digantikan.
+
 | Elemen | Detail |
 |---|---|
 | Tombol kiri atas | "< LOBBY" |

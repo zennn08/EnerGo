@@ -48,7 +48,7 @@ namespace EnerGo.Tests
         [Test]
         public void RadarHasEveryNamedElement() =>
             AssertNames(Clone("Assets/UI/Screens/Radar.uxml"),
-                "btn-kembali", "pil-spawn", "radar-disk", "info-kompas", "info-gps", "kartu-target", "target-ikon", "target-nama",
+                "btn-kembali", "pil-spawn", "radar-tap", "radar-utara", "info-kompas", "info-gps", "kartu-target", "target-ikon", "target-nama",
                 "target-jarak", "target-panah", "target-kosong", "btn-tangkap", "kartu-gps", "gps-judul", "gps-isi", "btn-coba-lagi",
                 "btn-latihan-gps", "kartu-tunggu", "lapis-aman", "btn-mengerti");
 

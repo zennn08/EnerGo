@@ -3,13 +3,13 @@
     <Style src="project://database/Assets/UI/Theme.uss" />
     <Style src="project://database/Assets/UI/Components.uss" />
     <Style src="project://database/Assets/UI/Screens/Layar.uss" />
-    <eg:PetaLatar class="eg-peta" />
+    <ui:Label name="radar-utara" class="radar__utara" text="U" picking-mode="Ignore" />
     <ui:VisualElement class="eg-layar eg-aman" picking-mode="Ignore">
         <ui:VisualElement class="eg-baris radar__atas" picking-mode="Ignore">
             <ui:Button name="btn-kembali" class="eg-btn eg-btn--kecil eg-btn--kertas" text="‹ DESA" />
             <ui:VisualElement class="eg-pil eg-pil--data" picking-mode="Ignore"><ui:Label name="pil-spawn" text="SPAWN BARU 00:00" /></ui:VisualElement>
         </ui:VisualElement>
-        <eg:RadarDisk name="radar-disk" class="radar__disk" />
+        <ui:VisualElement name="radar-tap" class="radar__disk" />
         <ui:VisualElement name="radar-info" class="eg-pil radar__info" picking-mode="Ignore">
             <ui:Label name="info-kompas" text="Kompas" />
             <ui:Label name="info-gps" text="GPS" />

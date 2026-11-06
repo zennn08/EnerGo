@@ -5,7 +5,9 @@ using UnityEngine.SceneManagement;
 
 namespace EnerGo
 {
-    // Exploration screen: SDA around the player on a heading-up radar. Walk within range of one and tap TANGKAP
+    public struct RadarNode { public string Id, ResourceId; public double Bearing, Distance; public bool InRange, Locked; }
+
+    // Exploration screen: SDA around the player on a heading-up 3D map (RadarWorld3D). Walk within range of one and tap TANGKAP
     // to open its capture mini-game; the spawn id travels along so the reward also removes it from the radar.
     [RequireComponent(typeof(LocationFeed))]
     public class RadarController : MonoBehaviour
@@ -30,12 +32,17 @@ namespace EnerGo
         public bool HasCompass => feed.HasCompass;
         public string CompassSource => feed.HeadingSource;
         public float AccuracyM => feed.AccuracyM;
+        public double Lat => feed.Lat;
+        public double Lon => feed.Lon;
+        public RadarWorld3D World { get; private set; }
         public long SecondsToNextSpawn => GeoSpawner.SecondsToNextWindow(NowUtc());
 
         private void Awake()
         {
             feed = GetComponent<LocationFeed>();
             safetySeen = PlayerPrefs.GetInt(PrefSafetySeen, 0) == 1;
+            World = gameObject.AddComponent<RadarWorld3D>();
+            World.Init(this);
         }
 
         private static long NowUtc() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -60,22 +67,22 @@ namespace EnerGo
             if (rangeAlert.Update(inRange, Time.unscaledTime)) Haptics.Pulse(60);
         }
 
-        public void FillNodes(List<EnerGo.UI.RadarDisk.Node> into)
+        public void FillNodes(List<RadarNode> into)
         {
             foreach (var s in nearby) into.Add(NodeFor(s));
         }
 
-        public bool TryGetSelected(out EnerGo.UI.RadarDisk.Node node)
+        public bool TryGetSelected(out RadarNode node)
         {
             int i = nearby.FindIndex(s => s.Id == selectedId);
             node = i >= 0 ? NodeFor(nearby[i]) : default;
             return i >= 0;
         }
 
-        private EnerGo.UI.RadarDisk.Node NodeFor(GeoSpawner.Spawn s)
+        private RadarNode NodeFor(GeoSpawner.Spawn s)
         {
             double d = GeoSpawner.DistanceM(feed.Lat, feed.Lon, s.Lat, s.Lon);
-            return new EnerGo.UI.RadarDisk.Node
+            return new RadarNode
             {
                 Id = s.Id,
                 ResourceId = s.ResourceId,
@@ -87,7 +94,7 @@ namespace EnerGo
         }
 
         // Actions for RadarView. The safety curtain blocks them all until it has been accepted.
-        public void Select(string id) { if (safetySeen) selectedId = id; }
+        public void Select(string id) { if (safetySeen && id != null) selectedId = id; }
 
         public void BackToLobby()
         {
