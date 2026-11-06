@@ -69,6 +69,10 @@ namespace EnerGo.Tests
                 "kartu-panduan", "panduan-ingatkan", "panduan-centang", "btn-panduan-tutup", "btn-panduan-utama");
 
         [Test]
+        public void GuideCardHasNoRuleLinesBehindItsText() =>
+            Assert.IsNull(Clone("Assets/UI/Screens/KartuPanduan.uxml").Q(className: "panduan__garis"));
+
+        [Test]
         public void GuideReminderIsAButtonSoItDoesNotFlipThePage() =>
             Assert.IsNotNull(Clone("Assets/UI/Screens/KartuPanduan.uxml").Q<UnityEngine.UIElements.Button>("panduan-ingatkan"));
 

@@ -1,9 +1,8 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:eg="EnerGo.UI">
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
     <!-- Guide card, read mode (LayarSheet preview, third frame, with TUTUP instead of LEWATI and no checkbox). -->
     <ui:VisualElement class="eg-redup" />
     <ui:VisualElement class="eg-layar eg-aman panduan__layar" picking-mode="Ignore">
         <ui:VisualElement name="kartu-panduan" class="eg-kartu panduan__kartu">
-            <eg:GarisKertas class="panduan__garis" />
             <ui:Label name="panduan-selotip" class="eg-selotip" text="EMAS" />
             <ui:Label name="panduan-langkah" class="eg-data-tebal panduan__langkah" text="LANGKAH 1/3" />
             <ui:VisualElement class="panduan__bingkai">
