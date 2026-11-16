@@ -28,6 +28,8 @@ namespace EnerGo.Editor
                 CreateLobbyScene();
             }
             UpdateBuildSettings();
+            // Play in the editor always starts from the lobby, like the phone, whatever scene is open.
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(LobbyScenePath);
         }
 
         public static void CreateLobbyScene()
