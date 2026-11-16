@@ -45,6 +45,7 @@ namespace EnerGo.UI
             tangkap.clicked += () => controller.CaptureSelected();
             root.Q<Button>("btn-coba-lagi").clicked += () => controller.Retry();
             root.Q<Button>("btn-latihan-gps").clicked += () => controller.PlayPractice();
+            if (LobbyController.PracticeLocked) root.Q<Button>("btn-latihan-gps").style.display = DisplayStyle.None;
             root.Q<Button>("btn-mengerti").clicked += () => controller.AcceptSafety();
             peta.RegisterCallback<ClickEvent>(e =>
             {

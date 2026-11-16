@@ -25,6 +25,11 @@ namespace EnerGo.UI
             root.Q<Button>("btn-berburu").clicked += () => controller.StartHunt();
             root.Q<Button>("btn-panduan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Guides);
             root.Q<Button>("btn-latihan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Practice);
+            if (LobbyController.PracticeLocked)
+            {
+                root.Q<Button>("btn-latihan").parent.style.display = DisplayStyle.None; // the whole dock item, label too
+                root.Q<Button>("btn-ke-latihan").style.display = DisplayStyle.None;
+            }
             root.Q<Button>("btn-pengaturan").clicked += () => controller.OpenSheet(LobbyController.ScreenState.Settings);
 
             BindSheets();

@@ -121,7 +121,7 @@ namespace EnerGo
 
         public void PlayPractice()
         {
-            if (!safetySeen) return;
+            if (!safetySeen || LobbyController.PracticeLocked) return;
             LobbyController.OpenPracticeOnLoad = true;
             SceneManager.LoadScene("LobbyScene");
         }

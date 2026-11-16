@@ -11,6 +11,10 @@ namespace EnerGo
     // Each action is the body of the matching IMGUI button from before the UI Toolkit move, unchanged.
     public class LobbyController : MonoBehaviour
     {
+        // ponytail: expo lock. Visitors must earn energy by hunting, so every way into practice is closed.
+        // Set false and rebuild to bring practice back.
+        public const bool PracticeLocked = true;
+
         // Lobby is the home screen, which shows the village; the scene keeps its name.
         public enum ScreenState
         {
@@ -106,7 +110,7 @@ namespace EnerGo
 
             if (hasShownSplash) currentState = ScreenState.Lobby;
             else if (SFXManager.Instance != null) SFXManager.Instance.PlaySplash();
-            if (OpenPracticeOnLoad) { OpenPracticeOnLoad = false; hasShownSplash = true; currentState = ScreenState.Practice; }
+            if (OpenPracticeOnLoad && !PracticeLocked) { OpenPracticeOnLoad = false; hasShownSplash = true; currentState = ScreenState.Practice; }
         }
 
         private void Start()
@@ -185,6 +189,7 @@ namespace EnerGo
         {
             if (currentState != ScreenState.Lobby || !InputReady) return;
             if (sheet != ScreenState.Guides && sheet != ScreenState.Practice && sheet != ScreenState.Settings) return;
+            if (sheet == ScreenState.Practice && PracticeLocked) return;
             Click();
             currentState = sheet;
             inputCooldownTimer = 0.2f;
@@ -284,7 +289,7 @@ namespace EnerGo
 
         public void OpenPracticeFromSettings()
         {
-            if (currentState != ScreenState.Settings || !InputReady) return;
+            if (currentState != ScreenState.Settings || !InputReady || PracticeLocked) return;
             Click();
             currentState = ScreenState.Practice;
             inputCooldownTimer = 0.2f;
@@ -317,7 +322,7 @@ namespace EnerGo
 
         public void StartPractice()
         {
-            if (currentState != ScreenState.Practice || !InputReady) return;
+            if (currentState != ScreenState.Practice || !InputReady || PracticeLocked) return;
             Click();
             ResourceIds.Selected = selectedResource == RandomResource
                 ? AllResources[Random.Range(0, AllResources.Length)] : selectedResource;
